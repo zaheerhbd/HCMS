@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════════════════
+# HCMS — .gitignore
+# Covers: Angular · .NET 8 · Azure · VS Code · JetBrains · Windows
+# ═══════════════════════════════════════════════════════════════════
+
+# ── SECRETS & ENVIRONMENT (never commit these) ───────────────────
+.env
+.env.*
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+*.pfx
+*.p12
+*.key
+
+# ── .NET 8 / C# ──────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+_ReSharper*/
+*.DotSettings.user
+packages/
+TestResults/
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
+publish/
+
+# ── ANGULAR / NODE ───────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tgz
+/out-tsc/
+/tmp/
+/coverage/
+/e2e/test-output/
+/package-lock.json
+/yarn.lock
+*.tsbuildinfo
+
+# ── AZURE / DEPLOYMENT ───────────────────────────────────────────
+.azure/
+*.pubxml
+*.pubxml.user
+*.PublishSettings
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+
+# ── VS CODE ──────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+# keep .vscode/extensions.json if you want to share recommended extensions
+
+# ── JETBRAINS (Rider) ─────────────────────────────────────────────
+.idea/
+*.iml
+
+# ── WINDOWS ──────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── MACOS ────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── LOGS & TEMP ──────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+logs/

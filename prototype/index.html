@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCMS Prototype — Healthcare Case Management System</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Inter (UI font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — LOGIN
+     First thing the user sees. Username/password → JWT auth in real app.
+     Demo credentials shown so the reviewer can log in immediately.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🏥</div>
+      <h1>HCMS</h1>
+      <p>Healthcare Case Management System</p>
+    </div>
+
+    <!-- Login form. Submit handled by wireLogin() in app.js -->
+    <form id="login-form">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="coordinator" autocomplete="username">
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="demo" autocomplete="current-password">
+
+      <!-- Demo hint so reviewers know what to type -->
+      <div class="login-hint">
+        🔑 Demo credentials:<br>
+        <strong>coordinator / demo</strong> — Care Coordinator role<br>
+        <strong>admin / demo</strong> — Admin role
+      </div>
+
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     APP SHELL — shown after login
+     Fixed topbar + fixed sidebar + scrollable main content.
+     Only the active .view inside .main-content is displayed at a time.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="app-shell">
+
+  <!-- ── TOP BAR ────────────────────────────────────────────────────
+       Fixed across all screens. Brand name, global search, bell, user.
+       ─────────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">🏥</div>
+      <span>HCMS</span>
+    </div>
+
+    <!-- Global search: press Enter to search patients & cases -->
+    <div class="topbar-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="global-search" placeholder="Search patients, cases… (press Enter)">
+    </div>
+
+    <div class="topbar-right">
+      <!-- Notification bell — toggles the notification panel -->
+      <button class="notif-btn" id="notif-btn" title="Notifications">
+        🔔
+        <span class="notif-badge" id="notif-badge">3</span>
+      </button>
+
+      <!-- User menu: shows logged-in user's name -->
+      <button class="user-menu">
+        <div class="user-avatar" id="user-avatar-initials">MS</div>
+        <span class="user-name" id="user-display-name">Maria Santos</span>
+        ▾
+      </button>
+    </div>
+  </header>
+
+  <!-- ── NOTIFICATION PANEL ─────────────────────────────────────────
+       Slides down from the topbar when the bell is clicked.
+       ─────────────────────────────────────────────────────────────── -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <span>Notifications</span>
+      <button class="btn btn-sm btn-outline" onclick="NOTIFICATIONS.forEach(n=>n.unread=false); renderNotifPanel(); document.getElementById('notif-badge').style.display='none';">
+        Mark all read
+      </button>
+    </div>
+    <div id="notif-list"><!-- rendered by renderNotifPanel() --></div>
+  </div>
+
+  <!-- ── SIDEBAR ────────────────────────────────────────────────────
+       Fixed left navigation. data-view attribute drives the router.
+       ─────────────────────────────────────────────────────────────── -->
+  <nav class="sidebar">
+
+    <!-- MAIN NAVIGATION -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="nav-link" data-view="dashboard"   onclick="navigate('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a class="nav-link" data-view="patients"    onclick="navigate('patients')">
+        <span class="nav-icon">👥</span> Patients
+      </a>
+      <a class="nav-link" data-view="cases"       onclick="navigate('cases')">
+        <span class="nav-icon">📋</span> Cases
+        <!-- Badge shows count of active cases -->
+        <span class="nav-badge">6</span>
+      </a>
+    </div>
+
+    <!-- WORKFLOW -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Workflow</div>
+      <a class="nav-link" data-view="tasks"        onclick="navigate('tasks')">
+        <span class="nav-icon">✅</span> My Tasks
+        <!-- Red badge = overdue tasks waiting -->
+        <span class="nav-badge red">2</span>
+      </a>
+      <a class="nav-link" data-view="appointments" onclick="navigate('appointments')">
+        <span class="nav-icon">📅</span> Appointments
+      </a>
+    </div>
+
+    <!-- INTEGRATIONS -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Integrations</div>
+      <!-- FHIR Explorer: view HL7 FHIR R4 patient bundles -->
+      <a class="nav-link" data-view="fhir" onclick="navigate('fhir')">
+        <span class="nav-icon">🔬</span> FHIR Explorer
+        <span class="nav-badge" style="background:var(--accent);">R4</span>
+      </a>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Analytics</div>
+      <a class="nav-link" data-view="reports" onclick="navigate('reports')">
+        <span class="nav-icon">📈</span> Reports
+      </a>
+    </div>
+
+    <!-- ADMINISTRATION (Admin/Supervisor role only) -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-link" data-view="admin-users" onclick="navigate('admin-users')">
+        <span class="nav-icon">👤</span> Users
+      </a>
+      <a class="nav-link" data-view="audit" onclick="navigate('audit')">
+        <span class="nav-icon">🛡</span> Audit Log
+      </a>
+    </div>
+
+    <!-- Footer: version + logout -->
+    <div class="sidebar-footer">
+      <div>HCMS Prototype v0.1</div>
+      <div style="margin-top:4px;">
+        <a onclick="document.getElementById('app-shell').classList.remove('visible');
+                    document.getElementById('login-screen').style.display='';
+                    showToast('Signed out successfully','success');"
+           style="cursor:pointer;color:var(--primary);">← Sign out</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT AREA ──────────────────────────────────────────
+       All views live here as sibling divs. Only .active is shown.
+       ─────────────────────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 2 — DASHBOARD
+         The home screen after login. KPI cards + recent activity.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-dashboard" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Welcome back, Maria. Here's your care coordination overview for today.</p>
+        </div>
+        <!-- Quick actions at the top -->
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="openModal('modal-add-patient')">+ New Patient</button>
+          <button class="btn btn-primary" onclick="openModal('modal-create-case')">+ Create Case</button>
+        </div>
+      </div>
+
+      <!-- Alert banner: escalated case needing attention -->
+      <div class="alert alert-warning">
+        <span style="font-size:18px;">⚠️</span>
+        <div>
+          <strong>Action Required:</strong> CASE-2026-00002 (Robert Chen — COPD) has been escalated to
+          <strong>Critical</strong> priority.
+          <a onclick="navigate('case-detail', CASES.find(c=>c.id==='case-002'))" style="cursor:pointer;text-decoration:underline;">View case →</a>
+        </div>
+      </div>
+
+      <!-- KPI Stat Cards: rendered by renderDashboard() -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="dash-active-cases">—</div>
+          <div class="stat-label">Active Cases</div>
+          <div class="stat-delta up">↑ 2 from last week</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-value" id="dash-critical-cases">—</div>
+          <div class="stat-label">Critical Priority</div>
+          <div class="stat-delta down">⚠ Requires immediate action</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-value" id="dash-overdue-tasks">—</div>
+          <div class="stat-label">Overdue Tasks</div>
+          <div class="stat-delta down">↑ 1 since yesterday</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="dash-today-appts">—</div>
+          <div class="stat-label">Upcoming Appointments</div>
+          <div class="stat-delta">Next 14 days</div>
+        </div>
+      </div>
+
+      <!-- Two-column grid: recent cases + sidebar widgets -->
+      <div class="dashboard-grid" style="grid-template-columns:2fr 1fr;">
+
+        <!-- Recent Cases table -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Cases</h3>
+            <button class="btn btn-sm btn-outline" onclick="navigate('cases')">View all →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Case #</th><th>Patient</th><th>Title</th>
+                  <th>Status</th><th>Priority</th><th>Assigned To</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-cases"><!-- renderDashboard() --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right column: Overdue Tasks + Appointments -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="card-header">
+              <h3>Overdue Tasks</h3>
+              <button class="btn btn-sm btn-outline" onclick="navigate('tasks')">All tasks →</button>
+            </div>
+            <div class="card-body" id="dash-overdue-task-list"><!-- renderDashboard() --></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Upcoming Appointments</h3>
+              <button class="btn btn-sm btn-outline" onclick="navigate('appointments')">Calendar →</button>
+            </div>
+            <div class="card-body" id="dash-appt-list"><!-- renderDashboard() --></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /view-dashboard -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 3 — PATIENTS LIST
+         Searchable, filterable patient roster.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-patients" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Patients</h2>
+          <p>All registered patients. Click a row to view the full patient record.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-patient')">+ Add Patient</button>
+      </div>
+
+      <!-- Search + filter toolbar -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="icon">🔍</span>
+          <input class="search-input" id="patient-search" type="text" placeholder="Search by name or MRN…">
+        </div>
+        <select class="filter-select" id="patient-risk-filter">
+          <option value="">All Risk Levels</option>
+          <option>Critical</option>
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+        <span style="margin-left:auto;font-size:12px;color:var(--muted);">
+          Showing 5 of 5 patients
+        </span>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>MRN</th><th>Patient</th><th>Date of Birth</th>
+                <th>Risk Level</th><th>Primary Diagnosis</th>
+                <th>Cases</th><th>Coordinator</th>
+              </tr>
+            </thead>
+            <tbody id="patients-tbody"><!-- renderPatients() --></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-patients -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 4 — PATIENT DETAIL
+         Full demographic view with tabbed sub-sections.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-patient-detail" class="view">
+
+      <!-- Breadcrumb: Patients > [Name] -->
+      <div class="breadcrumb">
+        <a onclick="navigate('patients')" style="cursor:pointer;">Patients</a>
+        <span class="sep">›</span>
+        <span class="current" id="pd-breadcrumb">Patient</span>
+      </div>
+
+      <!-- Hero: photo placeholder + name + quick stats -->
+      <div class="patient-hero">
+        <div class="patient-avatar-lg" id="pd-initials">SJ</div>
+        <div class="patient-hero-info">
+          <h2 id="pd-name">Sarah Johnson</h2>
+          <p id="pd-subtitle">58 yrs · Female · Type 2 Diabetes</p>
+          <div class="patient-hero-badges">
+            <span id="pd-risk" class="badge">High</span>
+            <span class="badge" style="background:rgba(255,255,255,.15);color:#fff;" id="pd-mrn">MRN-2026-00001</span>
+          </div>
+        </div>
+        <!-- Action buttons on the patient detail header -->
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4);"
+                  onclick="openModal('modal-create-case')">+ Create Case</button>
+          <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;"
+                  onclick="navigate('fhir')">View FHIR Record →</button>
+        </div>
+      </div>
+
+      <!-- Tabs: Demographics | Cases | Documents -->
+      <div class="tabs" id="pd-tabs">
+        <button class="tab-btn active" onclick="showTab('pd-tabs', 0)">Demographics</button>
+        <button class="tab-btn"        onclick="showTab('pd-tabs', 1)">Cases</button>
+        <button class="tab-btn"        onclick="showTab('pd-tabs', 2)">Documents</button>
+      </div>
+
+      <!-- TAB 1: Demographics -->
+      <div class="tab-panel active">
+        <div class="card">
+          <div class="card-header"><h3>Patient Information</h3></div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item"><label>Date of Birth</label><span id="pd-dob">—</span></div>
+              <div class="info-item"><label>Gender</label><span id="pd-gender">—</span></div>
+              <div class="info-item"><label>Phone</label><span id="pd-phone">—</span></div>
+              <div class="info-item"><label>Email</label><span id="pd-email">—</span></div>
+              <div class="info-item"><label>Address</label><span id="pd-address">—</span></div>
+              <div class="info-item"><label>Insurance</label><span id="pd-insurance">—</span></div>
+              <div class="info-item"><label>Assigned Coordinator</label><span id="pd-coord">—</span></div>
+              <div class="info-item"><label>Last Contact</label><span id="pd-last">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: Cases for this patient -->
+      <div class="tab-panel">
+        <div class="card">
+          <div class="card-header">
+            <h3>Associated Cases</h3>
+            <button class="btn btn-sm btn-primary" onclick="openModal('modal-create-case')">+ New Case</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Case #</th><th>Title</th><th>Status</th><th>Priority</th><th>Opened</th><th>Assigned To</th></tr>
+              </thead>
+              <tbody id="pd-cases-tbody"><!-- renderPatientDetail() --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Documents (prototype placeholder) -->
+      <div class="tab-panel">
+        <div class="card">
+          <div class="card-header">
+            <h3>Documents</h3>
+            <button class="btn btn-sm btn-outline" onclick="showToast('File upload modal would open (Azure Blob Storage)', 'info')">
+              ⬆ Upload Document
+            </button>
+          </div>
+          <div class="card-body">
+            <!-- Document list — in real app: GET /api/patients/{id}/documents -->
+            <table>
+              <thead>
+                <tr><th>File Name</th><th>Type</th><th>Uploaded</th><th>Uploaded By</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>📄 discharge-summary-2026-06-01.pdf</td>
+                  <td><span class="badge badge-blue">Discharge Summary</span></td>
+                  <td>2026-06-01</td>
+                  <td>Dr. James Lee</td>
+                  <td><button class="btn btn-sm btn-outline" onclick="showToast('Download via Azure Blob SAS URL (expires in 1h)', 'info')">Download</button></td>
+                </tr>
+                <tr>
+                  <td>📄 care-plan-v2.pdf</td>
+                  <td><span class="badge badge-teal">Care Plan</span></td>
+                  <td>2026-05-15</td>
+                  <td>Maria Santos</td>
+                  <td><button class="btn btn-sm btn-outline" onclick="showToast('Download via Azure Blob SAS URL (expires in 1h)', 'info')">Download</button></td>
+                </tr>
+                <tr>
+                  <td>📄 insurance-auth-aetna.pdf</td>
+                  <td><span class="badge badge-orange">Auth Document</span></td>
+                  <td>2026-06-08</td>
+                  <td>James Rodriguez</td>
+                  <td><button class="btn btn-sm btn-outline" onclick="showToast('Download via Azure Blob SAS URL (expires in 1h)', 'info')">Download</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div><!-- /view-patient-detail -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 5 — CASES LIST
+         All cases with status + priority filters.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-cases" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Cases</h2>
+          <p>All care management cases. Filter by status or priority.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-create-case')">+ Create Case</button>
+      </div>
+
+      <div class="toolbar">
+        <select class="filter-select" id="case-status-filter">
+          <option value="">All Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Open">Open</option>
+          <option value="InProgress">In Progress</option>
+          <option value="PendingInfo">Pending Info</option>
+          <option value="Escalated">Escalated</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <select class="filter-select" id="case-priority-filter">
+          <option value="">All Priorities</option>
+          <option>Critical</option>
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+        <span style="margin-left:auto;font-size:12px;color:var(--muted);">6 cases total</span>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Case #</th><th>Patient</th><th>Title</th>
+                <th>Status</th><th>Priority</th><th>Category</th>
+                <th>Close Date</th><th>Assigned To</th>
+              </tr>
+            </thead>
+            <tbody id="cases-tbody"><!-- renderCases() --></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-cases -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 6 — CASE DETAIL
+         Full case view with 5 tabs: Overview | Notes | Tasks | Documents | Team
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-case-detail" class="view">
+
+      <div class="breadcrumb">
+        <a onclick="navigate('cases')" style="cursor:pointer;">Cases</a>
+        <span class="sep">›</span>
+        <span class="current" id="cd-case-number">CASE-2026-00001</span>
+      </div>
+
+      <!-- Case header row -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+                <span id="cd-status" class="badge">In Progress</span>
+                <span id="cd-priority" class="badge">High</span>
+                <!-- Patient link — clicking navigates to their detail screen -->
+                <span id="cd-patient-link" style="font-size:13px;color:var(--muted);">👤 Patient Name</span>
+              </div>
+              <h2 id="cd-title" style="font-size:18px;margin-bottom:8px;">Case Title</h2>
+              <p id="cd-summary" style="color:var(--muted);font-size:13.5px;line-height:1.6;"></p>
+            </div>
+            <div style="min-width:200px;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+              <div><span style="color:var(--muted);">Category:</span> <strong id="cd-category">—</strong></div>
+              <div><span style="color:var(--muted);">Opened:</span> <strong id="cd-opened">—</strong></div>
+              <div><span style="color:var(--muted);">Target Close:</span> <strong id="cd-target">—</strong></div>
+              <div><span style="color:var(--muted);">Assigned To:</span> <strong id="cd-assigned">—</strong></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-note')">+ Add Note</button>
+              <button class="btn btn-outline btn-sm" onclick="openModal('modal-add-task')">+ Add Task</button>
+              <button class="btn btn-outline btn-sm" onclick="showToast('Status change modal would open here', 'info')">Change Status</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 tabs for case sub-content -->
+      <div class="tabs" id="cd-tabs">
+        <button class="tab-btn active" onclick="showTab('cd-tabs', 0)">📝 Notes</button>
+        <button class="tab-btn"        onclick="showTab('cd-tabs', 1)">✅ Tasks</button>
+        <button class="tab-btn"        onclick="showTab('cd-tabs', 2)">📄 Documents</button>
+        <button class="tab-btn"        onclick="showTab('cd-tabs', 3)">👥 Care Team</button>
+        <button class="tab-btn"        onclick="showTab('cd-tabs', 4)">🕐 History</button>
+      </div>
+
+      <!-- TAB: Notes -->
+      <div class="tab-panel active">
+        <div id="cd-notes-list"><!-- renderCaseDetail() --></div>
+        <button class="btn btn-outline" style="margin-top:12px;" onclick="openModal('modal-add-note')">+ Add Note</button>
+      </div>
+
+      <!-- TAB: Tasks -->
+      <div class="tab-panel">
+        <div class="task-list" id="cd-tasks-list"><!-- renderCaseDetail() --></div>
+        <button class="btn btn-outline" style="margin-top:12px;" onclick="openModal('modal-add-task')">+ Add Task</button>
+      </div>
+
+      <!-- TAB: Documents -->
+      <div class="tab-panel">
+        <div class="card">
+          <div class="card-header">
+            <h3>Case Documents</h3>
+            <button class="btn btn-sm btn-outline" onclick="showToast('Upload modal → Azure Blob Storage', 'info')">⬆ Upload</button>
+          </div>
+          <div class="card-body">
+            <p style="color:var(--muted);font-size:13px;">
+              Documents attached to this case. Files stored in Azure Blob Storage (private container).
+              Download links are time-limited SAS URLs (1 hour expiry, HIPAA compliant).
+            </p>
+            <div style="margin-top:16px;padding:20px;border:2px dashed var(--border);border-radius:var(--radius);text-align:center;color:var(--muted);">
+              Drop files here or <button class="btn btn-sm btn-outline" onclick="showToast('File picker → upload to Azure Blob Storage', 'info')">Browse</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Care Team -->
+      <div class="tab-panel">
+        <div class="card">
+          <div class="card-header"><h3>Care Team</h3></div>
+          <div class="card-body" id="cd-team-list"><!-- renderCaseDetail() --></div>
+        </div>
+      </div>
+
+      <!-- TAB: History / Audit trail for this case -->
+      <div class="tab-panel">
+        <div class="card">
+          <div class="card-header"><h3>Case History</h3></div>
+          <div class="card-body">
+            <!-- Prototype: static timeline — real app: GET /api/audit?entityId={caseId} -->
+            <div style="border-left:2px solid var(--border);padding-left:20px;">
+              <div style="position:relative;padding-bottom:20px;">
+                <div style="position:absolute;left:-26px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--primary);"></div>
+                <div style="font-size:12px;color:var(--muted);">2026-06-18 · Maria Santos</div>
+                <div style="margin-top:4px;">Case note added</div>
+              </div>
+              <div style="position:relative;padding-bottom:20px;">
+                <div style="position:absolute;left:-26px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--s-escalated);"></div>
+                <div style="font-size:12px;color:var(--muted);">2026-06-15 · Dr. James Lee</div>
+                <div style="margin-top:4px;">Priority changed to <strong>Critical</strong> — Escalated</div>
+              </div>
+              <div style="position:relative;">
+                <div style="position:absolute;left:-26px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--accent);"></div>
+                <div style="font-size:12px;color:var(--muted);">2026-06-01 · Maria Santos</div>
+                <div style="margin-top:4px;">Case opened with status <strong>Open</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /view-case-detail -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 7 — MY TASKS
+         Personal task list with completion toggle.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-tasks" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>My Tasks</h2>
+          <p>Tasks assigned to you across all cases. Check off tasks as you complete them.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-task')">+ Add Task</button>
+      </div>
+
+      <!-- Filter buttons: All | Pending | Overdue | Completed -->
+      <div class="toolbar" style="margin-bottom:20px;">
+        <button class="btn btn-primary btn-sm" data-task-filter="all">All Tasks</button>
+        <button class="btn btn-outline btn-sm" data-task-filter="pending">Pending</button>
+        <button class="btn btn-outline btn-sm" data-task-filter="overdue">Overdue ⚠</button>
+        <button class="btn btn-outline btn-sm" data-task-filter="completed">Completed</button>
+      </div>
+
+      <div class="task-list" id="tasks-list"><!-- renderTasks() --></div>
+    </div><!-- /view-tasks -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 8 — APPOINTMENTS
+         Upcoming appointments grouped by date.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-appointments" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Appointments</h2>
+          <p>Upcoming scheduled appointments for your patients (next 14 days).</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-appt')">+ Schedule Appointment</button>
+      </div>
+
+      <!-- Calendar view toggle (prototype: list view only) -->
+      <div class="toolbar" style="margin-bottom:20px;">
+        <button class="btn btn-primary btn-sm">📋 List View</button>
+        <button class="btn btn-outline btn-sm" onclick="showToast('Calendar view coming in Phase 4 build', 'info')">📅 Calendar View</button>
+        <select class="filter-select" style="margin-left:auto;" onchange="showToast('Filter applied: '+this.value,'info')">
+          <option value="">All Types</option>
+          <option>FollowUp</option>
+          <option>Telehealth</option>
+          <option>Initial</option>
+          <option>Procedure</option>
+        </select>
+      </div>
+
+      <div id="appt-list"><!-- renderAppointments() --></div>
+    </div><!-- /view-appointments -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 9 — FHIR EXPLORER
+         View a patient's FHIR R4 Bundle from the /fhir/R4/ endpoint.
+         This makes the portfolio stand out — HL7 FHIR interoperability.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-fhir" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>FHIR Explorer <span class="badge badge-teal" style="font-size:12px;vertical-align:middle;">R4</span></h2>
+          <p>HL7 FHIR R4 API facade. View patient bundles as they appear from the <code>/fhir/R4/</code> endpoints.</p>
+        </div>
+        <button class="btn btn-outline" onclick="showToast('CapabilityStatement endpoint: GET /fhir/R4/metadata', 'info')">
+          📜 View CapabilityStatement
+        </button>
+      </div>
+
+      <!-- Info card explaining what FHIR is (for portfolio reviewers) -->
+      <div class="alert alert-info" style="margin-bottom:20px;">
+        <span style="font-size:18px;">ℹ️</span>
+        <div>
+          <strong>FHIR R4 Integration:</strong> This app exposes a read-only FHIR facade built with the
+          <strong>Firely .NET SDK (Hl7.Fhir.R4)</strong>. Patient data is mapped on-the-fly from SQL Server
+          to FHIR R4 resources — no separate FHIR store needed. Supports Patient, Encounter, Task, Appointment
+          and DocumentReference resources, plus the <code>$everything</code> operation.
+        </div>
+      </div>
+
+      <div class="dashboard-grid" style="margin-bottom:0;">
+
+        <!-- Left: Patient selector + endpoint info + copy button -->
+        <div>
+          <div class="card">
+            <div class="card-header"><h3>Select Patient</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Patient</label>
+                <select class="form-control" id="fhir-patient-select">
+                  <!-- populated by renderFhir() -->
+                </select>
+              </div>
+              <div style="margin-top:12px;font-size:13px;">
+                <div style="color:var(--muted);margin-bottom:4px;">Endpoint being called:</div>
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+                            padding:8px 12px;font-family:monospace;font-size:12px;color:var(--accent);">
+                  <span id="fhir-endpoint">GET /fhir/R4/Patient/pat-001/$everything</span>
+                </div>
+              </div>
+
+              <!-- FHIR resource quick-links -->
+              <div style="margin-top:16px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Quick Resource Links</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <button class="btn btn-sm btn-outline" onclick="showToast('GET /fhir/R4/Patient — returns all patients','info')">Patient</button>
+                  <button class="btn btn-sm btn-outline" onclick="showToast('GET /fhir/R4/Encounter — returns all cases','info')">Encounter</button>
+                  <button class="btn btn-sm btn-outline" onclick="showToast('GET /fhir/R4/Task — returns all tasks','info')">Task</button>
+                  <button class="btn btn-sm btn-outline" onclick="showToast('GET /fhir/R4/Appointment — returns appointments','info')">Appointment</button>
+                  <button class="btn btn-sm btn-outline" onclick="showToast('GET /fhir/R4/DocumentReference — returns documents','info')">DocumentReference</button>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">Patient:</div>
+                <div style="font-weight:600;" id="fhir-patient-name">Sarah Johnson — MRN-2026-00001</div>
+              </div>
+
+              <div class="fhir-toolbar" style="margin-top:16px;">
+                <button class="btn btn-accent btn-sm" id="fhir-copy-btn">📋 Copy JSON</button>
+                <button class="btn btn-outline btn-sm"
+                        onclick="openModal('modal-fhir-import')">
+                  ⬆ Import Patient
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: syntax-highlighted FHIR JSON panel -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h3>FHIR R4 Bundle — $everything</h3>
+              <span style="font-size:11px;color:var(--muted);">4 resources · 2.1 KB</span>
+            </div>
+            <pre class="fhir-panel" id="fhir-json-panel"><!-- renderFhir() --></pre>
+          </div>
+        </div>
+      </div>
+    </div><!-- /view-fhir -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 10 — REPORTS
+         Case volume bar chart + status donut chart + summary stats.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-reports" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Reports &amp; Analytics</h2>
+          <p>Operational metrics and case management performance data.</p>
+        </div>
+        <button class="btn btn-outline" onclick="showToast('CSV export triggered — real app: GET /api/reports/export?format=csv', 'success')">
+          ⬇ Export CSV
+        </button>
+      </div>
+
+      <!-- Summary KPI row -->
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-value" id="rpt-total-cases">—</div>
+          <div class="stat-label">Total Cases (YTD)</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="rpt-total-patients">—</div>
+          <div class="stat-label">Active Patients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="rpt-avg-days">—</div>
+          <div class="stat-label">Avg Days to Close</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-value" id="rpt-closed-rate">—</div>
+          <div class="stat-label">Goal Achievement Rate</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <!-- Bar chart: Cases opened per month -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Cases Opened Per Month</h3>
+            <span style="font-size:12px;color:var(--muted);">Jan–Jun 2026</span>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart" id="bar-chart"><!-- renderReports() --></div>
+          </div>
+        </div>
+
+        <!-- Donut chart: Case status breakdown -->
+        <div class="card">
+          <div class="card-header"><h3>Cases by Status</h3></div>
+          <div class="card-body">
+            <div class="donut-wrap">
+              <svg id="donut-svg" width="120" height="120" viewBox="0 0 120 120"><!-- renderReports() --></svg>
+              <div class="donut-legend" id="donut-legend"><!-- renderReports() --></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second row: Priority breakdown table -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header"><h3>Cases by Priority — Current Snapshot</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Priority</th><th>Count</th><th>% of Total</th><th>Volume</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-critical">Critical</span></td><td>1</td><td>17%</td>
+                  <td><div class="progress-bar"><div class="progress-fill red" style="width:17%"></div></div></td></tr>
+              <tr><td><span class="badge badge-high">High</span></td><td>3</td><td>50%</td>
+                  <td><div class="progress-bar"><div class="progress-fill orange" style="width:50%"></div></div></td></tr>
+              <tr><td><span class="badge badge-medium">Medium</span></td><td>2</td><td>33%</td>
+                  <td><div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-reports -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 11 — ADMIN: USER MANAGEMENT
+         Full user table with role badges and activate/deactivate.
+         Requires Admin or Supervisor role in the real app (RBAC guard).
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-admin-users" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>User Management</h2>
+          <p>Manage system users, roles, and permissions. Requires Admin role.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-user')">+ Invite User</button>
+      </div>
+
+      <!-- Role legend -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+        <span style="font-size:12px;color:var(--muted);align-self:center;">Roles:</span>
+        <span class="badge badge-critical">Admin</span>
+        <span class="badge badge-orange">Supervisor</span>
+        <span class="badge badge-blue">CareCoordinator</span>
+        <span class="badge badge-teal">Clinician</span>
+        <span class="badge badge-gray">ReadOnly</span>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>User</th><th>Role</th><th>Department</th><th>Status</th><th>Last Login</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="users-tbody"><!-- renderAdminUsers() --></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-admin-users -->
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SCREEN 12 — AUDIT LOG
+         Immutable log of all user actions. HIPAA compliance record.
+         Colour-coded: yellow=write, red=delete, green=auth, white=read.
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="view-audit" class="view">
+
+      <div class="page-header">
+        <div>
+          <h2>Audit Log</h2>
+          <p>
+            Immutable record of all user actions for HIPAA compliance. Stored in Azure SQL + Application Insights.
+          </p>
+        </div>
+        <button class="btn btn-outline" onclick="showToast('Audit export triggered — real app: GET /api/audit/export', 'success')">
+          ⬇ Export Audit CSV
+        </button>
+      </div>
+
+      <!-- Filter toolbar -->
+      <div class="toolbar" style="margin-bottom:16px;">
+        <select class="filter-select" onchange="showToast('Filter: '+this.value, 'info')">
+          <option value="">All Actions</option>
+          <option>VIEW</option>
+          <option>CREATE</option>
+          <option>UPDATE</option>
+          <option>DELETE</option>
+          <option>LOGIN</option>
+          <option>EXPORT</option>
+        </select>
+        <select class="filter-select" onchange="showToast('Filter: '+this.value, 'info')">
+          <option value="">All Users</option>
+          <option>Maria Santos</option>
+          <option>James Rodriguez</option>
+          <option>Priya Nair</option>
+          <option>Thomas Grant</option>
+        </select>
+        <input type="date" class="filter-select" value="2026-06-22">
+        <input type="date" class="filter-select" value="2026-06-22">
+      </div>
+
+      <!-- Colour coding legend -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;align-items:center;">
+        <span style="color:var(--muted);">Row colours:</span>
+        <span>⬜ Read / View</span>
+        <span style="background:#FFFDE7;padding:2px 6px;border-radius:3px;">🟡 Write / Update</span>
+        <span style="background:#FFEBEE;padding:2px 6px;border-radius:3px;">🔴 Delete</span>
+        <span style="background:#E8F5E9;padding:2px 6px;border-radius:3px;">🟢 Auth / Login</span>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Timestamp</th><th>User</th><th>Action</th><th>Resource</th><th>Detail</th></tr>
+            </thead>
+            <tbody id="audit-tbody"><!-- renderAudit() --></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /view-audit -->
+
+  </main><!-- /main-content -->
+</div><!-- /app-shell -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MODAL DIALOGS
+     Overlays that slide in over the current view.
+     openModal(id) / closeModal(id) controlled by app.js.
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<!-- MODAL: Add New Patient -->
+<div class="modal-overlay" id="modal-add-patient">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Patient</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-patient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/patients  -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name <span class="required">*</span></label>
+          <input class="form-control" type="text" placeholder="Sarah">
+        </div>
+        <div class="form-group">
+          <label>Last Name <span class="required">*</span></label>
+          <input class="form-control" type="text" placeholder="Johnson">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date of Birth <span class="required">*</span></label>
+          <input class="form-control" type="date">
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select class="form-control">
+            <option>Female</option><option>Male</option>
+            <option>Non-binary</option><option>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone</label>
+          <input class="form-control" type="tel" placeholder="(555) 000-0000">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input class="form-control" type="email" placeholder="patient@email.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input class="form-control" type="text" placeholder="Street, City, State ZIP">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Insurance Provider</label>
+          <input class="form-control" type="text" placeholder="BlueCross BlueShield">
+        </div>
+        <div class="form-group">
+          <label>Insurance Member ID</label>
+          <input class="form-control" type="text" placeholder="BCB-000-000000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Primary Diagnosis / Conditions</label>
+        <textarea class="form-control" rows="2" placeholder="e.g. Type 2 Diabetes, Hypertension"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Risk Level</label>
+        <select class="form-control">
+          <option>Low</option><option>Medium</option>
+          <option>High</option><option>Critical</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-patient')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-patient'); showToast('Patient added successfully (MRN will be auto-generated)', 'success')">
+        Save Patient
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Create Case -->
+<div class="modal-overlay" id="modal-create-case">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Create New Case</h3>
+      <button class="modal-close" onclick="closeModal('modal-create-case')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/cases  -->
+      <div class="form-group">
+        <label>Patient <span class="required">*</span></label>
+        <select class="form-control">
+          <option value="">— Select Patient —</option>
+          <option>Sarah Johnson (MRN-2026-00001)</option>
+          <option>Robert Chen (MRN-2026-00002)</option>
+          <option>Linda Patel (MRN-2026-00003)</option>
+          <option>Marcus Williams (MRN-2026-00004)</option>
+          <option>Emily Torres (MRN-2026-00005)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Case Title <span class="required">*</span></label>
+        <input class="form-control" type="text" placeholder="e.g. Post-Discharge Follow-Up — CHF Management">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select class="form-control">
+            <option>Chronic Disease Management</option>
+            <option>Transition of Care</option>
+            <option>Specialty Referral</option>
+            <option>Mental Health</option>
+            <option>Behavioral &amp; Social Support</option>
+            <option>Palliative Care</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority <span class="required">*</span></label>
+          <select class="form-control">
+            <option>Low</option><option selected>Medium</option>
+            <option>High</option><option>Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Assigned Coordinator</label>
+          <select class="form-control">
+            <option>Maria Santos</option>
+            <option>James Rodriguez</option>
+            <option>Priya Nair</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Target Close Date</label>
+          <input class="form-control" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Case Summary</label>
+        <textarea class="form-control" rows="3" placeholder="Describe the care coordination need and initial plan…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-create-case')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-create-case'); showToast('Case created: CASE-2026-00007', 'success')">
+        Create Case
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Note to Case -->
+<div class="modal-overlay" id="modal-add-note">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Case Note</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-note')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/cases/{id}/notes  -->
+      <div class="form-group">
+        <label>Note Type</label>
+        <select class="form-control">
+          <option>Progress Note</option>
+          <option>Phone Call</option>
+          <option>Care Conference</option>
+          <option>Clinical Observation</option>
+          <option>Administrative</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note <span class="required">*</span></label>
+        <textarea class="form-control" rows="5" placeholder="Document your interaction, observations, or plan update…"></textarea>
+        <div class="form-hint">⚠ Do not include unnecessary PHI. Notes are stored encrypted and included in audit logs.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-note')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-note'); showToast('Note saved to case', 'success')">
+        Save Note
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Task -->
+<div class="modal-overlay" id="modal-add-task">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Task</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-task')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/tasks  -->
+      <div class="form-group">
+        <label>Task Title <span class="required">*</span></label>
+        <input class="form-control" type="text" placeholder="e.g. Schedule rheumatology referral">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Assign To</label>
+          <select class="form-control">
+            <option>Maria Santos</option>
+            <option>James Rodriguez</option>
+            <option>Priya Nair</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due Date <span class="required">*</span></label>
+          <input class="form-control" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select class="form-control">
+          <option>Low</option><option selected>Medium</option>
+          <option>High</option><option>Critical</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea class="form-control" rows="2" placeholder="Optional task details…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-task'); showToast('Task created and assigned', 'success')">
+        Create Task
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Schedule Appointment -->
+<div class="modal-overlay" id="modal-add-appt">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Schedule Appointment</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-appt')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/appointments (includes conflict detection) -->
+      <div class="form-group">
+        <label>Patient <span class="required">*</span></label>
+        <select class="form-control">
+          <option>— Select Patient —</option>
+          <option>Sarah Johnson</option>
+          <option>Robert Chen</option>
+          <option>Linda Patel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Appointment Title <span class="required">*</span></label>
+        <input class="form-control" type="text" placeholder="e.g. Endocrinology Follow-Up — A1C Review">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select class="form-control">
+            <option>FollowUp</option><option>Initial</option>
+            <option>Telehealth</option><option>Procedure</option><option>LabWork</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Provider</label>
+          <input class="form-control" type="text" placeholder="Dr. Angela Kim">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date <span class="required">*</span></label>
+          <input class="form-control" type="date">
+        </div>
+        <div class="form-group">
+          <label>Time <span class="required">*</span></label>
+          <input class="form-control" type="time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input class="form-control" type="text" placeholder="Suite 400, Medical Pavilion / Video Call">
+      </div>
+      <div class="form-hint" style="margin-top:4px;">
+        ⚙ Conflict detection runs automatically — overlapping appointments will be flagged before saving.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-appt')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-appt'); showToast('Appointment scheduled — confirmation sent to patient', 'success')">
+        Schedule
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Invite User (Admin) -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Invite User</h3>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Real app: POST /api/admin/users — sends invite email via SendGrid -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name <span class="required">*</span></label>
+          <input class="form-control" type="text" placeholder="Jane">
+        </div>
+        <div class="form-group">
+          <label>Last Name <span class="required">*</span></label>
+          <input class="form-control" type="text" placeholder="Doe">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Work Email <span class="required">*</span></label>
+        <input class="form-control" type="email" placeholder="jane.doe@hcms.org">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role <span class="required">*</span></label>
+          <select class="form-control">
+            <option>CareCoordinator</option>
+            <option>Clinician</option>
+            <option>Supervisor</option>
+            <option>ReadOnly</option>
+            <option>Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <input class="form-control" type="text" placeholder="Case Management – Unit A">
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-top:8px;">
+        ℹ An invitation email with a secure setup link will be sent to the user. The link expires in 48 hours.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-user'); showToast('Invitation sent to jane.doe@hcms.org', 'success')">
+        Send Invitation
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: FHIR Patient Import ─────────────────────────────────────
+     Simulates POST /fhir/R4/Patient
+     User pastes a FHIR R4 Patient JSON → app validates, maps fields,
+     shows a preview, then on confirm creates the patient in the system.
+     ─────────────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-fhir-import">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>
+        Import Patient from FHIR
+        <span class="badge badge-teal" style="font-size:11px;vertical-align:middle;margin-left:6px;">R4</span>
+      </h3>
+      <button class="modal-close" onclick="closeModal('modal-fhir-import')">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Step explanation — what this modal does in plain English -->
+      <div class="alert alert-info" style="margin-bottom:20px;">
+        <span style="font-size:18px;">ℹ️</span>
+        <div>
+          <strong>What this does:</strong> Paste a FHIR R4 Patient resource from any external system
+          (Epic, Cerner, a referring clinic). The app reads the standard fields, maps them to your
+          internal patient schema, assigns a new MRN, and creates the patient record — no manual
+          data entry needed.
+          <br><br>
+          <span style="font-size:12px;color:var(--muted);">
+            Real app endpoint: <code>POST /fhir/R4/Patient</code> ·
+            Validated by Firely .NET SDK · Logged in FhirImportLogs table
+          </span>
+        </div>
+      </div>
+
+      <!-- Step 1: Paste JSON -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label style="font-weight:600;font-size:13px;">
+          Step 1 — Paste FHIR R4 Patient JSON
+        </label>
+        <!-- Fills textarea with the SAMPLE_FHIR_PATIENT from data.js -->
+        <button class="btn btn-sm btn-outline" onclick="fillSampleFhirPatient()">
+          📋 Use Sample Patient (David Nguyen from Epic)
+        </button>
+      </div>
+
+      <textarea id="fhir-import-input"
+                style="width:100%;height:200px;font-family:monospace;font-size:12px;
+                       background:#1E1E2E;color:#CDD6F4;border:1px solid var(--border);
+                       border-radius:var(--radius);padding:14px;resize:vertical;line-height:1.6;"
+                placeholder='{
+  "resourceType": "Patient",
+  "id": "...",
+  "name": [{ "family": "Smith", "given": ["John"] }],
+  "gender": "male",
+  "birthDate": "1970-01-15",
+  "telecom": [{ "system": "phone", "value": "(555) 000-0000" }],
+  "address": [{ "text": "123 Main St, Chicago, IL 60601" }]
+}'></textarea>
+
+      <!-- Error message (shown if JSON is invalid or wrong resourceType) -->
+      <div id="fhir-import-error"
+           style="display:none;margin-top:10px;padding:10px 14px;background:#FFEBEE;
+                  color:#C62828;border-radius:var(--radius);font-size:13px;border-left:3px solid #C62828;">
+      </div>
+
+      <!-- Step 2: Parse button -->
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="parseFhirImport()">
+          🔍 Step 2 — Parse &amp; Preview Import
+        </button>
+        <span style="font-size:12px;color:var(--muted);margin-left:10px;">
+          Validates the JSON and shows exactly which fields will be mapped before anything is saved.
+        </span>
+      </div>
+
+      <!-- Step 3: Field mapping preview (hidden until parse succeeds) -->
+      <div id="fhir-import-preview"
+           style="display:none;margin-top:20px;border:1px solid var(--border);
+                  border-radius:var(--radius);overflow:hidden;">
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-fhir-import')">Cancel</button>
+      <!-- Disabled until parse succeeds; onclick calls confirmFhirImport() in app.js -->
+      <button id="fhir-confirm-btn" class="btn btn-accent" disabled onclick="confirmFhirImport()">
+        ✓ Confirm Import &amp; Create Patient
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     TOAST CONTAINER
+     Fixed bottom-right. Toasts injected here by showToast() in app.js.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+
+<!-- Scripts: load data first, then app logic -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

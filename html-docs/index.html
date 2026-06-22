@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCMS — Project Overview</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a href="index.html" class="brand"><span class="icon">🏥</span> HCMS Docs</a>
+  <a href="index.html" class="active">Overview</a>
+  <a href="product-requirements.html">Product Requirements</a>
+  <a href="phase-tracker.html">Phase Tracker</a>
+</nav>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <span class="sb-label">On this page</span>
+    <a href="#overview">Project Overview</a>
+    <a href="#tech-stack">Tech Stack</a>
+    <a href="#modules">12 Modules</a>
+    <a href="#phases">Build Phases</a>
+    <a href="#azure">Azure Architecture</a>
+    <a href="#personas">User Personas</a>
+    <span class="sb-label">Documents</span>
+    <a href="product-requirements.html">→ Product Requirements</a>
+    <a href="phase-tracker.html">→ Phase Tracker</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero">
+      <h1>Healthcare Case Management System</h1>
+      <p class="sub">Enterprise portfolio project demonstrating Angular · .NET 8 Clean Architecture · Azure · FHIR R4</p>
+      <div class="meta">
+        <div class="meta-item"><span class="dot"></span> Portfolio Project</div>
+        <div class="meta-item">📅 Started: June 2026</div>
+        <div class="meta-item">⏱ Est. Duration: 16 weeks (part-time)</div>
+        <div class="meta-item">📋 8 Build Phases</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">13</div>
+        <div class="stat-label">System Modules</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-number">20+</div>
+        <div class="stat-label">Database Tables</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-number">55+</div>
+        <div class="stat-label">API Endpoints</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-number">185</div>
+        <div class="stat-label">Tracked Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">54</div>
+        <div class="stat-label">Functional Requirements</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-number">R4</div>
+        <div class="stat-label">FHIR Standard</div>
+      </div>
+    </div>
+
+    <!-- TECH STACK -->
+    <h2 id="tech-stack"><span class="num">01</span> Tech Stack</h2>
+    <div class="card">
+      <h3 style="margin-top:0">Frontend</h3>
+      <div class="stack-pills">
+        <span class="pill pill-blue">Angular 17+</span>
+        <span class="pill pill-blue">Angular Material</span>
+        <span class="pill pill-blue">NgRx Store</span>
+        <span class="pill pill-blue">TypeScript</span>
+        <span class="pill pill-blue">Chart.js / ng2-charts</span>
+        <span class="pill pill-blue">ngx-json-viewer</span>
+        <span class="pill pill-gray">Reactive Forms</span>
+        <span class="pill pill-gray">Lazy Loaded Modules</span>
+      </div>
+
+      <h3>Backend</h3>
+      <div class="stack-pills">
+        <span class="pill pill-purple">.NET 8 Web API</span>
+        <span class="pill pill-purple">Clean Architecture</span>
+        <span class="pill pill-purple">EF Core</span>
+        <span class="pill pill-purple">MediatR (CQRS)</span>
+        <span class="pill pill-purple">FluentValidation</span>
+        <span class="pill pill-purple">Serilog</span>
+        <span class="pill pill-teal">Hl7.Fhir.R4 (Firely SDK)</span>
+        <span class="pill pill-teal">NHapi (HL7 v2, stretch)</span>
+      </div>
+
+      <h3>Database</h3>
+      <div class="stack-pills">
+        <span class="pill pill-gray">SQL Server 2022 (local)</span>
+        <span class="pill pill-blue">Azure SQL Database</span>
+      </div>
+
+      <h3>Azure Services</h3>
+      <div class="stack-pills">
+        <span class="pill pill-blue">App Service (.NET API)</span>
+        <span class="pill pill-blue">Static Web Apps (Angular)</span>
+        <span class="pill pill-blue">Azure SQL</span>
+        <span class="pill pill-blue">Blob Storage</span>
+        <span class="pill pill-blue">Key Vault</span>
+        <span class="pill pill-blue">Application Insights</span>
+        <span class="pill pill-blue">Azure Monitor</span>
+      </div>
+
+      <h3>DevOps</h3>
+      <div class="stack-pills">
+        <span class="pill pill-dark">GitHub Actions CI/CD</span>
+        <span class="pill pill-dark">xUnit + WebApplicationFactory</span>
+        <span class="pill pill-dark">Playwright E2E</span>
+        <span class="pill pill-dark">OWASP ZAP</span>
+      </div>
+    </div>
+
+    <!-- MODULES -->
+    <h2 id="modules"><span class="num">02</span> System Modules</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <div class="feature-title">Identity &amp; Access</div>
+        <div class="feature-desc">JWT auth, refresh token rotation, RBAC (5 roles), account lockout, rate limiting</div>
+      </div>
+      <div class="feature-card teal">
+        <div class="feature-icon">👤</div>
+        <div class="feature-title">Patient Management</div>
+        <div class="feature-desc">Registration, MRN generation, demographic &amp; insurance management, paginated search</div>
+      </div>
+      <div class="feature-card green">
+        <div class="feature-icon">📁</div>
+        <div class="feature-title">Case Management</div>
+        <div class="feature-desc">Full case lifecycle (Draft → Closed/Escalated), status machine, tags, case history</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <div class="feature-title">Case Notes</div>
+        <div class="feature-desc">Append-only clinical notes, 24h edit window, immutable after lock</div>
+      </div>
+      <div class="feature-card purple">
+        <div class="feature-icon">✅</div>
+        <div class="feature-title">Task Management</div>
+        <div class="feature-desc">Case-scoped tasks, assignee, due dates, overdue detection, status transitions</div>
+      </div>
+      <div class="feature-card yellow">
+        <div class="feature-icon">📄</div>
+        <div class="feature-title">Document Management</div>
+        <div class="feature-desc">Azure Blob upload (≤20 MB), 1-hour SAS download URLs, soft delete, categories</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <div class="feature-title">Appointments</div>
+        <div class="feature-desc">Scheduling, provider conflict detection, 4 appointment types, 5 status transitions</div>
+      </div>
+      <div class="feature-card teal">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Care Team</div>
+        <div class="feature-desc">Per-case team composition, lead coordinator + specialists, audit-logged changes</div>
+      </div>
+      <div class="feature-card green">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Dashboard &amp; Reports</div>
+        <div class="feature-desc">3 role-specific dashboards, Chart.js widgets, CSV export for all report types</div>
+      </div>
+      <div class="feature-card red">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">Audit Log</div>
+        <div class="feature-desc">Immutable HIPAA-aligned event log — entity, action, old/new JSON, user, IP, timestamp</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <div class="feature-title">Notifications</div>
+        <div class="feature-desc">In-app bell, unread badge, trigger engine (case assign, task overdue, escalation)</div>
+      </div>
+      <div class="feature-card purple">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">Administration</div>
+        <div class="feature-desc">User management, role assignment, audit log viewer (admin only)</div>
+      </div>
+      <div class="feature-card teal" style="border-top-color:#0d9488; position:relative;">
+        <span class="badge badge-teal" style="position:absolute;top:.75rem;right:.75rem;font-size:.6rem">NEW</span>
+        <div class="feature-icon">⚕️</div>
+        <div class="feature-title">FHIR/HL7 Integration</div>
+        <div class="feature-desc">FHIR R4 REST facade, Patient/$everything Bundle, import/export, HL7 v2 ADT+ORU receiver (stretch)</div>
+      </div>
+    </div>
+
+    <!-- PHASES -->
+    <h2 id="phases"><span class="num">03</span> Build Phases</h2>
+    <div class="callout callout-info">
+      <strong>Status:</strong> Phase 1 not yet started. All 185 tasks remain.
+      Total estimated duration: <strong>~16 weeks part-time</strong> / ~8 weeks full-time.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Phase</th><th>Duration</th><th>Deliverable</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Foundation &amp; Infrastructure</strong></td><td>2 wks</td><td>Deployable skeleton with auth</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>2</td><td><strong>Patient &amp; Case Core</strong></td><td>3 wks</td><td>Full case lifecycle working</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>3</td><td><strong>Documents, Tasks &amp; Notes</strong></td><td>2 wks</td><td>Blob upload + task management</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>4</td><td><strong>Appointments &amp; Scheduling</strong></td><td>2 wks</td><td>Calendar and booking</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>5</td><td><strong>FHIR/HL7 Integration</strong> <span class="badge badge-teal" style="margin-left:4px">FHIR R4</span></td><td>2 wks</td><td>FHIR API, resource mapping, Bundle export/import</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>6</td><td><strong>Dashboards &amp; Reports</strong></td><td>2 wks</td><td>All dashboards + CSV export</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>7</td><td><strong>Notifications &amp; Audit UI</strong></td><td>1 wk</td><td>Notification bell + audit log viewer</td><td class="status-ns">Not Started</td></tr>
+          <tr><td>8</td><td><strong>Testing, Security &amp; Polish</strong></td><td>2 wks</td><td>Production-ready quality bar</td><td class="status-ns">Not Started</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- AZURE ARCHITECTURE -->
+    <h2 id="azure"><span class="num">04</span> Azure Architecture</h2>
+    <div class="arch">┌─────────────────────────────────────────────────────────────────────┐
+│                        GitHub Actions CI/CD                          │
+│  Build → Test → Publish → Deploy (dev → staging → prod)             │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                 ▼
+  ┌──────────────────┐  ┌─────────────┐  ┌──────────────────┐
+  │ Azure Static     │  │ Azure App   │  │  Azure SQL        │
+  │ Web Apps         │  │ Service     │  │  Database         │
+  │ (Angular SPA)    │  │ (.NET 8 API)│  │  (S2 tier)        │
+  └────────┬─────────┘  └──────┬──────┘  └──────────────────┘
+           │ HTTPS             │ HTTPS             ▲
+           │                   │ (Managed          │
+           │                   │  Identity)        │ EF Core
+           │                   ▼                   │
+           │           ┌──────────────────┐        │
+           └──────────►│  Azure Key Vault  │        │
+                       │  - JWT secret     │────────┘
+                       │  - SQL conn str   │
+                       │  - Blob conn str  │
+                       └──────────────────┘
+                                │
+                ┌───────────────┼────────────────┐
+                ▼               ▼                 ▼
+     ┌──────────────────┐  ┌──────────────┐  ┌───────────────┐
+     │  Azure Blob      │  │  Application │  │  Azure        │
+     │  Storage         │  │  Insights    │  │  Monitor      │
+     │  (case-documents)│  │  (traces,    │  │  (alerts,     │
+     │  private         │  │   metrics,   │  │   dashboards) │
+     └──────────────────┘  │   logs)      │  └───────────────┘
+                           └──────────────┘</div>
+
+    <div class="card" style="margin-top:0.5rem">
+      <strong>Resource Naming:</strong> <code>hcm-{env}-{resource}</code>
+      &nbsp;·&nbsp; e.g. <code>hcm-prod-api</code>, <code>hcm-prod-sql</code>, <code>hcm-prod-kv</code><br><br>
+      <strong>Environments:</strong>
+      <span class="badge badge-gray" style="margin:0 4px">dev — SQL LocalDB</span>
+      <span class="badge badge-yellow" style="margin:0 4px">staging — Azure Free/Basic</span>
+      <span class="badge badge-green" style="margin:0 4px">prod — Azure Standard</span>
+    </div>
+
+    <!-- USER PERSONAS -->
+    <h2 id="personas"><span class="num">05</span> User Personas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Persona</th><th>Role</th><th>Primary Need</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Care Coordinator</strong></td><td>Manages patient case lifecycle</td><td>Create/update cases, assign tasks, track status</td></tr>
+          <tr><td><strong>Clinician / Provider</strong></td><td>Delivers patient care</td><td>View case notes, update clinical findings</td></tr>
+          <tr><td><strong>Case Supervisor</strong></td><td>Oversees team workload</td><td>Monitor caseloads, reassign, approve escalations</td></tr>
+          <tr><td><strong>Administrator</strong></td><td>Manages system configuration</td><td>User/role management, audit logs, reports</td></tr>
+          <tr><td><strong>Patient</strong> <span class="badge badge-gray">Future</span></td><td>Receives care</td><td>Self-service portal, appointment visibility</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <h2><span class="num">06</span> Documentation</h2>
+    <div class="feature-grid" style="grid-template-columns:repeat(2,1fr)">
+      <a href="product-requirements.html" style="text-decoration:none">
+        <div class="feature-card green" style="cursor:pointer">
+          <div class="feature-icon">📋</div>
+          <div class="feature-title">Product Requirements</div>
+          <div class="feature-desc">Vision, 54 functional requirements, DB schema (20+ tables), 55+ API endpoints, Angular modules, Azure config, risks &amp; assumptions</div>
+        </div>
+      </a>
+      <a href="phase-tracker.html" style="text-decoration:none">
+        <div class="feature-card purple" style="cursor:pointer">
+          <div class="feature-icon">🗺️</div>
+          <div class="feature-title">Phase Tracker</div>
+          <div class="feature-desc">8-phase interactive roadmap with 185 checkboxes, progress bars, Definitions of Done, and backlog — tracks completion in your browser</div>
+        </div>
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<button id="back-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer>
+  Healthcare Case Management System &mdash; Portfolio Project &nbsp;·&nbsp; Stack: Angular · .NET 8 · Azure · FHIR R4
+</footer>
+
+<script>
+  // Scroll spy
+  const links = document.querySelectorAll('.sidebar a[href^="#"]');
+  const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 90;
+    let active = sections[0];
+    sections.forEach(s => { if (s.offsetTop <= y) active = s; });
+    links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + active.id));
+    document.getElementById('back-top').classList.toggle('show', window.scrollY > 300);
+  }, { passive: true });
+</script>
+</body>
+</html>

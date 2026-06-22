@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCMS — Phase Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="brand"><span class="icon">🏥</span> HCMS Docs</a>
+  <a href="index.html">Overview</a>
+  <a href="product-requirements.html">Product Requirements</a>
+  <a href="phase-tracker.html" class="active">Phase Tracker</a>
+</nav>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <span class="sb-label">Phases</span>
+    <a href="#overview">Overview &amp; Progress</a>
+    <a href="#phase1">Phase 1 — Foundation</a>
+    <a href="#phase2">Phase 2 — Patient &amp; Case</a>
+    <a href="#phase3">Phase 3 — Docs &amp; Tasks</a>
+    <a href="#phase4">Phase 4 — Appointments</a>
+    <a href="#phase5">Phase 5 — FHIR/HL7</a>
+    <a href="#phase6">Phase 6 — Dashboards</a>
+    <a href="#phase7">Phase 7 — Notifications</a>
+    <a href="#phase8">Phase 8 — Testing &amp; Polish</a>
+    <span class="sb-label">More</span>
+    <a href="#backlog">Backlog</a>
+    <a href="#summary">Progress Summary</a>
+    <span class="sb-label">Actions</span>
+    <a href="#" id="reset-all" style="color:var(--danger)">Reset All Checkboxes</a>
+  </aside>
+
+  <main class="main">
+
+    <div style="margin-bottom:1.75rem">
+      <h1>Phase Tracker</h1>
+      <p style="color:var(--text-muted);font-size:.9rem">
+        Interactive checklist — your progress is saved in the browser automatically.
+        &nbsp;<span id="total-pct" class="badge badge-blue">0 / 185 tasks</span>
+      </p>
+    </div>
+
+    <!-- OVERALL PROGRESS -->
+    <div class="card" id="overview">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <strong>Overall Project Progress</strong>
+        <span id="overall-label" style="font-size:.82rem;color:var(--text-muted)">0%</span>
+      </div>
+      <div class="progress-bar" style="height:12px">
+        <div class="progress-fill" id="overall-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- PHASE OVERVIEW TABLE -->
+    <div class="table-wrap" style="margin-top:1.5rem">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Phase</th><th>Duration</th><th>Tasks</th><th>Progress</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><a href="#phase1" style="color:inherit;font-weight:600">Foundation &amp; Infrastructure</a></td><td>2 wks</td><td id="cnt1">0/29</td><td style="min-width:140px"><div class="progress-bar"><div class="progress-fill" id="bar1" style="width:0%"></div></div></td></tr>
+          <tr><td>2</td><td><a href="#phase2" style="color:inherit;font-weight:600">Patient &amp; Case Core</a></td><td>3 wks</td><td id="cnt2">0/38</td><td><div class="progress-bar"><div class="progress-fill" id="bar2" style="width:0%"></div></div></td></tr>
+          <tr><td>3</td><td><a href="#phase3" style="color:inherit;font-weight:600">Documents, Tasks &amp; Notes</a></td><td>2 wks</td><td id="cnt3">0/22</td><td><div class="progress-bar"><div class="progress-fill" id="bar3" style="width:0%"></div></div></td></tr>
+          <tr><td>4</td><td><a href="#phase4" style="color:inherit;font-weight:600">Appointments &amp; Scheduling</a></td><td>2 wks</td><td id="cnt4">0/16</td><td><div class="progress-bar"><div class="progress-fill" id="bar4" style="width:0%"></div></div></td></tr>
+          <tr><td>5</td><td><a href="#phase5" style="color:inherit;font-weight:600">FHIR/HL7 Integration</a> <span class="badge badge-teal">FHIR R4</span></td><td>2 wks</td><td id="cnt5">0/24</td><td><div class="progress-bar"><div class="progress-fill" id="bar5" style="width:0%"></div></div></td></tr>
+          <tr><td>6</td><td><a href="#phase6" style="color:inherit;font-weight:600">Dashboards &amp; Reports</a></td><td>2 wks</td><td id="cnt6">0/20</td><td><div class="progress-bar"><div class="progress-fill" id="bar6" style="width:0%"></div></div></td></tr>
+          <tr><td>7</td><td><a href="#phase7" style="color:inherit;font-weight:600">Notifications &amp; Audit UI</a></td><td>1 wk</td><td id="cnt7">0/14</td><td><div class="progress-bar"><div class="progress-fill" id="bar7" style="width:0%"></div></div></td></tr>
+          <tr><td>8</td><td><a href="#phase8" style="color:inherit;font-weight:600">Testing, Security &amp; Polish</a></td><td>2 wks</td><td id="cnt8">0/22</td><td><div class="progress-bar"><div class="progress-fill" id="bar8" style="width:0%"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─── PHASE 1 ─────────────────────────────── -->
+    <div class="phase-section" id="phase1">
+      <div class="phase-header">
+        <span class="phase-num">Phase 1</span>
+        <span class="phase-title">Foundation &amp; Infrastructure</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 29 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: A deployable, authenticated skeleton. Login works end-to-end in Azure. CI/CD pipeline is green. Nothing else.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="1">
+            <li><input type="checkbox" id="p1-b1"><label for="p1-b1">Create solution with Clean Architecture projects: <code>HCM.Domain</code>, <code>HCM.Application</code>, <code>HCM.Infrastructure</code>, <code>HCM.API</code></label></li>
+            <li><input type="checkbox" id="p1-b2"><label for="p1-b2">Configure <code>appsettings.json</code> with environment-specific overrides</label></li>
+            <li><input type="checkbox" id="p1-b3"><label for="p1-b3">Wire Azure Key Vault via <code>DefaultAzureCredential</code> (Managed Identity in Azure; local dev uses <code>az login</code>)</label></li>
+            <li><input type="checkbox" id="p1-b4"><label for="p1-b4">Add EF Core with SQL Server provider; create initial <code>ApplicationDbContext</code></label></li>
+            <li><input type="checkbox" id="p1-b5"><label for="p1-b5">Create <code>Users</code>, <code>Roles</code>, <code>UserRoles</code>, <code>RefreshTokens</code> entities and first migration</label></li>
+            <li><input type="checkbox" id="p1-b6"><label for="p1-b6">Implement JWT authentication: <code>AuthController</code> with <code>/login</code>, <code>/refresh</code>, <code>/logout</code></label></li>
+            <li><input type="checkbox" id="p1-b7"><label for="p1-b7">Implement refresh token rotation with sliding expiration</label></li>
+            <li><input type="checkbox" id="p1-b8"><label for="p1-b8">Add account lockout after 5 failed login attempts</label></li>
+            <li><input type="checkbox" id="p1-b9"><label for="p1-b9">Implement global exception handler middleware returning RFC 7807 ProblemDetails</label></li>
+            <li><input type="checkbox" id="p1-b10"><label for="p1-b10">Add request logging middleware (Serilog → Application Insights)</label></li>
+            <li><input type="checkbox" id="p1-b11"><label for="p1-b11">Add <code>/health</code> endpoint checking DB connectivity</label></li>
+            <li><input type="checkbox" id="p1-b12"><label for="p1-b12">Add rate limiting on <code>/api/auth/login</code> (10 req/min per IP)</label></li>
+            <li><input type="checkbox" id="p1-b13"><label for="p1-b13">Seed database: Admin user, all roles</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="1">
+            <li><input type="checkbox" id="p1-f1"><label for="p1-f1">Scaffold Angular project with <code>ng new hcm-web --routing --style=scss</code></label></li>
+            <li><input type="checkbox" id="p1-f2"><label for="p1-f2">Install and configure Angular Material</label></li>
+            <li><input type="checkbox" id="p1-f3"><label for="p1-f3">Set up <code>CoreModule</code> (singleton services), <code>SharedModule</code> (reusable components)</label></li>
+            <li><input type="checkbox" id="p1-f4"><label for="p1-f4">Implement lazy-loaded <code>AuthModule</code>: Login page with Reactive Form</label></li>
+            <li><input type="checkbox" id="p1-f5"><label for="p1-f5">Implement <code>AuthService</code>: login, logout, token storage, refresh on 401</label></li>
+            <li><input type="checkbox" id="p1-f6"><label for="p1-f6">Implement <code>JwtInterceptor</code>: attach Bearer token to all API requests</label></li>
+            <li><input type="checkbox" id="p1-f7"><label for="p1-f7">Implement <code>ErrorInterceptor</code>: map API errors to user-facing toasts</label></li>
+            <li><input type="checkbox" id="p1-f8"><label for="p1-f8">Implement <code>AuthGuard</code> and <code>RoleGuard</code></label></li>
+            <li><input type="checkbox" id="p1-f9"><label for="p1-f9">Create <code>AppShellComponent</code>: sidebar nav, top bar, notification placeholder</label></li>
+            <li><input type="checkbox" id="p1-f10"><label for="p1-f10">Create placeholder route-guarded stubs for all feature modules</label></li>
+            <li><input type="checkbox" id="p1-f11"><label for="p1-f11">Configure environment files: <code>environment.ts</code>, <code>environment.prod.ts</code></label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label infra">☁️ Infrastructure Tasks</div>
+          <ul class="checklist" data-phase="1">
+            <li><input type="checkbox" id="p1-i1"><label for="p1-i1">Create GitHub repository with branch protection on <code>main</code> (require PR + passing CI)</label></li>
+            <li><input type="checkbox" id="p1-i2"><label for="p1-i2">Provision Azure staging resources: Resource Group, App Service Plan, App Service, Azure SQL, Key Vault, Application Insights, Storage Account, Static Web Apps</label></li>
+            <li><input type="checkbox" id="p1-i3"><label for="p1-i3">Configure Managed Identity on App Service; grant Key Vault Secrets User role</label></li>
+            <li><input type="checkbox" id="p1-i4"><label for="p1-i4">Store secrets in Key Vault: DB connection string, JWT secret</label></li>
+            <li><input type="checkbox" id="p1-i5"><label for="p1-i5">Create GitHub Actions <code>build-api.yml</code>: restore, build, test, publish, deploy to App Service</label></li>
+            <li><input type="checkbox" id="p1-i6"><label for="p1-i6">Create GitHub Actions <code>build-angular.yml</code>: npm ci, lint, test, build prod, deploy to Static Web Apps</label></li>
+            <li><input type="checkbox" id="p1-i7"><label for="p1-i7">Configure CORS on API to accept Angular SWA origin</label></li>
+            <li><input type="checkbox" id="p1-i8"><label for="p1-i8">Add <code>.github/dependabot.yml</code> for dependency update PRs</label></li>
+            <li><input type="checkbox" id="p1-i9"><label for="p1-i9">Add <code>.gitignore</code> entries: local overrides, <code>*.user</code>, <code>bin/</code>, <code>obj/</code>, <code>node_modules/</code></label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 1</div>
+          <ul class="dod-list">
+            <li>User can log in on the deployed staging URL</li>
+            <li>JWT refresh works transparently (no logout on token expiry)</li>
+            <li>GitHub Actions pipeline is green on push to <code>main</code></li>
+            <li><code>/health</code> returns 200 from staging App Service</li>
+            <li>No secrets in source code (verified by GitHub secret scanning)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 2 ─────────────────────────────── -->
+    <div class="phase-section" id="phase2">
+      <div class="phase-header">
+        <span class="phase-num">Phase 2</span>
+        <span class="phase-title">Patient &amp; Case Core</span>
+        <span class="phase-dur">3 weeks &nbsp;·&nbsp; 38 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: Complete patient registration and the full case lifecycle. Create patient → open case → change status → add care team member works end-to-end.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="2">
+            <li><input type="checkbox" id="p2-b1"><label for="p2-b1">Add EF Core entities: <code>Patients</code>, <code>PatientInsurance</code>, <code>CaseTypes</code>, <code>Cases</code>, <code>CaseTags</code>, <code>CaseCaseTags</code>, <code>CaseStatusHistory</code>, <code>CareTeamMembers</code>, <code>CaseNotes</code></label></li>
+            <li><input type="checkbox" id="p2-b2"><label for="p2-b2">Create and apply EF Core migration</label></li>
+            <li><input type="checkbox" id="p2-b3"><label for="p2-b3">Implement <code>PatientsController</code>: full CRUD + paginated search (name, DOB, MRN, insurance ID)</label></li>
+            <li><input type="checkbox" id="p2-b4"><label for="p2-b4">Auto-generate MRN on patient create (e.g. <code>MRN-{year}-{sequence:D5}</code>)</label></li>
+            <li><input type="checkbox" id="p2-b5"><label for="p2-b5">Implement <code>CasesController</code>: create, read, update, paginated list with filters</label></li>
+            <li><input type="checkbox" id="p2-b6"><label for="p2-b6">Implement case status state machine: validate allowed transitions server-side</label></li>
+            <li><input type="checkbox" id="p2-b7"><label for="p2-b7">Auto-generate <code>CaseNumber</code> on case create (e.g. <code>CASE-{year}-{sequence:D5}</code>)</label></li>
+            <li><input type="checkbox" id="p2-b8"><label for="p2-b8">Implement <code>PUT /api/cases/{id}/status</code> with status history record</label></li>
+            <li><input type="checkbox" id="p2-b9"><label for="p2-b9">Implement care team endpoints: add/remove members, list team</label></li>
+            <li><input type="checkbox" id="p2-b10"><label for="p2-b10">Implement <code>POST /api/cases/{id}/notes</code> and <code>GET /api/cases/{id}/notes</code> (paginated)</label></li>
+            <li><input type="checkbox" id="p2-b11"><label for="p2-b11">Background Hosted Service: lock <code>CaseNotes.IsEditable = 0</code> after 24 hours</label></li>
+            <li><input type="checkbox" id="p2-b12"><label for="p2-b12">Implement <code>UsersController</code> (Admin only): list, create, update, role assignment, activate/deactivate</label></li>
+            <li><input type="checkbox" id="p2-b13"><label for="p2-b13">Add <code>AuditInterceptor</code> (EF Core <code>SaveChanges</code> override) for Patient, Case, CaseNote, User entities</label></li>
+            <li><input type="checkbox" id="p2-b14"><label for="p2-b14">Seed: default CaseTypes (Chronic Disease, Post-Surgery, Mental Health, Preventive, Behavioral), CaseTags</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="2">
+            <li><input type="checkbox" id="p2-f1"><label for="p2-f1">Implement <code>PatientsModule</code>: <code>PatientListComponent</code>, <code>PatientDetailComponent</code>, <code>PatientFormComponent</code>, <code>PatientService</code></label></li>
+            <li><input type="checkbox" id="p2-f2"><label for="p2-f2">Implement <code>CasesModule</code>: <code>CaseListComponent</code>, <code>CaseDetailComponent</code> (with tabs: Notes, Tasks, Documents, Team, History)</label></li>
+            <li><input type="checkbox" id="p2-f3"><label for="p2-f3">Implement <code>CaseFormComponent</code>: create/edit form, patient picker (autocomplete), case type/priority/tags</label></li>
+            <li><input type="checkbox" id="p2-f4"><label for="p2-f4">Implement <code>CaseStatusHistoryComponent</code>: timeline view of status changes</label></li>
+            <li><input type="checkbox" id="p2-f5"><label for="p2-f5">Implement <code>CareTeamComponent</code>: member list with add/remove</label></li>
+            <li><input type="checkbox" id="p2-f6"><label for="p2-f6">Implement <code>CaseNotesComponent</code>: note list + add note form; show read-only lock indicator after 24h</label></li>
+            <li><input type="checkbox" id="p2-f7"><label for="p2-f7">Add <code>StatusBadgeComponent</code> to <code>SharedModule</code> (color-coded by status value)</label></li>
+            <li><input type="checkbox" id="p2-f8"><label for="p2-f8">Add <code>HasRoleDirective</code> to <code>SharedModule</code></label></li>
+            <li><input type="checkbox" id="p2-f9"><label for="p2-f9">Add <code>ConfirmDialogComponent</code> to <code>SharedModule</code></label></li>
+            <li><input type="checkbox" id="p2-f10"><label for="p2-f10">Wire breadcrumb navigation: Patients → Patient Detail → Case Detail</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 2</div>
+          <ul class="dod-list">
+            <li>Admin can create users and assign roles</li>
+            <li>Coordinator can register a patient with insurance info</li>
+            <li>Coordinator can open a case and transition through all statuses</li>
+            <li>Care team members can be added and removed; action appears in audit log</li>
+            <li>Notes can be added; notes older than 24h show as read-only</li>
+            <li>Patient list search returns correct results with pagination</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 3 ─────────────────────────────── -->
+    <div class="phase-section" id="phase3">
+      <div class="phase-header">
+        <span class="phase-num">Phase 3</span>
+        <span class="phase-title">Documents, Tasks &amp; Notes</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 22 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: File upload to Azure Blob Storage is working. Task management within cases is complete.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="3">
+            <li><input type="checkbox" id="p3-b1"><label for="p3-b1">Add <code>Documents</code>, <code>CaseTasks</code> EF Core entities; create migration</label></li>
+            <li><input type="checkbox" id="p3-b2"><label for="p3-b2">Implement <code>POST /upload</code>: validate file type and size (max 20 MB), upload to Blob, save metadata</label></li>
+            <li><input type="checkbox" id="p3-b3"><label for="p3-b3">Implement <code>GET /{id}/download-url</code>: generate 1-hour SAS URL; log download to audit</label></li>
+            <li><input type="checkbox" id="p3-b4"><label for="p3-b4">Implement <code>DELETE /{id}</code>: soft-delete metadata (physical blob deletion deferred)</label></li>
+            <li><input type="checkbox" id="p3-b5"><label for="p3-b5">Configure Azure Blob Storage client via <code>DefaultAzureCredential</code>; container: <code>case-documents</code></label></li>
+            <li><input type="checkbox" id="p3-b6"><label for="p3-b6">Implement <code>IBlobStorageService</code> abstraction; concrete implementation in Infrastructure</label></li>
+            <li><input type="checkbox" id="p3-b7"><label for="p3-b7">Validate allowed MIME types: PDF, PNG, JPG, DOCX only</label></li>
+            <li><input type="checkbox" id="p3-b8"><label for="p3-b8">Implement <code>TasksController</code>: CRUD, status transitions, <code>GET /my</code> for current user's tasks</label></li>
+            <li><input type="checkbox" id="p3-b9"><label for="p3-b9">Validate task status transitions server-side</label></li>
+            <li><input type="checkbox" id="p3-b10"><label for="p3-b10">Add task <code>DueDate</code> index for overdue query performance</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="3">
+            <li><input type="checkbox" id="p3-f1"><label for="p3-f1">Implement <code>DocumentListComponent</code>: table with name, category, uploader, date; download button</label></li>
+            <li><input type="checkbox" id="p3-f2"><label for="p3-f2">Implement <code>DocumentUploadComponent</code>: drag-and-drop or file picker, category selector, progress bar</label></li>
+            <li><input type="checkbox" id="p3-f3"><label for="p3-f3">Implement <code>DocumentService</code>: upload with <code>HttpClient reportProgress</code>, download URL fetch</label></li>
+            <li><input type="checkbox" id="p3-f4"><label for="p3-f4">Implement <code>MyTasksComponent</code>: tasks assigned to current user with overdue highlighting</label></li>
+            <li><input type="checkbox" id="p3-f5"><label for="p3-f5">Implement <code>TaskListComponent</code> embedded in Case Detail tasks tab</label></li>
+            <li><input type="checkbox" id="p3-f6"><label for="p3-f6">Implement <code>TaskFormComponent</code>: create/edit task, assignee picker, due date picker</label></li>
+            <li><input type="checkbox" id="p3-f7"><label for="p3-f7">Implement <code>TaskStatusChipComponent</code>: clickable status chip triggering transition dialog</label></li>
+            <li><input type="checkbox" id="p3-f8"><label for="p3-f8">Add <code>FileUploadComponent</code> to <code>SharedModule</code></label></li>
+            <li><input type="checkbox" id="p3-f9"><label for="p3-f9">Display overdue task count badge in sidebar nav</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 3</div>
+          <ul class="dod-list">
+            <li>User can upload a PDF to a case; file appears in document list</li>
+            <li>Download generates a working SAS URL that expires (verify by inspecting expiry)</li>
+            <li>Task can be created with an assignee and due date; status transitions work</li>
+            <li>Overdue tasks are highlighted in red in <code>MyTasksComponent</code></li>
+            <li>Deleted documents do not appear in the list but remain in audit log</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 4 ─────────────────────────────── -->
+    <div class="phase-section" id="phase4">
+      <div class="phase-header">
+        <span class="phase-num">Phase 4</span>
+        <span class="phase-title">Appointments &amp; Scheduling</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 16 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: Appointments can be scheduled, confirmed, and completed. Conflict detection prevents double-booking.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="4">
+            <li><input type="checkbox" id="p4-b1"><label for="p4-b1">Add <code>Providers</code>, <code>Appointments</code> EF Core entities; create migration</label></li>
+            <li><input type="checkbox" id="p4-b2"><label for="p4-b2">Implement <code>POST /appointments</code>: validate provider has no overlapping appointment</label></li>
+            <li><input type="checkbox" id="p4-b3"><label for="p4-b3">Implement <code>GET /appointments</code>: paginated list filtered by patient, provider, status, date range</label></li>
+            <li><input type="checkbox" id="p4-b4"><label for="p4-b4">Implement <code>PUT /{id}</code>: reschedule (re-validate conflicts)</label></li>
+            <li><input type="checkbox" id="p4-b5"><label for="p4-b5">Implement <code>PUT /{id}/status</code>: Confirm, Complete, Cancel, NoShow</label></li>
+            <li><input type="checkbox" id="p4-b6"><label for="p4-b6">Implement <code>GET /providers/{providerId}/availability</code>: return busy slots for a date range</label></li>
+            <li><input type="checkbox" id="p4-b7"><label for="p4-b7">Seed initial providers (linked to clinician users)</label></li>
+            <li><input type="checkbox" id="p4-b8"><label for="p4-b8">Background Hosted Service: query appointments starting in 24h; create <code>Notifications</code> rows; mark <code>ReminderSentAt</code></label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="4">
+            <li><input type="checkbox" id="p4-f1"><label for="p4-f1">Implement <code>AppointmentListComponent</code>: paginated table, filter by patient/provider/status/date</label></li>
+            <li><input type="checkbox" id="p4-f2"><label for="p4-f2">Implement <code>AppointmentFormComponent</code>: patient picker, provider picker, type selector, date/time range picker, conflict warning</label></li>
+            <li><input type="checkbox" id="p4-f3"><label for="p4-f3">Implement <code>AppointmentDetailComponent</code>: status actions (Confirm, Complete, Cancel, NoShow)</label></li>
+            <li><input type="checkbox" id="p4-f4"><label for="p4-f4">Implement <code>ProviderAvailabilityComponent</code>: simple slot grid for selected provider + date</label></li>
+            <li><input type="checkbox" id="p4-f5"><label for="p4-f5">Implement <code>AppointmentService</code>: all HTTP calls</label></li>
+            <li><input type="checkbox" id="p4-f6"><label for="p4-f6">Add upcoming appointments section to Case Detail</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 4</div>
+          <ul class="dod-list">
+            <li>Appointment can be scheduled and confirmed</li>
+            <li>Attempting to book a provider at an occupied time shows a conflict error</li>
+            <li>Status transitions (NoShow, Complete, Cancel) work</li>
+            <li>A notification row is created for appointments starting in &lt; 24h (verify via DB query)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 5 ─────────────────────────────── -->
+    <div class="phase-section" id="phase5">
+      <div class="phase-header" style="background: linear-gradient(90deg, #0f766e, #0d9488)">
+        <span class="phase-num">Phase 5</span>
+        <span class="phase-title">FHIR/HL7 Integration</span>
+        <span class="badge badge-teal">FHIR R4</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 24 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: A FHIR R4 API facade is live. Query <code>/fhir/R4/metadata</code>, retrieve a patient as a FHIR resource, and download a full <code>$everything</code> Bundle. Patient import from FHIR JSON works. HL7 v2 ADT receiver is stretch.</p>
+
+        <div class="callout callout-info" style="margin-bottom:1rem">
+          <strong>Key Packages:</strong> <code>Hl7.Fhir.R4</code> (Firely .NET SDK) for .NET serialization &nbsp;·&nbsp; <code>ngx-json-viewer</code> for Angular FHIR JSON display &nbsp;·&nbsp; <code>NHapi</code> for HL7 v2 (stretch)
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="5">
+            <li><input type="checkbox" id="p5-b1"><label for="p5-b1">Add <code>Hl7.Fhir.R4</code> NuGet package (Firely .NET SDK) to <code>HCM.Infrastructure</code></label></li>
+            <li><input type="checkbox" id="p5-b2"><label for="p5-b2">Add <code>FhirImportLogs</code> EF Core entity; create and apply migration</label></li>
+            <li><input type="checkbox" id="p5-b3"><label for="p5-b3">Create <code>IFhirMappingService</code> interface in <code>HCM.Application</code></label></li>
+            <li><input type="checkbox" id="p5-b4"><label for="p5-b4">Implement <code>Patient → FHIR Patient</code> mapping (id, identifier/MRN, name, birthDate, gender, telecom)</label></li>
+            <li><input type="checkbox" id="p5-b5"><label for="p5-b5">Implement <code>Case → FHIR Encounter</code> mapping (status: Draft/Open→planned, InProgress→in-progress, Closed→finished)</label></li>
+            <li><input type="checkbox" id="p5-b6"><label for="p5-b6">Implement <code>Appointment → FHIR Appointment</code>, <code>CaseTask → FHIR Task</code>, <code>Document → FHIR DocumentReference</code> mappings</label></li>
+            <li><input type="checkbox" id="p5-b7"><label for="p5-b7">Implement <code>GET /fhir/R4/metadata</code>: CapabilityStatement declaring supported resources and search params</label></li>
+            <li><input type="checkbox" id="p5-b8"><label for="p5-b8">Implement <code>GET /fhir/R4/Patient</code>: search with params <code>_id</code>, <code>name</code>, <code>birthdate</code>, <code>identifier</code>; return FHIR Bundle (searchset)</label></li>
+            <li><input type="checkbox" id="p5-b9"><label for="p5-b9">Implement <code>GET /fhir/R4/Patient/{id}</code>: read; return 404 OperationOutcome if not found</label></li>
+            <li><input type="checkbox" id="p5-b10"><label for="p5-b10">Implement <code>POST /fhir/R4/Patient</code>: accept FHIR Patient JSON, validate with Firely, map to internal Patient, log to FhirImportLogs</label></li>
+            <li><input type="checkbox" id="p5-b11"><label for="p5-b11">Implement <code>GET /fhir/R4/Patient/{id}/$everything</code>: return FHIR Bundle (collection) with Patient + all related Encounters, Appointments, Tasks, DocumentReferences</label></li>
+            <li><input type="checkbox" id="p5-b12"><label for="p5-b12">Implement <code>GET /fhir/R4/Encounter</code>, <code>GET /fhir/R4/Encounter/{id}</code>, <code>GET /fhir/R4/Appointment/{id}</code>, <code>GET /fhir/R4/Task/{id}</code>, <code>GET /fhir/R4/DocumentReference/{id}</code></label></li>
+            <li><input type="checkbox" id="p5-b13"><label for="p5-b13">Add global FHIR exception handler: map domain exceptions to HL7 <code>OperationOutcome</code></label></li>
+            <li><input type="checkbox" id="p5-b14"><label for="p5-b14">Log every FHIR Patient export ($everything or GET) to <code>AuditLogs</code> as action <code>FhirExport</code></label></li>
+            <li><input type="checkbox" id="p5-b15"><label for="p5-b15"><em>(Stretch)</em> Implement <code>POST /api/hl7/adt</code>: receive HL7 v2 ADT^A01; parse with NHapi; upsert Patient + FhirImportLogs</label></li>
+            <li><input type="checkbox" id="p5-b16"><label for="p5-b16"><em>(Stretch)</em> Implement <code>POST /api/hl7/oru</code>: receive HL7 v2 ORU^R01; create read-only CaseNote on patient's active case</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="5">
+            <li><input type="checkbox" id="p5-f1"><label for="p5-f1">Install <code>ngx-json-viewer</code> package for collapsible FHIR JSON tree display</label></li>
+            <li><input type="checkbox" id="p5-f2"><label for="p5-f2">Implement <code>FhirExplorerComponent</code>: shows raw FHIR JSON for any resource type + ID using <code>ngx-json-viewer</code></label></li>
+            <li><input type="checkbox" id="p5-f3"><label for="p5-f3">Implement <code>FhirImportComponent</code>: paste or upload FHIR Patient JSON; submit to <code>POST /fhir/R4/Patient</code>; show OperationOutcome errors</label></li>
+            <li><input type="checkbox" id="p5-f4"><label for="p5-f4">Implement <code>FhirService</code>: typed HTTP calls to <code>/fhir/R4/</code> endpoints</label></li>
+            <li><input type="checkbox" id="p5-f5"><label for="p5-f5">Add <strong>"Export as FHIR Bundle"</strong> button to <code>PatientDetailComponent</code>: calls <code>$everything</code>, downloads as <code>patient-{mrn}-fhir-bundle.json</code></label></li>
+            <li><input type="checkbox" id="p5-f6"><label for="p5-f6">Add <strong>"Import Patient from FHIR"</strong> menu option on Patient List page</label></li>
+            <li><input type="checkbox" id="p5-f7"><label for="p5-f7">Add "View FHIR" tab to PatientDetail linking to <code>FhirExplorerComponent</code></label></li>
+            <li><input type="checkbox" id="p5-f8"><label for="p5-f8">Wire <code>FhirModule</code> as lazy-loaded feature module with role guard (CareCoordinator, Clinician, Admin)</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 5</div>
+          <ul class="dod-list">
+            <li><code>GET /fhir/R4/metadata</code> returns a valid FHIR CapabilityStatement (validate with Firely or online FHIR validator)</li>
+            <li><code>GET /fhir/R4/Patient?name=Smith</code> returns a FHIR searchset Bundle with correct entries</li>
+            <li><code>GET /fhir/R4/Patient/{id}/$everything</code> returns a Bundle containing at least Patient + Encounter resources</li>
+            <li>Importing a FHIR Patient JSON via the UI creates a new patient with a generated MRN</li>
+            <li>The "Export as FHIR Bundle" download is valid JSON parseable as a FHIR R4 Bundle</li>
+            <li>FHIR endpoints return 401 without a JWT; errors return OperationOutcome (not ProblemDetails)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 6 ─────────────────────────────── -->
+    <div class="phase-section" id="phase6">
+      <div class="phase-header">
+        <span class="phase-num">Phase 6</span>
+        <span class="phase-title">Dashboards &amp; Reports</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 20 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: All three dashboards are populated with live data. CSV export works for all three report types.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="6">
+            <li><input type="checkbox" id="p6-b1"><label for="p6-b1">Implement <code>GET /dashboard/coordinator</code>: my open cases (by status), my overdue tasks, today's appointments, inactive cases (7 days)</label></li>
+            <li><input type="checkbox" id="p6-b2"><label for="p6-b2">Implement <code>GET /dashboard/supervisor</code>: team caseload per user, escalated cases, inactive cases</label></li>
+            <li><input type="checkbox" id="p6-b3"><label for="p6-b3">Implement <code>GET /dashboard/admin</code>: active user count, logins last 7 days, system metrics</label></li>
+            <li><input type="checkbox" id="p6-b4"><label for="p6-b4">Implement <code>GET /reports/cases-by-status</code>: JSON + CSV via <code>format=csv</code> query param (use <code>CsvHelper</code> NuGet)</label></li>
+            <li><input type="checkbox" id="p6-b5"><label for="p6-b5">Implement <code>GET /reports/case-duration</code>: average days open→closed by case type</label></li>
+            <li><input type="checkbox" id="p6-b6"><label for="p6-b6">Implement <code>GET /reports/tasks-by-assignee</code>: done vs. overdue vs. open per user</label></li>
+            <li><input type="checkbox" id="p6-b7"><label for="p6-b7">Add DB indexes to support dashboard queries (case status + coordinator, task due date + assignee)</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="6">
+            <li><input type="checkbox" id="p6-f1"><label for="p6-f1">Implement <code>CoordinatorDashboardComponent</code>: stat cards, cases-by-status donut chart, overdue task list</label></li>
+            <li><input type="checkbox" id="p6-f2"><label for="p6-f2">Implement <code>SupervisorDashboardComponent</code>: team caseload bar chart, escalated cases table, inactive cases table</label></li>
+            <li><input type="checkbox" id="p6-f3"><label for="p6-f3">Implement <code>AdminDashboardComponent</code>: user counts, login trend line chart, top error list</label></li>
+            <li><input type="checkbox" id="p6-f4"><label for="p6-f4">Implement <code>CasesByStatusReportComponent</code>: bar chart + table + CSV export button</label></li>
+            <li><input type="checkbox" id="p6-f5"><label for="p6-f5">Implement <code>CaseDurationReportComponent</code>: bar chart per case type + CSV export</label></li>
+            <li><input type="checkbox" id="p6-f6"><label for="p6-f6">Implement <code>TasksByAssigneeReportComponent</code>: stacked bar chart + CSV export</label></li>
+            <li><input type="checkbox" id="p6-f7"><label for="p6-f7">Install and configure <code>ng2-charts</code> + <code>Chart.js</code></label></li>
+            <li><input type="checkbox" id="p6-f8"><label for="p6-f8">Route dashboard based on user's primary role (default landing page post-login)</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 6</div>
+          <ul class="dod-list">
+            <li>Coordinator dashboard shows accurate counts matching DB state</li>
+            <li>CSV export downloads a valid file with correct headers and data</li>
+            <li>Charts render without console errors</li>
+            <li>Supervisor can see their team's caseloads</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 7 ─────────────────────────────── -->
+    <div class="phase-section" id="phase7">
+      <div class="phase-header">
+        <span class="phase-num">Phase 7</span>
+        <span class="phase-title">Notifications &amp; Audit UI</span>
+        <span class="phase-dur">1 week &nbsp;·&nbsp; 14 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: In-app notification bell works. Audit log is browsable by admins.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Tasks</div>
+          <ul class="checklist" data-phase="7">
+            <li><input type="checkbox" id="p7-b1"><label for="p7-b1">Ensure <code>Notifications</code> entity and migration exist (may be done in Phase 4)</label></li>
+            <li><input type="checkbox" id="p7-b2"><label for="p7-b2">Wire notification creation for all trigger events: case assigned, task assigned, task overdue, escalation, appointment reminder</label></li>
+            <li><input type="checkbox" id="p7-b3"><label for="p7-b3">Implement <code>NotificationsController</code>: list, unread count, mark read, mark all read</label></li>
+            <li><input type="checkbox" id="p7-b4"><label for="p7-b4">Implement <code>AuditController</code> (Admin only): paginated audit log with filters (entity type, user, date range, action)</label></li>
+            <li><input type="checkbox" id="p7-b5"><label for="p7-b5">Background Hosted Service: daily overdue task check → create notifications for overdue tasks</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Tasks</div>
+          <ul class="checklist" data-phase="7">
+            <li><input type="checkbox" id="p7-f1"><label for="p7-f1">Implement <code>NotificationBellComponent</code>: icon in top bar; polls <code>GET /notifications/unread-count</code> every 60s; badge</label></li>
+            <li><input type="checkbox" id="p7-f2"><label for="p7-f2">Implement <code>NotificationListComponent</code>: dropdown/panel showing latest 20 notifications with mark-read action</label></li>
+            <li><input type="checkbox" id="p7-f3"><label for="p7-f3">Implement <code>NotificationService</code>: HTTP calls + polling</label></li>
+            <li><input type="checkbox" id="p7-f4"><label for="p7-f4">Implement <code>AuditLogComponent</code> (Admin only): filterable, paginated table of all audit events</label></li>
+            <li><input type="checkbox" id="p7-f5"><label for="p7-f5">Audit log row expand: show OldValues / NewValues JSON diff (formatted JSON view)</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 7</div>
+          <ul class="dod-list">
+            <li>Notification bell updates without page refresh</li>
+            <li>Notifications are created when a case is assigned</li>
+            <li>Admin can filter audit log by user and see JSON old/new values</li>
+            <li>Non-admin users cannot access <code>/api/audit</code> (403 returned)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PHASE 8 ─────────────────────────────── -->
+    <div class="phase-section" id="phase8">
+      <div class="phase-header">
+        <span class="phase-num">Phase 8</span>
+        <span class="phase-title">Testing, Security &amp; Polish</span>
+        <span class="phase-dur">2 weeks &nbsp;·&nbsp; 22 tasks</span>
+      </div>
+      <div class="phase-body">
+        <p class="phase-goal">Goal: Production-quality build. Key flows covered by tests. Security hardened. Live in prod.</p>
+
+        <div class="task-group">
+          <div class="task-group-label backend">⚙️ Backend Testing</div>
+          <ul class="checklist" data-phase="8">
+            <li><input type="checkbox" id="p8-b1"><label for="p8-b1">Unit tests (xUnit + Moq): all Application layer use cases / command handlers</label></li>
+            <li><input type="checkbox" id="p8-b2"><label for="p8-b2">Integration tests: Auth flow (login → access → refresh → logout)</label></li>
+            <li><input type="checkbox" id="p8-b3"><label for="p8-b3">Integration tests: Patient CRUD + case status machine (valid and invalid transitions)</label></li>
+            <li><input type="checkbox" id="p8-b4"><label for="p8-b4">Integration tests: FHIR endpoints — <code>/metadata</code>, Patient read, <code>$everything</code>, Patient import</label></li>
+            <li><input type="checkbox" id="p8-b5"><label for="p8-b5">Code coverage report: target ≥ 70% on Application layer</label></li>
+            <li><input type="checkbox" id="p8-b6"><label for="p8-b6">OWASP dependency check in CI pipeline</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label frontend">🖥 Frontend Testing</div>
+          <ul class="checklist" data-phase="8">
+            <li><input type="checkbox" id="p8-f1"><label for="p8-f1">Unit tests (Jasmine/Karma): <code>AuthService</code>, <code>JwtInterceptor</code>, <code>FhirService</code>, form validators</label></li>
+            <li><input type="checkbox" id="p8-f2"><label for="p8-f2">E2E tests (Playwright or Cypress): login flow, create patient, create case, upload document, FHIR export</label></li>
+            <li><input type="checkbox" id="p8-f3"><label for="p8-f3">Run <code>ng build --configuration production --stats-json</code>; analyse bundle size</label></li>
+            <li><input type="checkbox" id="p8-f4"><label for="p8-f4">Accessibility audit: run Lighthouse on Login, Case List, Case Detail, FHIR Explorer pages; target ≥ 90</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label" style="color:var(--danger)">🔒 Security Hardening</div>
+          <ul class="checklist" data-phase="8">
+            <li><input type="checkbox" id="p8-s1"><label for="p8-s1">Verify no PHI (names, DOB, MRN) appears in Application Insights traces or logs</label></li>
+            <li><input type="checkbox" id="p8-s2"><label for="p8-s2">Add <code>Content-Security-Policy</code>, <code>X-Frame-Options</code>, <code>X-Content-Type-Options</code> headers to API responses</label></li>
+            <li><input type="checkbox" id="p8-s3"><label for="p8-s3">Rotate JWT secret in Key Vault; confirm app picks up new version without redeploy</label></li>
+            <li><input type="checkbox" id="p8-s4"><label for="p8-s4">Confirm SAS URLs are not logged (check Application Insights live stream during a download)</label></li>
+            <li><input type="checkbox" id="p8-s5"><label for="p8-s5">Run OWASP ZAP quick scan against staging API; resolve any Medium+ findings</label></li>
+            <li><input type="checkbox" id="p8-s6"><label for="p8-s6">Confirm <code>AuditController</code> returns 403 when called with a non-Admin JWT</label></li>
+          </ul>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-label infra">☁️ Production Deploy &amp; Polish</div>
+          <ul class="checklist" data-phase="8">
+            <li><input type="checkbox" id="p8-i1"><label for="p8-i1">Provision prod Azure resources (separate Resource Group from staging)</label></li>
+            <li><input type="checkbox" id="p8-i2"><label for="p8-i2">Configure manual approval gate in GitHub Actions for prod deploy</label></li>
+            <li><input type="checkbox" id="p8-i3"><label for="p8-i3">Set up Application Insights alerts: error rate &gt; 5%, availability &lt; 99%, p95 &gt; 2s</label></li>
+            <li><input type="checkbox" id="p8-i4"><label for="p8-i4">Add budget alert on Azure subscription ($20/month threshold for portfolio)</label></li>
+            <li><input type="checkbox" id="p8-i5"><label for="p8-i5">Update <code>README.md</code>: architecture diagram, local setup steps, environment variable guide, screenshots</label></li>
+            <li><input type="checkbox" id="p8-i6"><label for="p8-i6">Record a 5-minute demo walkthrough video for portfolio (include FHIR export demo)</label></li>
+          </ul>
+        </div>
+
+        <div class="dod-box">
+          <div class="dod-title">✅ Definition of Done — Phase 8</div>
+          <ul class="dod-list">
+            <li>CI pipeline runs all tests; build fails if tests fail</li>
+            <li>Lighthouse accessibility score ≥ 90 on primary pages</li>
+            <li>OWASP ZAP scan shows no Medium or Critical findings</li>
+            <li>Prod deployment is behind a manual approval gate</li>
+            <li>Application Insights shows live traces from prod environment</li>
+            <li><code>README.md</code> is complete with setup instructions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKLOG -->
+    <h2 id="backlog">Backlog <span style="font-weight:400;font-size:.9rem;color:var(--text-muted)">(deferred items)</span></h2>
+    <div class="callout callout-warning">These items are intentionally deferred to keep the project shippable within the 16-week plan.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Email notifications via SendGrid</td><td>Phase 4 laid the groundwork; wire SMTP in Phase 8+</td></tr>
+          <tr><td>Patient self-service portal</td><td>Separate Angular app or module; requires patient user role</td></tr>
+          <tr><td>SMART on FHIR authentication</td><td>Replace JWT with Azure AD OIDC + SMART app launch; out of scope for portfolio</td></tr>
+          <tr><td>Full bi-directional EHR sync</td><td>Phase 5 covers read/export/import; real-time sync with live EHR is out of scope</td></tr>
+          <tr><td>Multi-tenancy (multiple organizations)</td><td>Schema-per-tenant or row-level security</td></tr>
+          <tr><td>Azure Active Directory SSO</td><td>Replace JWT with Azure AD OIDC</td></tr>
+          <tr><td>Real-time notifications via SignalR</td><td>Replace 60s polling with WebSocket push</td></tr>
+          <tr><td>Mobile PWA</td><td>Progressive Web App manifest + offline mode</td></tr>
+          <tr><td>Physical blob deletion job</td><td>Azure Function triggered nightly to clean soft-deleted blobs</td></tr>
+          <tr><td>Two-factor authentication</td><td>TOTP or SMS-based</td></tr>
+          <tr><td>Document versioning</td><td>Track document versions with history</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PROGRESS SUMMARY -->
+    <h2 id="summary">Progress Summary</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Phase</th><th>Tasks Total</th><th>Complete</th><th>Remaining</th></tr></thead>
+        <tbody>
+          <tr><td>Phase 1 — Foundation</td><td>~29</td><td id="s1c">0</td><td id="s1r">29</td></tr>
+          <tr><td>Phase 2 — Patient &amp; Case Core</td><td>~38</td><td id="s2c">0</td><td id="s2r">38</td></tr>
+          <tr><td>Phase 3 — Documents &amp; Tasks</td><td>~22</td><td id="s3c">0</td><td id="s3r">22</td></tr>
+          <tr><td>Phase 4 — Appointments</td><td>~16</td><td id="s4c">0</td><td id="s4r">16</td></tr>
+          <tr><td>Phase 5 — FHIR/HL7 Integration</td><td>~24</td><td id="s5c">0</td><td id="s5r">24</td></tr>
+          <tr><td>Phase 6 — Dashboards &amp; Reports</td><td>~20</td><td id="s6c">0</td><td id="s6r">20</td></tr>
+          <tr><td>Phase 7 — Notifications &amp; Audit UI</td><td>~14</td><td id="s7c">0</td><td id="s7r">14</td></tr>
+          <tr><td>Phase 8 — Testing &amp; Polish</td><td>~22</td><td id="s8c">0</td><td id="s8r">22</td></tr>
+          <tr style="background:#f0f4ff;font-weight:700"><td><strong>Total</strong></td><td><strong>~185</strong></td><td id="stc"><strong>0</strong></td><td id="str"><strong>185</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<button id="back-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer>
+  Healthcare Case Management System &mdash; Phase Tracker &nbsp;·&nbsp; Progress is saved in your browser (localStorage)
+</footer>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────
+const TOTALS = { 1: 29, 2: 38, 3: 22, 4: 16, 5: 24, 6: 20, 7: 14, 8: 22 };
+const GRAND_TOTAL = Object.values(TOTALS).reduce((a, b) => a + b, 0);
+
+// ─── LOAD SAVED STATE ──────────────────────────────────────
+function loadState() {
+  const all = document.querySelectorAll('input[type="checkbox"]');
+  all.forEach(cb => {
+    const saved = localStorage.getItem('hcms-' + cb.id);
+    if (saved === 'true') {
+      cb.checked = true;
+      cb.closest('li').classList.add('done');
+    }
+  });
+}
+
+// ─── UPDATE PROGRESS ───────────────────────────────────────
+function updateProgress() {
+  let grandDone = 0;
+
+  for (let p = 1; p <= 8; p++) {
+    const boxes = document.querySelectorAll(`#phase${p} input[type="checkbox"]`);
+    const done = [...boxes].filter(b => b.checked).length;
+    const total = boxes.length;
+    grandDone += done;
+
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const bar = document.getElementById('bar' + p);
+    const cnt = document.getElementById('cnt' + p);
+    if (bar) bar.style.width = pct + '%';
+    if (cnt) cnt.textContent = done + '/' + total;
+
+    // summary table
+    const sc = document.getElementById('s' + p + 'c');
+    const sr = document.getElementById('s' + p + 'r');
+    if (sc) sc.textContent = done;
+    if (sr) sr.textContent = total - done;
+  }
+
+  const grandPct = Math.round(grandDone / GRAND_TOTAL * 100);
+  document.getElementById('overall-bar').style.width = grandPct + '%';
+  document.getElementById('overall-label').textContent = grandPct + '%';
+  document.getElementById('total-pct').textContent = grandDone + ' / ' + GRAND_TOTAL + ' tasks';
+
+  const stc = document.getElementById('stc');
+  const str = document.getElementById('str');
+  if (stc) stc.innerHTML = '<strong>' + grandDone + '</strong>';
+  if (str) str.innerHTML = '<strong>' + (GRAND_TOTAL - grandDone) + '</strong>';
+}
+
+// ─── EVENTS ────────────────────────────────────────────────
+document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    localStorage.setItem('hcms-' + cb.id, cb.checked);
+    cb.closest('li').classList.toggle('done', cb.checked);
+    updateProgress();
+  });
+});
+
+document.getElementById('reset-all').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!confirm('Reset all checkboxes? This cannot be undone.')) return;
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('li').classList.remove('done');
+    localStorage.removeItem('hcms-' + cb.id);
+  });
+  updateProgress();
+});
+
+// ─── SCROLL SPY ────────────────────────────────────────────
+const sLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+const anchors = [...sLinks].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+const bt = document.getElementById('back-top');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 90;
+  let cur = anchors[0];
+  anchors.forEach(a => { if (a.offsetTop <= y) cur = a; });
+  sLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur.id));
+  bt.classList.toggle('show', window.scrollY > 300);
+}, { passive: true });
+
+// ─── INIT ──────────────────────────────────────────────────
+loadState();
+updateProgress();
+</script>
+</body>
+</html>

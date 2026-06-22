@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCMS — Product Requirements</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="brand"><span class="icon">🏥</span> HCMS Docs</a>
+  <a href="index.html">Overview</a>
+  <a href="product-requirements.html" class="active">Product Requirements</a>
+  <a href="phase-tracker.html">Phase Tracker</a>
+</nav>
+
+<div class="page">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <span class="sb-label">Product Requirements</span>
+    <a href="#vision">Vision</a>
+    <a href="#personas">Target Users</a>
+    <a href="#fr">Functional Requirements</a>
+    <a href="#fr-auth" class="sub">Auth &amp; Access</a>
+    <a href="#fr-patient" class="sub">Patient Management</a>
+    <a href="#fr-case" class="sub">Case Management</a>
+    <a href="#fr-notes" class="sub">Case Notes</a>
+    <a href="#fr-tasks" class="sub">Task Management</a>
+    <a href="#fr-docs" class="sub">Document Management</a>
+    <a href="#fr-appts" class="sub">Appointments</a>
+    <a href="#fr-team" class="sub">Care Team</a>
+    <a href="#fr-dash" class="sub">Dashboard &amp; Reports</a>
+    <a href="#fr-audit" class="sub">Audit &amp; Compliance</a>
+    <a href="#fr-notif" class="sub">Notifications</a>
+    <a href="#fr-fhir" class="sub">FHIR/HL7</a>
+    <a href="#nfr">Non-Functional Req.</a>
+    <span class="sb-label">Architecture</span>
+    <a href="#modules">Main Modules</a>
+    <a href="#db">Database Tables</a>
+    <a href="#db-identity" class="sub">Identity</a>
+    <a href="#db-patient" class="sub">Patient</a>
+    <a href="#db-case" class="sub">Case</a>
+    <a href="#db-team" class="sub">Care Team</a>
+    <a href="#db-tasks" class="sub">Tasks</a>
+    <a href="#db-docs" class="sub">Documents</a>
+    <a href="#db-appts" class="sub">Appointments</a>
+    <a href="#db-notif" class="sub">Notifications</a>
+    <a href="#db-audit" class="sub">Audit</a>
+    <a href="#db-fhir" class="sub">FHIR</a>
+    <a href="#api">API Modules</a>
+    <a href="#angular">Angular Modules</a>
+    <a href="#azure">Azure Architecture</a>
+    <a href="#risks">Risks &amp; Assumptions</a>
+  </aside>
+
+  <main class="main">
+
+    <!-- PAGE TITLE -->
+    <div style="margin-bottom:1.75rem">
+      <h1>Product Requirements</h1>
+      <p style="color:var(--text-muted);font-size:.9rem">Healthcare Case Management System &nbsp;·&nbsp; Last updated: 2026-06-21</p>
+    </div>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 1 — PRODUCT REQUIREMENTS
+    ─────────────────────────────────────────────── -->
+    <h2 id="vision"><span class="num">1.1</span> Vision</h2>
+    <div class="card">
+      <p>A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enables care coordinators, clinicians, and administrators to manage patient cases from intake through discharge — with full audit trails, document handling, FHIR R4 interoperability, and real-time dashboards.</p>
+    </div>
+
+    <!-- Target Users -->
+    <h2 id="personas"><span class="num">1.2</span> Target Users</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Persona</th><th>Role</th><th>Primary Need</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Care Coordinator</strong></td><td>Manages patient case lifecycle</td><td>Create/update cases, assign tasks, track status</td></tr>
+          <tr><td><strong>Clinician / Provider</strong></td><td>Delivers patient care</td><td>View case notes, update clinical findings</td></tr>
+          <tr><td><strong>Case Supervisor</strong></td><td>Oversees team workload</td><td>Monitor caseloads, reassign, approve escalations</td></tr>
+          <tr><td><strong>Administrator</strong></td><td>Manages system configuration</td><td>User/role management, audit logs, reports</td></tr>
+          <tr><td><strong>Patient</strong> <span class="badge badge-gray">Future Phase</span></td><td>Receives care</td><td>Self-service portal, appointment visibility</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Functional Requirements -->
+    <h2 id="fr"><span class="num">1.3</span> Functional Requirements</h2>
+
+    <!-- Auth -->
+    <h3 id="fr-auth">Authentication &amp; Authorization</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-01</span><span class="fr-text">Users must authenticate via username/password (JWT) with refresh token rotation.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-02</span><span class="fr-text">Role-based access control (RBAC): <strong>Admin, Supervisor, CareCoordinator, Clinician, ReadOnly</strong>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-03</span><span class="fr-text">All actions must be authorized at the API layer; UI hides unauthorized elements via <code>HasRoleDirective</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-04</span><span class="fr-text">Passwords must meet complexity rules; accounts lock after 5 failed attempts.</span></li>
+    </ul>
+
+    <!-- Patient -->
+    <h3 id="fr-patient">Patient Management</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-05</span><span class="fr-text">Register new patients with demographic, contact, and insurance information.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-06</span><span class="fr-text">Search patients by name, date of birth, MRN (Medical Record Number), or insurance ID.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-07</span><span class="fr-text">View complete patient profile including cases, documents, and appointment history.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-08</span><span class="fr-text">Soft-delete patients (deactivate, not hard-delete) to preserve audit integrity.</span></li>
+    </ul>
+
+    <!-- Case -->
+    <h3 id="fr-case">Case Management</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-09</span><span class="fr-text">Create a case linked to a patient with a case type, priority, and assigned coordinator.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-10</span><span class="fr-text">Case status lifecycle: <code>Draft → Open → In Progress → Pending Review → Closed / Escalated</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-11</span><span class="fr-text">Supervisors can reassign cases and approve escalations.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-12</span><span class="fr-text">Case history log captures every status change with timestamp and acting user.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-13</span><span class="fr-text">Support multiple concurrent open cases per patient.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-14</span><span class="fr-text">Cases can be tagged (e.g., Chronic Disease, Post-Surgery, Mental Health).</span></li>
+    </ul>
+
+    <!-- Notes -->
+    <h3 id="fr-notes">Case Notes</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-15</span><span class="fr-text">Coordinators and clinicians can add timestamped notes to any case.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-16</span><span class="fr-text">Notes support plain text; rich-text formatting is a stretch goal.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-17</span><span class="fr-text">Notes are immutable after 24 hours (append-only model); corrections require a new note.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-18</span><span class="fr-text">Notes are visible to all care team members assigned to the case.</span></li>
+    </ul>
+
+    <!-- Tasks -->
+    <h3 id="fr-tasks">Task Management</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-19</span><span class="fr-text">Tasks can be created within a case and assigned to any care team member.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-20</span><span class="fr-text">Task statuses: <code>Todo → In Progress → Blocked → Done → Cancelled</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-21</span><span class="fr-text">Tasks have due dates; overdue tasks surface on the assignee's dashboard.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-22</span><span class="fr-text">Completed tasks trigger a notification to the case coordinator.</span></li>
+    </ul>
+
+    <!-- Documents -->
+    <h3 id="fr-docs">Document Management</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-23</span><span class="fr-text">Upload documents (PDF, DOCX, PNG, JPG) up to 20 MB per file to a case.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-24</span><span class="fr-text">Documents are stored in Azure Blob Storage; metadata (name, type, uploader) in SQL.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-25</span><span class="fr-text">Generate time-limited (1-hour) SAS download URLs; never expose raw blob URLs.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-26</span><span class="fr-text">Document categories: Referral, Lab Result, Consent Form, Insurance, Other.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-27</span><span class="fr-text">Soft-delete documents; physical blob deletion is a background job (future).</span></li>
+    </ul>
+
+    <!-- Appointments -->
+    <h3 id="fr-appts">Appointments &amp; Scheduling</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-28</span><span class="fr-text">Schedule appointments linked to a patient and optionally to a case.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-29</span><span class="fr-text">Appointment types: Initial Assessment, Follow-Up, Specialist Referral, Telehealth.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-30</span><span class="fr-text">Appointment statuses: <code>Scheduled → Confirmed → Completed → No-Show → Cancelled</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-31</span><span class="fr-text">Prevent double-booking a provider for the same date/time slot.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-32</span><span class="fr-text">Appointment reminders queued 24 hours before (email/in-app, Phase 7+).</span></li>
+    </ul>
+
+    <!-- Care Team -->
+    <h3 id="fr-team">Care Team</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-33</span><span class="fr-text">Each case has a care team: one lead coordinator plus optional clinicians/specialists.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-34</span><span class="fr-text">Team members can be added or removed; removals are logged in audit.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-35</span><span class="fr-text">A user can be on multiple care teams simultaneously.</span></li>
+    </ul>
+
+    <!-- Dashboard -->
+    <h3 id="fr-dash">Dashboard &amp; Reporting</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-36</span><span class="fr-text">Coordinator dashboard: my cases by status, overdue tasks, upcoming appointments.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-37</span><span class="fr-text">Supervisor dashboard: team caseloads, escalated cases, cases with no activity in 7 days.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-38</span><span class="fr-text">Admin dashboard: user activity, login history, system health.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-39</span><span class="fr-text">Reports: Cases by status, Average case duration, Tasks by assignee (CSV export).</span></li>
+    </ul>
+
+    <!-- Audit -->
+    <h3 id="fr-audit">Audit &amp; Compliance</h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-40</span><span class="fr-text">Every create/update/delete on patient, case, note, document, and user records produces an audit log entry.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-41</span><span class="fr-text">Audit logs are immutable; no API endpoint supports deletion.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-42</span><span class="fr-text">Logs capture: entity type, entity ID, action, old value (JSON), new value (JSON), user ID, timestamp, IP address.</span></li>
+    </ul>
+
+    <!-- Notifications -->
+    <h3 id="fr-notif">Notifications <span class="badge badge-gray" style="margin-left:6px;vertical-align:middle">Phase 7+</span></h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-43</span><span class="fr-text">In-app notification bell; unread count badge.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-44</span><span class="fr-text">Notification triggers: case assigned, task assigned, task overdue, case escalated, appointment reminder.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-45</span><span class="fr-text">Users can mark notifications read/dismissed.</span></li>
+    </ul>
+
+    <!-- FHIR -->
+    <h3 id="fr-fhir">FHIR/HL7 Integration <span class="badge badge-teal" style="margin-left:6px;vertical-align:middle">Phase 5</span></h3>
+    <ul class="fr-list">
+      <li class="fr-item"><span class="fr-code">FR-46</span><span class="fr-text">The system shall expose a FHIR R4-compliant REST API at <code>/fhir/R4/</code> with a valid CapabilityStatement at <code>/fhir/R4/metadata</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-47</span><span class="fr-text">The FHIR API shall support read and search operations for Patient, Encounter (Case), Appointment, Task, and DocumentReference resources.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-48</span><span class="fr-text">The <code>Patient/{id}/$everything</code> operation shall return a FHIR R4 Bundle containing all related resources for a patient.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-49</span><span class="fr-text">Users with CareCoordinator or Clinician role may import a patient by submitting a FHIR R4 Patient resource (JSON); system auto-generates an MRN.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-50</span><span class="fr-text">Any patient record may be exported as a downloadable FHIR R4 Bundle (JSON) from the patient detail page; the download is logged in audit.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-51</span><span class="fr-text">FHIR search shall support standard parameters: Patient by <code>_id</code>, <code>name</code>, <code>birthdate</code>, <code>identifier</code>; Encounter by <code>patient</code>, <code>status</code>.</span></li>
+      <li class="fr-item"><span class="fr-code">FR-52</span><span class="fr-text">All FHIR API errors shall return HL7-compliant <code>OperationOutcome</code> resources; HTTP status codes follow FHIR REST semantics.</span></li>
+      <li class="fr-item"><span class="fr-code stretch fr-code">FR-53</span><span class="fr-text"><em>(Stretch)</em> The system shall accept HL7 v2 ADT^A01 messages via HTTP and auto-create or update the corresponding Patient record.</span></li>
+      <li class="fr-item"><span class="fr-code stretch fr-code">FR-54</span><span class="fr-text"><em>(Stretch)</em> The system shall accept HL7 v2 ORU^R01 messages and attach the observation payload as a read-only CaseNote on the patient's active case.</span></li>
+    </ul>
+
+    <!-- NFR -->
+    <h2 id="nfr"><span class="num">1.4</span> Non-Functional Requirements</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-red">Security</span></td><td>HTTPS everywhere; secrets in Azure Key Vault; no secrets in source code</td></tr>
+          <tr><td><span class="badge badge-red">Security</span></td><td>OWASP Top 10 mitigated; input validation on all endpoints</td></tr>
+          <tr><td><span class="badge badge-blue">Performance</span></td><td>API p95 response time &lt; 400 ms under 100 concurrent users</td></tr>
+          <tr><td><span class="badge badge-green">Availability</span></td><td>99.5% uptime SLA target (Azure App Service Standard tier)</td></tr>
+          <tr><td><span class="badge badge-blue">Scalability</span></td><td>Stateless API; horizontal scale-out via App Service scale rules</td></tr>
+          <tr><td><span class="badge badge-yellow">Auditability</span></td><td>All PHI-touching operations logged with user identity</td></tr>
+          <tr><td><span class="badge badge-teal">Observability</span></td><td>Structured logging to Application Insights; custom dashboards</td></tr>
+          <tr><td><span class="badge badge-purple">Compliance</span></td><td>HIPAA-aligned: minimum necessary data, audit trails, encryption at rest and in transit</td></tr>
+          <tr><td><span class="badge badge-gray">Browser</span></td><td>Latest Chrome, Edge, Firefox, Safari</td></tr>
+          <tr><td><span class="badge badge-gray">Accessibility</span></td><td>WCAG 2.1 AA for all primary user flows</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 2 — MODULES
+    ─────────────────────────────────────────────── -->
+    <h2 id="modules"><span class="num">2</span> Main Modules</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Module</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Identity &amp; Access</strong></td><td>Authentication, JWT, refresh tokens, RBAC, lockout</td></tr>
+          <tr><td>2</td><td><strong>Patient Management</strong></td><td>Registration, search, profile, demographics, insurance</td></tr>
+          <tr><td>3</td><td><strong>Case Management</strong></td><td>Case lifecycle, status machine, tags, history, escalation</td></tr>
+          <tr><td>4</td><td><strong>Case Notes</strong></td><td>Append-only clinical notes per case</td></tr>
+          <tr><td>5</td><td><strong>Task Management</strong></td><td>Case-scoped tasks, assignments, due dates, statuses</td></tr>
+          <tr><td>6</td><td><strong>Document Management</strong></td><td>Blob upload/download, metadata, SAS URLs, categories</td></tr>
+          <tr><td>7</td><td><strong>Appointments</strong></td><td>Scheduling, provider calendar, conflict detection</td></tr>
+          <tr><td>8</td><td><strong>Care Team</strong></td><td>Team composition per case, member roles</td></tr>
+          <tr><td>9</td><td><strong>Dashboard &amp; Reports</strong></td><td>Coordinator/Supervisor/Admin views, CSV export</td></tr>
+          <tr><td>10</td><td><strong>Audit Log</strong></td><td>Immutable event log for compliance</td></tr>
+          <tr><td>11</td><td><strong>Notifications</strong></td><td>In-app alerts, trigger engine</td></tr>
+          <tr><td>12</td><td><strong>Administration</strong></td><td>User management, role assignment, system config</td></tr>
+          <tr><td>13</td><td><strong>FHIR/HL7 Integration</strong> <span class="badge badge-teal">NEW</span></td><td>FHIR R4 REST facade, resource mapping, Bundle export/import, HL7 v2 receiver (stretch)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 3 — DATABASE
+    ─────────────────────────────────────────────── -->
+    <h2 id="db"><span class="num">3</span> Database Tables</h2>
+    <div class="callout callout-info">All tables use <strong>UTC timestamps</strong> (<code>DATETIME2</code>), soft-delete patterns where applicable, and <code>UNIQUEIDENTIFIER</code> PKs (sequential via <code>NEWSEQUENTIALID()</code>). Schema: <code>dbo</code>.</div>
+
+    <h3 id="db-identity">Identity &amp; Access</h3>
+    <pre><code>Users
+  UserId          UNIQUEIDENTIFIER PK DEFAULT NEWSEQUENTIALID()
+  Email           NVARCHAR(256) UNIQUE NOT NULL
+  PasswordHash    NVARCHAR(512) NOT NULL
+  FirstName       NVARCHAR(100) NOT NULL
+  LastName        NVARCHAR(100) NOT NULL
+  IsActive        BIT NOT NULL DEFAULT 1
+  FailedLoginCount INT NOT NULL DEFAULT 0
+  LockedUntil     DATETIME2 NULL
+  LastLoginAt     DATETIME2 NULL
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  UpdatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+
+Roles
+  RoleId    INT PK IDENTITY
+  Name      NVARCHAR(50) UNIQUE NOT NULL   -- Admin, Supervisor, CareCoordinator, Clinician, ReadOnly
+  Description NVARCHAR(200) NULL
+
+UserRoles
+  UserId  UNIQUEIDENTIFIER FK → Users.UserId
+  RoleId  INT FK → Roles.RoleId
+  PK(UserId, RoleId)
+
+RefreshTokens
+  TokenId     UNIQUEIDENTIFIER PK
+  UserId      UNIQUEIDENTIFIER FK → Users.UserId
+  Token       NVARCHAR(512) NOT NULL
+  ExpiresAt   DATETIME2 NOT NULL
+  RevokedAt   DATETIME2 NULL
+  CreatedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-patient">Patient Management</h3>
+    <pre><code>Patients
+  PatientId       UNIQUEIDENTIFIER PK DEFAULT NEWSEQUENTIALID()
+  MRN             NVARCHAR(20) UNIQUE NOT NULL   -- System-generated Medical Record Number
+  FirstName       NVARCHAR(100) NOT NULL
+  LastName        NVARCHAR(100) NOT NULL
+  DateOfBirth     DATE NOT NULL
+  Gender          NVARCHAR(20) NULL
+  Phone           NVARCHAR(20) NULL
+  Email           NVARCHAR(256) NULL
+  Address         NVARCHAR(500) NULL
+  City            NVARCHAR(100) NULL
+  State           NVARCHAR(50) NULL
+  ZipCode         NVARCHAR(20) NULL
+  EmergencyContactName    NVARCHAR(200) NULL
+  EmergencyContactPhone   NVARCHAR(20) NULL
+  IsActive        BIT NOT NULL DEFAULT 1
+  CreatedBy       UNIQUEIDENTIFIER FK → Users.UserId
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  UpdatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+
+PatientInsurance
+  InsuranceId     UNIQUEIDENTIFIER PK DEFAULT NEWSEQUENTIALID()
+  PatientId       UNIQUEIDENTIFIER FK → Patients.PatientId
+  InsurancePlan   NVARCHAR(200) NOT NULL
+  MemberId        NVARCHAR(100) NOT NULL
+  GroupNumber     NVARCHAR(100) NULL
+  SubscriberName  NVARCHAR(200) NULL
+  EffectiveDate   DATE NOT NULL
+  TerminationDate DATE NULL
+  IsPrimary       BIT NOT NULL DEFAULT 1
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-case">Case Management</h3>
+    <pre><code>CaseTypes
+  CaseTypeId  INT PK IDENTITY
+  Name        NVARCHAR(100) UNIQUE NOT NULL   -- Chronic Disease, Post-Surgery, Mental Health, ...
+  Description NVARCHAR(500) NULL
+  IsActive    BIT NOT NULL DEFAULT 1
+
+Cases
+  CaseId          UNIQUEIDENTIFIER PK DEFAULT NEWSEQUENTIALID()
+  CaseNumber      NVARCHAR(20) UNIQUE NOT NULL   -- e.g. CASE-2026-00001
+  PatientId       UNIQUEIDENTIFIER FK → Patients.PatientId
+  CaseTypeId      INT FK → CaseTypes.CaseTypeId
+  Title           NVARCHAR(300) NOT NULL
+  Description     NVARCHAR(2000) NULL
+  Priority        NVARCHAR(20) NOT NULL DEFAULT 'Medium'  -- Low, Medium, High, Critical
+  Status          NVARCHAR(50) NOT NULL DEFAULT 'Draft'   -- Draft, Open, InProgress, PendingReview, Closed, Escalated
+  LeadCoordinatorId UNIQUEIDENTIFIER FK → Users.UserId
+  OpenedAt        DATETIME2 NULL
+  ClosedAt        DATETIME2 NULL
+  DueDate         DATE NULL
+  IsActive        BIT NOT NULL DEFAULT 1
+  CreatedBy       UNIQUEIDENTIFIER FK → Users.UserId
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  UpdatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+
+CaseTags / CaseCaseTags  (many-to-many)
+
+CaseStatusHistory
+  HistoryId   UNIQUEIDENTIFIER PK
+  CaseId      UNIQUEIDENTIFIER FK → Cases.CaseId
+  FromStatus  NVARCHAR(50) NULL
+  ToStatus    NVARCHAR(50) NOT NULL
+  Comment     NVARCHAR(500) NULL
+  ChangedBy   UNIQUEIDENTIFIER FK → Users.UserId
+  ChangedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+
+CaseNotes
+  NoteId      UNIQUEIDENTIFIER PK
+  CaseId      UNIQUEIDENTIFIER FK → Cases.CaseId
+  Content     NVARCHAR(MAX) NOT NULL
+  IsEditable  BIT NOT NULL DEFAULT 1   -- set to 0 after 24h by background job
+  CreatedBy   UNIQUEIDENTIFIER FK → Users.UserId
+  CreatedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-team">Care Team</h3>
+    <pre><code>CareTeamMembers
+  MemberId    UNIQUEIDENTIFIER PK
+  CaseId      UNIQUEIDENTIFIER FK → Cases.CaseId
+  UserId      UNIQUEIDENTIFIER FK → Users.UserId
+  TeamRole    NVARCHAR(100) NOT NULL   -- Lead, Clinician, Specialist, Support
+  AddedBy     UNIQUEIDENTIFIER FK → Users.UserId
+  AddedAt     DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  RemovedAt   DATETIME2 NULL
+  RemovedBy   UNIQUEIDENTIFIER FK → Users.UserId NULL</code></pre>
+
+    <h3 id="db-tasks">Task Management</h3>
+    <pre><code>CaseTasks
+  TaskId      UNIQUEIDENTIFIER PK
+  CaseId      UNIQUEIDENTIFIER FK → Cases.CaseId
+  Title       NVARCHAR(300) NOT NULL
+  Description NVARCHAR(2000) NULL
+  Status      NVARCHAR(50) NOT NULL DEFAULT 'Todo'   -- Todo, InProgress, Blocked, Done, Cancelled
+  Priority    NVARCHAR(20) NOT NULL DEFAULT 'Medium'
+  AssignedTo  UNIQUEIDENTIFIER FK → Users.UserId NULL
+  DueDate     DATE NULL
+  CompletedAt DATETIME2 NULL
+  CompletedBy UNIQUEIDENTIFIER FK → Users.UserId NULL
+  CreatedBy   UNIQUEIDENTIFIER FK → Users.UserId
+  CreatedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  UpdatedAt   DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-docs">Document Management</h3>
+    <pre><code>Documents
+  DocumentId      UNIQUEIDENTIFIER PK
+  CaseId          UNIQUEIDENTIFIER FK → Cases.CaseId
+  PatientId       UNIQUEIDENTIFIER FK → Patients.PatientId
+  FileName        NVARCHAR(500) NOT NULL
+  ContentType     NVARCHAR(100) NOT NULL
+  FileSizeBytes   BIGINT NOT NULL
+  BlobContainerName NVARCHAR(100) NOT NULL
+  BlobName        NVARCHAR(500) NOT NULL   -- path in Azure Blob Storage
+  Category        NVARCHAR(100) NOT NULL   -- Referral, LabResult, ConsentForm, Insurance, Other
+  Description     NVARCHAR(500) NULL
+  IsDeleted       BIT NOT NULL DEFAULT 0
+  DeletedAt       DATETIME2 NULL
+  DeletedBy       UNIQUEIDENTIFIER FK → Users.UserId NULL
+  UploadedBy      UNIQUEIDENTIFIER FK → Users.UserId
+  UploadedAt      DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-appts">Appointments</h3>
+    <pre><code>Providers
+  ProviderId  UNIQUEIDENTIFIER PK
+  UserId      UNIQUEIDENTIFIER FK → Users.UserId NULL   -- NULL if external provider
+  Name        NVARCHAR(200) NOT NULL
+  Specialty   NVARCHAR(200) NULL
+  IsActive    BIT NOT NULL DEFAULT 1
+
+Appointments
+  AppointmentId   UNIQUEIDENTIFIER PK
+  PatientId       UNIQUEIDENTIFIER FK → Patients.PatientId
+  CaseId          UNIQUEIDENTIFIER FK → Cases.CaseId NULL
+  ProviderId      UNIQUEIDENTIFIER FK → Providers.ProviderId
+  AppointmentType NVARCHAR(100) NOT NULL   -- InitialAssessment, FollowUp, SpecialistReferral, Telehealth
+  Status          NVARCHAR(50) NOT NULL DEFAULT 'Scheduled'  -- Scheduled, Confirmed, Completed, NoShow, Cancelled
+  ScheduledStart  DATETIME2 NOT NULL
+  ScheduledEnd    DATETIME2 NOT NULL
+  Location        NVARCHAR(300) NULL
+  Notes           NVARCHAR(2000) NULL
+  ReminderSentAt  DATETIME2 NULL
+  CreatedBy       UNIQUEIDENTIFIER FK → Users.UserId
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  UpdatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-notif">Notifications</h3>
+    <pre><code>Notifications
+  NotificationId  UNIQUEIDENTIFIER PK
+  UserId          UNIQUEIDENTIFIER FK → Users.UserId
+  Title           NVARCHAR(300) NOT NULL
+  Body            NVARCHAR(1000) NOT NULL
+  Type            NVARCHAR(100) NOT NULL   -- CaseAssigned, TaskAssigned, TaskOverdue, Escalation, AppointmentReminder
+  EntityType      NVARCHAR(100) NULL       -- Case, Task, Appointment
+  EntityId        UNIQUEIDENTIFIER NULL
+  IsRead          BIT NOT NULL DEFAULT 0
+  ReadAt          DATETIME2 NULL
+  CreatedAt       DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <h3 id="db-audit">Audit Log</h3>
+    <pre><code>AuditLogs
+  AuditId     UNIQUEIDENTIFIER PK
+  EntityType  NVARCHAR(100) NOT NULL   -- Patient, Case, CaseNote, Document, User, ...
+  EntityId    NVARCHAR(100) NOT NULL
+  Action      NVARCHAR(50) NOT NULL    -- Create, Update, Delete, Login, Logout, Download, FhirExport
+  OldValues   NVARCHAR(MAX) NULL       -- JSON snapshot
+  NewValues   NVARCHAR(MAX) NULL       -- JSON snapshot
+  UserId      UNIQUEIDENTIFIER NULL    -- NULL for system actions
+  UserEmail   NVARCHAR(256) NULL       -- denormalized for log permanence
+  IpAddress   NVARCHAR(50) NULL
+  UserAgent   NVARCHAR(500) NULL
+  OccurredAt  DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+  -- No FK to Users: audit log must survive user deletion</code></pre>
+
+    <h3 id="db-fhir">FHIR Integration <span class="badge badge-teal">NEW</span></h3>
+    <pre><code>FhirImportLogs
+  ImportId          UNIQUEIDENTIFIER PK DEFAULT NEWSEQUENTIALID()
+  PatientId         UNIQUEIDENTIFIER FK → Patients.PatientId NULL  -- NULL when import fails
+  SourceSystem      NVARCHAR(200) NULL        -- e.g. "ExternalEHR", "ManualUpload"
+  FhirResourceType  NVARCHAR(100) NOT NULL DEFAULT 'Patient'
+  FhirResourceId    NVARCHAR(100) NULL        -- source system's FHIR resource ID
+  FhirVersion       NVARCHAR(20) NOT NULL DEFAULT 'R4'
+  RawPayload        NVARCHAR(MAX) NOT NULL    -- original FHIR JSON stored for traceability
+  Status            NVARCHAR(50) NOT NULL     -- Success, Failed, PartialSuccess
+  ErrorMessage      NVARCHAR(2000) NULL
+  ImportedBy        UNIQUEIDENTIFIER FK → Users.UserId
+  ImportedAt        DATETIME2 NOT NULL DEFAULT GETUTCDATE()</code></pre>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 4 — API
+    ─────────────────────────────────────────────── -->
+    <h2 id="api"><span class="num">4</span> API Modules (.NET 8 Web API)</h2>
+
+    <div class="callout callout-info">
+      <strong>Clean Architecture Layers:</strong><br>
+      <code>HCM.Domain</code> — Entities, value objects, domain events, enums<br>
+      <code>HCM.Application</code> — Use cases (CQRS with MediatR), interfaces, DTOs, validators<br>
+      <code>HCM.Infrastructure</code> — EF Core DbContext, repositories, Blob storage, Key Vault, FHIR mapping<br>
+      <code>HCM.API</code> — Controllers, middleware, filters, DI composition root
+    </div>
+
+    <h4>AuthController — <code>/api/auth</code></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/login</code></td><td>Authenticate; return JWT + refresh token</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/refresh</code></td><td>Exchange refresh token for new JWT</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/logout</code></td><td>Revoke refresh token</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/change-password</code></td><td>Authenticated password change</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>UsersController — <code>/api/users</code> <span class="badge badge-red">Admin only</span></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/</code></td><td>Paginated user list with filters</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}</code></td><td>User detail</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/</code></td><td>Create user and assign roles</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}</code></td><td>Update user info</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}/roles</code></td><td>Reassign roles</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}/activate</code></td><td>Activate / deactivate user</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>PatientsController — <code>/api/patients</code></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/</code></td><td>Paginated search (name, DOB, MRN, insurance ID)</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}</code></td><td>Full patient profile</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/</code></td><td>Register new patient</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}</code></td><td>Update demographics</td></tr>
+        <tr><td><span class="badge badge-red">DELETE</span></td><td><code>/{id}</code></td><td>Soft-delete (deactivate)</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/cases</code></td><td>All cases for patient</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/appointments</code></td><td>Patient appointment history</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/documents</code></td><td>Patient document list</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>CasesController — <code>/api/cases</code></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/</code></td><td>Paginated list (status, priority, coordinator, tag)</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}</code></td><td>Case detail with care team, notes summary</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/</code></td><td>Create case</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}</code></td><td>Update case metadata</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}/status</code></td><td>Transition case status</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/history</code></td><td>Status change history</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/notes</code></td><td>Paginated notes</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/{id}/notes</code></td><td>Add note</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/tasks</code></td><td>Task list for case</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/{id}/tasks</code></td><td>Create task</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/documents</code></td><td>Documents attached to case</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/team</code></td><td>Care team members</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/{id}/team</code></td><td>Add team member</td></tr>
+        <tr><td><span class="badge badge-red">DELETE</span></td><td><code>/{id}/team/{memberId}</code></td><td>Remove team member</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>DocumentsController — <code>/api/documents</code></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/upload</code></td><td>Upload document (multipart/form-data, max 20 MB)</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}/download-url</code></td><td>Get 1-hour SAS URL; logged to audit</td></tr>
+        <tr><td><span class="badge badge-red">DELETE</span></td><td><code>/{id}</code></td><td>Soft-delete document</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>AppointmentsController — <code>/api/appointments</code></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/</code></td><td>Paginated list with filters</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/{id}</code></td><td>Appointment detail</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/</code></td><td>Schedule appointment (validates conflicts)</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}</code></td><td>Reschedule appointment</td></tr>
+        <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/{id}/status</code></td><td>Confirm / Complete / Cancel / NoShow</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/providers/{providerId}/availability</code></td><td>Available slots for a provider</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>FhirController — <code>/fhir/R4</code> <span class="badge badge-teal" style="margin-left:6px">FHIR R4</span></h4>
+    <div class="callout callout-success" style="margin-bottom:0.75rem">Uses the <strong>Firely .NET SDK</strong> (<code>Hl7.Fhir.R4</code> NuGet). Resources are mapped from internal entities on-the-fly — no separate FHIR datastore required.</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>FHIR Operation</th><th>Internal Mapping</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/metadata</code></td><td>CapabilityStatement</td><td>Hardcoded conformance resource</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Patient</code></td><td>search-type</td><td><code>Patients</code> table; params: <code>_id</code>, <code>name</code>, <code>birthdate</code>, <code>identifier</code></td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Patient/{id}</code></td><td>read</td><td>Single Patient entity → FHIR Patient</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/Patient</code></td><td>create</td><td>Import FHIR Patient JSON → upsert row + FhirImportLogs</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Patient/{id}/$everything</code></td><td>operation</td><td>FHIR Bundle: Patient + Encounters + Appointments + Tasks + DocumentReferences</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Encounter</code></td><td>search-type</td><td><code>Cases</code> table; params: <code>patient</code>, <code>status</code></td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Encounter/{id}</code></td><td>read</td><td>Case → FHIR Encounter</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Appointment/{id}</code></td><td>read</td><td>Appointment → FHIR Appointment</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/Task/{id}</code></td><td>read</td><td>CaseTask → FHIR Task</td></tr>
+        <tr><td><span class="badge badge-blue">GET</span></td><td><code>/DocumentReference/{id}</code></td><td>read</td><td>Document → FHIR DocumentReference</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>FHIR Resource Mappings</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Internal Entity</th><th>FHIR R4 Resource</th><th>Key Field Mappings</th></tr></thead>
+      <tbody>
+        <tr><td><code>Patient</code></td><td><code>Patient</code></td><td><code>PatientId→id</code>, <code>MRN→identifier</code>, <code>Name→name</code>, <code>DateOfBirth→birthDate</code>, <code>Gender→gender</code>, <code>Phone/Email→telecom</code></td></tr>
+        <tr><td><code>Case</code></td><td><code>Encounter</code></td><td><code>CaseId→id</code>, <code>CaseNumber→identifier</code>, <code>Status: Draft/Open→planned, InProgress→in-progress, Closed→finished, Escalated→entered-in-error</code></td></tr>
+        <tr><td><code>Appointment</code></td><td><code>Appointment</code></td><td><code>AppointmentId→id</code>, <code>Status→status</code>, <code>ScheduledStart→start</code>, <code>ScheduledEnd→end</code>, <code>AppointmentType→serviceType</code></td></tr>
+        <tr><td><code>CaseTask</code></td><td><code>Task</code></td><td><code>TaskId→id</code>, <code>Status→status</code>, <code>AssignedTo→owner</code>, <code>DueDate→executionPeriod.end</code></td></tr>
+        <tr><td><code>Document</code></td><td><code>DocumentReference</code></td><td><code>DocumentId→id</code>, <code>Category→category</code>, <code>FileName→content.attachment.title</code>, <code>ContentType→contentType</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Hl7Controller — <code>/api/hl7</code> <span class="badge badge-gray">Stretch Goal</span></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/adt</code></td><td>Receive HL7 v2 ADT^A01; parse with NHapi; upsert Patient + FhirImportLogs</td></tr>
+        <tr><td><span class="badge badge-green">POST</span></td><td><code>/oru</code></td><td>Receive HL7 v2 ORU^R01; attach observation as read-only CaseNote</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Other Controllers</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Controller</th><th>Base Route</th><th>Key Endpoints</th></tr></thead>
+      <tbody>
+        <tr><td><strong>TasksController</strong></td><td><code>/api/tasks</code></td><td>GET /my · GET /{id} · PUT /{id} · PUT /{id}/status · DELETE /{id}</td></tr>
+        <tr><td><strong>DashboardController</strong></td><td><code>/api/dashboard</code></td><td>GET /coordinator · GET /supervisor · GET /admin</td></tr>
+        <tr><td><strong>ReportsController</strong></td><td><code>/api/reports</code></td><td>GET /cases-by-status · GET /case-duration · GET /tasks-by-assignee (CSV or JSON)</td></tr>
+        <tr><td><strong>AuditController</strong></td><td><code>/api/audit</code></td><td>GET / (paginated, Admin only) · GET /{entityType}/{entityId}</td></tr>
+        <tr><td><strong>NotificationsController</strong></td><td><code>/api/notifications</code></td><td>GET / · GET /unread-count · PUT /{id}/read · PUT /mark-all-read</td></tr>
+      </tbody>
+    </table></div>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 5 — ANGULAR
+    ─────────────────────────────────────────────── -->
+    <h2 id="angular"><span class="num">5</span> Angular Modules</h2>
+    <pre><code>src/app/
+  core/
+    services/        AuthService · UserService · NotificationService
+    interceptors/    JwtInterceptor · ErrorInterceptor · LoadingInterceptor
+    guards/          AuthGuard · RoleGuard
+    models/          Core shared interfaces
+
+  shared/
+    components/      PageHeader · DataTable · ConfirmDialog · StatusBadge · FileUpload
+    pipes/           DateFormatPipe · TruncatePipe · EnumLabelPipe
+    directives/      HasRoleDirective
+
+  features/
+    auth/            Login · ChangePassword
+    dashboard/       CoordinatorDashboard · SupervisorDashboard · AdminDashboard
+    patients/        PatientList · PatientDetail · PatientForm
+    cases/           CaseList · CaseDetail · CaseForm · CaseStatusHistory
+    case-notes/      NoteList · NoteForm (embedded in CaseDetail)
+    tasks/           TaskList · TaskDetail · TaskForm · MyTasks
+    documents/       DocumentList · DocumentUpload (embedded in CaseDetail / PatientDetail)
+    appointments/    AppointmentList · AppointmentForm · ProviderCalendar
+    reports/         ReportsDashboard · CasesByStatus · CaseDuration · TasksByAssignee
+    notifications/   NotificationBell · NotificationList
+    admin/           UserList · UserForm · RoleAssignment · AuditLog
+    fhir/            FhirExplorer · FhirImportComponent · FhirExportButton</code></pre>
+
+    <h3>Key Patterns</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Pattern</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td>State management</td><td>NgRx Store for auth state and notifications; RxJS for component-level UI state</td></tr>
+        <tr><td>HTTP</td><td><code>HttpClient</code> with typed services; <code>catchError</code> to global error handler</td></tr>
+        <tr><td>Forms</td><td>Reactive Forms throughout; custom validators for date ranges, phone, MRN</td></tr>
+        <tr><td>Routing</td><td>Lazy-loaded feature modules; role-based route guards</td></tr>
+        <tr><td>UI Library</td><td>Angular Material (MDC) — enterprise look, accessibility built-in</td></tr>
+        <tr><td>Tables</td><td>Angular CDK virtual scroll for large lists; Angular Material paginator</td></tr>
+        <tr><td>Charts</td><td>Chart.js via <code>ng2-charts</code> for dashboard widgets</td></tr>
+        <tr><td>File upload</td><td>Custom <code>FileUploadComponent</code> using <code>FormData</code> and progress events</td></tr>
+        <tr><td>Auth tokens</td><td><code>localStorage</code> for JWT; <code>sessionStorage</code> option for sensitive roles</td></tr>
+        <tr><td>FHIR display</td><td><code>ngx-json-viewer</code> for collapsible FHIR JSON tree; <code>FhirService</code> targets <code>/fhir/R4/</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 6 — AZURE
+    ─────────────────────────────────────────────── -->
+    <h2 id="azure"><span class="num">6</span> Azure Deployment Architecture</h2>
+    <div class="arch">┌─────────────────────────────────────────────────────────────────────┐
+│                        GitHub Actions CI/CD                          │
+│  Build → Test → Publish → Deploy (dev → staging → prod)             │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                 ▼
+  ┌──────────────────┐  ┌─────────────┐  ┌──────────────────┐
+  │ Azure Static     │  │ Azure App   │  │  Azure SQL        │
+  │ Web Apps         │  │ Service     │  │  Database         │
+  │ (Angular SPA)    │  │ (.NET 8 API)│  │  (General Purpose │
+  │  Free/Standard   │  │  P1v3 tier) │  │   S2 tier)        │
+  └────────┬─────────┘  └──────┬──────┘  └──────────────────┘
+           │ HTTPS             │ HTTPS             ▲
+           │                   │ (VNET             │
+           │                   │  Integration)     │ EF Core
+           │                   ▼                   │
+           │           ┌──────────────────┐        │
+           └──────────►│  Azure Key Vault  │        │
+                       │  - JWT secret     │────────┘
+                       │  - SQL conn str   │
+                       │  - Blob conn str  │
+                       └──────────────────┘
+                                │
+                ┌───────────────┼────────────────┐
+                ▼               ▼                 ▼
+     ┌──────────────────┐  ┌──────────────┐  ┌───────────────┐
+     │  Azure Blob      │  │  Application │  │  Azure        │
+     │  Storage         │  │  Insights    │  │  Monitor      │
+     │  (case-documents)│  │  (traces,    │  │  (alerts,     │
+     │  private         │  │   metrics,   │  │   dashboards) │
+     └──────────────────┘  │   logs)      │  └───────────────┘
+                           └──────────────┘
+
+Resource Group: rg-hcm-prod
+  ├── App Service Plan:  asp-hcm-prod (P1v3 Linux)
+  │   └── App Service:  hcm-prod-api (.NET 8)
+  ├── Static Web App:   hcm-prod-web (Angular)
+  ├── Azure SQL Server: hcm-prod-sqlsrv
+  │   └── Database:     hcm-prod-db (S2)
+  ├── Storage Account:  hcmprodst → container: case-documents (private)
+  ├── Key Vault:        hcm-prod-kv
+  ├── App Insights:     hcm-prod-ai
+  └── Log Analytics:    hcm-prod-law</div>
+
+    <h3>CI/CD Pipeline</h3>
+    <pre><code>Trigger: push to main / PR to main
+
+Jobs:
+  build-api:
+    dotnet restore && dotnet build --no-restore
+    dotnet test (unit + integration)
+    dotnet publish -o ./publish → Upload artifact
+
+  build-angular:
+    npm ci
+    ng lint && ng test --watch=false
+    ng build --configuration production → Upload artifact
+
+  deploy-staging:
+    needs: [build-api, build-angular]
+    Deploy API  → hcm-staging-api (App Service)
+    Deploy SPA  → Static Web Apps staging slot
+    Run smoke tests
+
+  deploy-prod:
+    needs: deploy-staging
+    environment: production  ← manual approval gate
+    Deploy API  → hcm-prod-api
+    Deploy SPA  → Static Web Apps production</code></pre>
+
+    <!-- ────────────────────────────────────────────
+         SECTION 8 — RISKS
+    ─────────────────────────────────────────────── -->
+    <h2 id="risks"><span class="num">8</span> Risks &amp; Assumptions</h2>
+
+    <h3>Risks</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr class="risk-medium"><td>R1</td><td>Azure costs exceed free-tier for portfolio demo</td><td>Medium</td><td>Medium</td><td>Use Basic/Free tiers; set budget alerts; shut down non-prod after hours</td></tr>
+        <tr class="risk-high"><td>R2</td><td>HIPAA compliance gaps expose PHI in logs</td><td>Medium</td><td>High</td><td>Strip PHI from all log messages; use entity IDs only; enable App Insights masking</td></tr>
+        <tr class="risk-critical"><td>R3</td><td>JWT secret leaked to source control</td><td>Low</td><td>Critical</td><td>Use Key Vault; GitHub secret scanning; pre-commit hooks</td></tr>
+        <tr class="risk-critical"><td>R4</td><td>SQL injection via dynamic queries</td><td>Low</td><td>Critical</td><td>EF Core parameterized queries only; ban raw SQL in PRs</td></tr>
+        <tr class="risk-high"><td>R5</td><td>Blob SAS URL leaked (document access control failure)</td><td>Low</td><td>High</td><td>Short-lived SAS (1h); log every download in audit; no public container access</td></tr>
+        <tr class="risk-medium"><td>R6</td><td>Scope creep extends Phase 1 indefinitely</td><td>High</td><td>Medium</td><td>Strict phase definitions; defer nice-to-haves to backlog; time-box phases</td></tr>
+        <tr class="risk-medium"><td>R7</td><td>EF Core migration conflicts in team development</td><td>Medium</td><td>Low</td><td>Single migration owner per branch; squash migrations before merge</td></tr>
+        <tr class="risk-low"><td>R8</td><td>Angular bundle size too large for demo</td><td>Low</td><td>Low</td><td>Lazy loading per module; analyse with <code>--stats-json</code> + webpack-bundle-analyzer</td></tr>
+        <tr class="risk-medium"><td>R9</td><td>No real SMTP for email notifications</td><td>Medium</td><td>Low</td><td>Phase 7 feature; use SendGrid free tier or stub in earlier phases</td></tr>
+        <tr class="risk-low"><td>R10</td><td>Azure AD not integrated (SAML/OAuth)</td><td>Low</td><td>Low</td><td>Out of scope for portfolio; JWT + RBAC is sufficient to demonstrate skill</td></tr>
+        <tr class="risk-medium"><td>R11</td><td>FHIR resource mapping has edge cases (status enum mismatches)</td><td>Medium</td><td>Medium</td><td>Scope Phase 5 to read + export first; use Firely SDK for validation; unit-test each mapping</td></tr>
+        <tr class="risk-low"><td>R12</td><td>Firely .NET SDK adds serialization overhead</td><td>Low</td><td>Low</td><td>Isolate FHIR logic behind <code>IFhirMappingService</code>; SDK only loaded on FHIR request paths</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Assumptions</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Assumption</th></tr></thead>
+      <tbody>
+        <tr><td>A1</td><td>This is a portfolio project; no real patient data will ever be stored</td></tr>
+        <tr><td>A2</td><td>A single Azure subscription is used for all environments</td></tr>
+        <tr><td>A3</td><td>GitHub is the source control and CI/CD platform</td></tr>
+        <tr><td>A4</td><td>The developer has an active Azure subscription (pay-as-you-go or Visual Studio credits)</td></tr>
+        <tr><td>A5</td><td>Angular 17+ (NgModules used to demonstrate enterprise patterns)</td></tr>
+        <tr><td>A6</td><td>.NET 8 LTS is the target runtime</td></tr>
+        <tr><td>A7</td><td>SQL Server 2022 / Azure SQL is the only supported database</td></tr>
+        <tr><td>A8</td><td>Multi-tenancy (multiple hospital organizations) is out of scope for this phase</td></tr>
+        <tr><td>A9</td><td>FHIR R4 API facade, Bundle export, and Patient import are in scope (Phase 5); SMART on FHIR auth and full bi-directional EHR sync are out of scope</td></tr>
+        <tr><td>A10</td><td>Mobile app is out of scope; responsive web is the target</td></tr>
+        <tr><td>A11</td><td>Email notifications use SendGrid when implemented in Phase 7</td></tr>
+        <tr><td>A12</td><td>The Angular app is a SPA; no SSR is required</td></tr>
+      </tbody>
+    </table></div>
+
+  </main>
+</div>
+
+<button id="back-top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer>
+  Healthcare Case Management System &mdash; Product Requirements &nbsp;·&nbsp; 2026-06-21
+</footer>
+
+<script>
+  // Scroll spy
+  const sLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+  const anchors = [...sLinks].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  const bt = document.getElementById('back-top');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 90;
+    let current = anchors[0];
+    anchors.forEach(a => { if (a.offsetTop <= y) current = a; });
+    sLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current.id));
+    bt.classList.toggle('show', window.scrollY > 300);
+  }, { passive: true });
+</script>
+</body>
+</html>
