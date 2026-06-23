@@ -1,0 +1,68 @@
+{
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build*)",
+      "Bash(dotnet restore*)",
+      "Bash(dotnet test*)",
+      "Bash(dotnet run*)",
+      "Bash(dotnet publish*)",
+      "Bash(dotnet ef migrations add*)",
+      "Bash(dotnet ef migrations list*)",
+      "Bash(dotnet ef migrations script*)",
+      "Bash(dotnet user-secrets*)",
+      "Bash(dotnet format*)",
+      "Bash(ng build*)",
+      "Bash(ng test*)",
+      "Bash(ng lint*)",
+      "Bash(ng serve*)",
+      "Bash(ng generate*)",
+      "Bash(ng new*)",
+      "Bash(npm ci*)",
+      "Bash(npm install*)",
+      "Bash(npm run*)",
+      "Bash(npx *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git stash*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(mkdir*)",
+      "Bash(ls*)",
+      "Bash(sqllocaldb*)",
+      "Bash(azurite*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "statusMessage": "Checking docs for milestone updates...",
+            "command": "@{hookSpecificOutput=@{hookEventName='Stop';additionalContext='DOCS UPDATE CHECK: Before finishing, review what happened this session. If any tasks were checked off in docs/phase-tracker.md, a phase was completed, or any module features shipped — you MUST update: (1) docs/changelog.md: add a [YYYY-MM-DD] dated bullet under the correct phase section describing what changed and why. (2) docs/project-status.md: tick off completed tasks in the phase checklist, update the phase overview table counts, and note any new blockers or decisions. (3) docs/feature-reference.md: change the Status field from Not Started to In Progress or Complete for any modules that moved. Update the Last Updated date at the top of each file you change. If nothing doc-worthy happened this session, skip all of the above — do not add empty or placeholder entries.'}} | ConvertTo-Json -Compress -Depth 5"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "statusMessage": "Test gate: verifying tests pass before commit...",
+            "command": "$raw=[Console]::In.ReadToEnd();if($raw -notmatch 'git commit'){exit 0};if(-not(Test-Path *.sln)){exit 0};Write-Host 'TEST GATE: Running dotnet test...';dotnet test --nologo;if($LASTEXITCODE -ne 0){@{decision='block';reason='Tests failed - commit blocked. Fix all failing tests before committing.'} | ConvertTo-Json -Compress;exit 2};exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
