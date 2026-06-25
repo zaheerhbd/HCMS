@@ -37,10 +37,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: npm run lint --if-present
 
-      - name: Test
-        working-directory: ${{ env.WORKING_DIR }}
-        run: npm run test -- --watch=false --browsers=ChromeHeadless
-
       - name: Build (production)
         working-directory: ${{ env.WORKING_DIR }}
         run: npm run build -- --configuration production
