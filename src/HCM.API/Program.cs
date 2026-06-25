@@ -106,19 +106,15 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// ── Seed database on startup (dev only) ──────────────────────────────────────
-if (app.Environment.IsDevelopment())
-    await DataSeeder.SeedAsync(app.Services);
+// ── Seed database on startup (all environments) ──────────────────────────────
+await DataSeeder.SeedAsync(app.Services);
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("Angular");
