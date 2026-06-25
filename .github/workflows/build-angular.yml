@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIR }}
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Lint
         working-directory: ${{ env.WORKING_DIR }}
