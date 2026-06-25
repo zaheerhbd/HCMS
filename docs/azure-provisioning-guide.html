@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMS — Azure Provisioning Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.6;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 860px; margin: 0 auto; }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0078d4;
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+
+  .progress-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .progress-step {
+    flex: 1;
+    min-width: 60px;
+    height: 6px;
+    background: #cbd5e1;
+    border-radius: 3px;
+    transition: background 0.3s;
+  }
+
+  .progress-step.done { background: #0078d4; }
+
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.4rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .section-header:hover { background: #f1f5f9; }
+
+  .step-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0078d4;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-badge.done { background: #16a34a; }
+
+  .section-title {
+    font-weight: 600;
+    font-size: 1rem;
+    flex: 1;
+  }
+
+  .section-meta {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    white-space: nowrap;
+  }
+
+  .chevron {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    transition: transform 0.2s;
+  }
+
+  .section-body {
+    padding: 1.4rem;
+  }
+
+  .step-list { list-style: none; }
+
+  .step-list li {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.93rem;
+    align-items: flex-start;
+  }
+
+  .step-list li:last-child { border-bottom: none; }
+
+  .step-list li::before {
+    content: "→";
+    color: #0078d4;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  code {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 0.87em;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  .value-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+  }
+
+  .value-box strong { color: #1e40af; display: block; margin-bottom: 0.35rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .value-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #dbeafe;
+  }
+
+  .value-row:last-child { border-bottom: none; }
+
+  .value-row .label { color: #475569; font-size: 0.88rem; }
+  .value-row .val { font-family: Consolas, monospace; font-size: 0.88rem; color: #1e40af; }
+
+  .warning {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.87rem;
+    margin: 0.75rem 0;
+    color: #713f12;
+  }
+
+  .warning::before { content: "⚠ "; font-weight: 700; }
+
+  .tip {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.87rem;
+    margin: 0.75rem 0;
+    color: #14532d;
+  }
+
+  .tip::before { content: "💡 "; }
+
+  .nav-link {
+    display: inline-block;
+    background: #0078d4;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+
+  .nav-link:hover { background: #006cbd; }
+
+  .nav-link.secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    margin-left: 0.5rem;
+  }
+
+  .checklist { list-style: none; margin-top: 0.5rem; }
+
+  .checklist li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+
+  .checklist input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #0078d4;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .final-checklist {
+    background: #fff;
+    border: 2px solid #0078d4;
+    border-radius: 12px;
+    padding: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .final-checklist h2 {
+    color: #0078d4;
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+  }
+
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 0.75rem 0; }
+
+  .phase-tag {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.87rem; }
+  th { background: #f8fafc; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; color: #475569; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>HCMS — Azure Provisioning Guide</h1>
+  <p class="subtitle">Phase 1 · Single prod environment · Portal UI walkthrough · <strong>hcm-prod-*</strong> naming</p>
+
+  <div class="phase-tag">Phase 1 — Foundation &amp; Infrastructure</div>
+
+  <!-- OVERVIEW TABLE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge" style="background:#64748b">✦</div>
+      <div class="section-title">What you'll create</div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>Step</th><th>Resource</th><th>Name</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Resource Group</td><td><code>hcm-prod-rg</code></td><td>Container for everything</td></tr>
+          <tr><td>2</td><td>SQL Server + Database</td><td><code>hcm-prod-sql</code> / <code>HcmsDb</code></td><td>Relational data store</td></tr>
+          <tr><td>3</td><td>Key Vault</td><td><code>hcm-prod-kv</code></td><td>Secrets (connection string, JWT)</td></tr>
+          <tr><td>4</td><td>Application Insights</td><td><code>hcm-prod-ai</code></td><td>Logs &amp; telemetry</td></tr>
+          <tr><td>5</td><td>App Service Plan</td><td><code>hcm-prod-plan</code></td><td>Compute for the API</td></tr>
+          <tr><td>6</td><td>App Service (Web App)</td><td><code>hcm-prod-api</code></td><td>.NET 8 API host</td></tr>
+          <tr><td>7</td><td>Static Web App</td><td><code>hcm-prod-swa</code></td><td>Angular frontend host</td></tr>
+          <tr><td>8</td><td>Managed Identity</td><td>(on hcm-prod-api)</td><td>Lets API read Key Vault secrets</td></tr>
+          <tr><td>9</td><td>GitHub Secrets</td><td>2 secrets</td><td>CI/CD deploy credentials</td></tr>
+        </tbody>
+      </table>
+      <div class="tip">Sign in to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> before starting. Keep this guide open in a second tab.</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Resource Group -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">1</div>
+      <div class="section-title">Create Resource Group</div>
+      <span class="section-meta">~1 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>Resource groups</strong> in the top search bar → click it</li>
+        <li>Click <strong>+ Create</strong></li>
+        <li>Fill in the form:</li>
+      </ul>
+      <div class="value-box">
+        <strong>Values to enter</strong>
+        <div class="value-row"><span class="label">Subscription</span><span class="val">your subscription</span></div>
+        <div class="value-row"><span class="label">Resource group name</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+      </div>
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 2: SQL Server + DB -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">2</div>
+      <div class="section-title">Create SQL Server &amp; Database</div>
+      <span class="section-meta">~5 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>SQL servers</strong> → click it → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Server name</span><span class="val">hcm-prod-sql</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+        <div class="value-row"><span class="label">Authentication method</span><span class="val">Use SQL authentication</span></div>
+        <div class="value-row"><span class="label">Server admin login</span><span class="val">hcmadmin</span></div>
+        <div class="value-row"><span class="label">Password</span><span class="val">Choose a strong password — save it!</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong> — wait for deployment</li>
+        <li>Go to the newly created SQL server → click <strong>Databases</strong> in the left menu → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Create Database</strong>
+        <div class="value-row"><span class="label">Database name</span><span class="val">HcmsDb</span></div>
+        <div class="value-row"><span class="label">Server</span><span class="val">hcm-prod-sql (already selected)</span></div>
+        <div class="value-row"><span class="label">Compute + storage</span><span class="val">Click "Configure database" → Basic tier → cheapest option</span></div>
+        <div class="value-row"><span class="label">Backup storage redundancy</span><span class="val">Locally redundant</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+        <li>Back on the SQL server, go to <strong>Networking</strong> in the left menu</li>
+        <li>Under <em>Firewall rules</em> → toggle <strong>"Allow Azure services and resources to access this server"</strong> → <strong>ON</strong></li>
+        <li>Click <strong>Save</strong></li>
+      </ul>
+
+      <div class="warning">Save your SQL admin password now. You'll need it in Step 8 when creating Key Vault secrets.</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Key Vault -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">3</div>
+      <div class="section-title">Create Key Vault</div>
+      <span class="section-meta">~2 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>Key vaults</strong> → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Key vault name</span><span class="val">hcm-prod-kv</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+        <div class="value-row"><span class="label">Pricing tier</span><span class="val">Standard</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Go to the <strong>Access configuration</strong> tab → Permission model: <strong>Vault access policy</strong></li>
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+      </ul>
+
+      <div class="tip">Don't add secrets yet — you need the App Service Managed Identity set up first (Step 8) so the API can read them.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Application Insights -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">4</div>
+      <div class="section-title">Create Application Insights</div>
+      <span class="section-meta">~2 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>Application Insights</strong> → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Name</span><span class="val">hcm-prod-ai</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+        <div class="value-row"><span class="label">Resource mode</span><span class="val">Workspace-based</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+        <li>Once created, open it → copy the <strong>Connection String</strong> from the Overview page — you'll use it in Step 8</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 5: App Service Plan -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">5</div>
+      <div class="section-title">Create App Service Plan</div>
+      <span class="section-meta">~2 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>App Service plans</strong> → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Name</span><span class="val">hcm-prod-plan</span></div>
+        <div class="value-row"><span class="label">Operating System</span><span class="val">Linux</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+        <div class="value-row"><span class="label">Pricing plan</span><span class="val">Basic B1</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 6: App Service (Web App) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">6</div>
+      <div class="section-title">Create App Service (API)</div>
+      <span class="section-meta">~3 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>App Services</strong> → <strong>+ Create</strong> → <strong>Web App</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Name</span><span class="val">hcm-prod-api</span></div>
+        <div class="value-row"><span class="label">Publish</span><span class="val">Code</span></div>
+        <div class="value-row"><span class="label">Runtime stack</span><span class="val">.NET 8 (LTS)</span></div>
+        <div class="value-row"><span class="label">Operating System</span><span class="val">Linux</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US</span></div>
+        <div class="value-row"><span class="label">App Service Plan</span><span class="val">hcm-prod-plan (existing)</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+      </ul>
+
+      <div class="tip">Your API will be reachable at <code>https://hcm-prod-api.azurewebsites.net</code> once deployed.</div>
+    </div>
+  </div>
+
+  <!-- STEP 7: Static Web App -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">7</div>
+      <div class="section-title">Create Static Web App (Angular)</div>
+      <span class="section-meta">~3 min</span>
+    </div>
+    <div class="section-body">
+      <ul class="step-list">
+        <li>Search <strong>Static Web Apps</strong> → <strong>+ Create</strong></li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Basics tab</strong>
+        <div class="value-row"><span class="label">Resource group</span><span class="val">hcm-prod-rg</span></div>
+        <div class="value-row"><span class="label">Name</span><span class="val">hcm-prod-swa</span></div>
+        <div class="value-row"><span class="label">Plan type</span><span class="val">Free</span></div>
+        <div class="value-row"><span class="label">Region</span><span class="val">East US 2</span></div>
+        <div class="value-row"><span class="label">Source</span><span class="val">Other (we deploy via GitHub Actions manually)</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Review + create</strong> → <strong>Create</strong></li>
+        <li>Once created, open it → click <strong>Manage deployment token</strong> in the Overview → copy the token → save it (needed for GitHub secret in Step 9)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 8: Managed Identity + KV Secrets -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">8</div>
+      <div class="section-title">Managed Identity + Key Vault Secrets</div>
+      <span class="section-meta">~5 min</span>
+    </div>
+    <div class="section-body">
+      <p style="margin-bottom:0.75rem; font-size:0.9rem; color:#475569;">This lets the API read secrets from Key Vault without any credentials in config files.</p>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">8a — Enable Managed Identity on the App Service</strong>
+      <ul class="step-list" style="margin-top:0.5rem; margin-bottom:1rem;">
+        <li>Go to <strong>hcm-prod-api</strong> (App Service) → left menu: <strong>Identity</strong></li>
+        <li>Under <em>System assigned</em> tab → toggle Status to <strong>On</strong> → click <strong>Save</strong> → confirm</li>
+        <li>Copy the <strong>Object (principal) ID</strong> that appears — you need it next</li>
+      </ul>
+
+      <hr>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">8b — Grant access to Key Vault</strong>
+      <ul class="step-list" style="margin-top:0.5rem; margin-bottom:1rem;">
+        <li>Go to <strong>hcm-prod-kv</strong> (Key Vault) → left menu: <strong>Access policies</strong></li>
+        <li>Click <strong>+ Create</strong></li>
+        <li>Under <em>Permissions</em>: tick <strong>Get</strong> and <strong>List</strong> under Secret permissions only → Next</li>
+        <li>Under <em>Principal</em>: search for <code>hcm-prod-api</code> → select it → Next → <strong>Create</strong></li>
+      </ul>
+
+      <hr>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">8c — Add secrets to Key Vault</strong>
+      <ul class="step-list" style="margin-top:0.5rem; margin-bottom:1rem;">
+        <li>Still in <strong>hcm-prod-kv</strong> → left menu: <strong>Secrets</strong> → <strong>+ Generate/Import</strong></li>
+        <li>Add secret 1:</li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Secret 1 — Database connection string</strong>
+        <div class="value-row"><span class="label">Name</span><span class="val">ConnectionStrings--DefaultConnection</span></div>
+        <div class="value-row"><span class="label">Value</span><span class="val">Server=hcm-prod-sql.database.windows.net;Database=HcmsDb;User Id=hcmadmin;Password=YOUR_PASSWORD;Encrypt=True;</span></div>
+      </div>
+
+      <div class="warning">Replace <code>YOUR_PASSWORD</code> with the SQL admin password you chose in Step 2. The double dash <code>--</code> in the secret name maps to <code>:</code> in .NET config (e.g. <code>ConnectionStrings:DefaultConnection</code>).</div>
+
+      <ul class="step-list">
+        <li>Click <strong>Create</strong> → then <strong>+ Generate/Import</strong> again for secret 2:</li>
+      </ul>
+
+      <div class="value-box">
+        <strong>Secret 2 — JWT signing secret</strong>
+        <div class="value-row"><span class="label">Name</span><span class="val">Jwt--Secret</span></div>
+        <div class="value-row"><span class="label">Value</span><span class="val">A random string, at least 64 characters long</span></div>
+      </div>
+
+      <div class="tip">Generate a strong JWT secret: open browser console on any page and run <code>btoa(crypto.getRandomValues(new Uint8Array(48)).join(''))</code> — copy the result.</div>
+
+      <hr>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">8d — Wire Key Vault URI into App Service config</strong>
+      <ul class="step-list" style="margin-top:0.5rem;">
+        <li>Go back to <strong>hcm-prod-api</strong> → left menu: <strong>Environment variables</strong> (under Settings)</li>
+        <li>Click <strong>+ Add</strong> for each of these two settings:</li>
+      </ul>
+
+      <div class="value-box">
+        <strong>App Settings to add</strong>
+        <div class="value-row"><span class="label">KeyVaultUri</span><span class="val">https://hcm-prod-kv.vault.azure.net/</span></div>
+        <div class="value-row"><span class="label">ASPNETCORE_ENVIRONMENT</span><span class="val">Production</span></div>
+        <div class="value-row"><span class="label">ApplicationInsights__ConnectionString</span><span class="val">(paste the AI connection string from Step 4)</span></div>
+      </div>
+
+      <ul class="step-list">
+        <li>Click <strong>Apply</strong> → <strong>Confirm</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 9: GitHub Secrets -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-badge">9</div>
+      <div class="section-title">Add GitHub Secrets for CI/CD</div>
+      <span class="section-meta">~3 min</span>
+    </div>
+    <div class="section-body">
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">9a — Get API publish profile</strong>
+      <ul class="step-list" style="margin-top:0.5rem; margin-bottom:1rem;">
+        <li>Go to <strong>hcm-prod-api</strong> → Overview page → click <strong>Download publish profile</strong> in the top toolbar</li>
+        <li>Open the downloaded <code>.PublishSettings</code> file in Notepad → select all → copy all content</li>
+      </ul>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">9b — Add both secrets to GitHub</strong>
+      <ul class="step-list" style="margin-top:0.5rem; margin-bottom:1rem;">
+        <li>Go to your GitHub repo → <strong>Settings</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong></li>
+        <li>Click <strong>New repository secret</strong> and add:</li>
+      </ul>
+
+      <div class="value-box">
+        <strong>GitHub Secrets to add</strong>
+        <div class="value-row"><span class="label">AZURE_WEBAPP_PUBLISH_PROFILE</span><span class="val">Paste full XML content from .PublishSettings file</span></div>
+        <div class="value-row"><span class="label">AZURE_STATIC_WEB_APPS_API_TOKEN</span><span class="val">Paste deployment token from Step 7</span></div>
+      </div>
+
+      <strong style="font-size:0.85rem; color:#475569; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-top:1rem;">9c — Trigger CI/CD</strong>
+      <ul class="step-list" style="margin-top:0.5rem;">
+        <li>Push any commit to <code>main</code> branch (or push the existing code if not already pushed)</li>
+        <li>Go to your GitHub repo → <strong>Actions</strong> tab — watch both workflows run</li>
+        <li><strong>Build &amp; Deploy API</strong> deploys the .NET API to <code>hcm-prod-api</code></li>
+        <li><strong>Build &amp; Deploy Angular</strong> deploys the SPA to <code>hcm-prod-swa</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FINAL CHECKLIST -->
+  <div class="final-checklist">
+    <h2>✓ Phase 1 Definition of Done</h2>
+    <ul class="checklist">
+      <li><input type="checkbox"> Resource group <code>hcm-prod-rg</code> created</li>
+      <li><input type="checkbox"> SQL Server <code>hcm-prod-sql</code> + database <code>HcmsDb</code> created</li>
+      <li><input type="checkbox"> "Allow Azure services" firewall rule enabled on SQL Server</li>
+      <li><input type="checkbox"> Key Vault <code>hcm-prod-kv</code> created (Vault access policy mode)</li>
+      <li><input type="checkbox"> Application Insights <code>hcm-prod-ai</code> created</li>
+      <li><input type="checkbox"> App Service Plan <code>hcm-prod-plan</code> (B1 Linux) created</li>
+      <li><input type="checkbox"> App Service <code>hcm-prod-api</code> (.NET 8) created</li>
+      <li><input type="checkbox"> Static Web App <code>hcm-prod-swa</code> created</li>
+      <li><input type="checkbox"> Managed Identity enabled on <code>hcm-prod-api</code></li>
+      <li><input type="checkbox"> Key Vault access policy: <code>hcm-prod-api</code> can Get + List secrets</li>
+      <li><input type="checkbox"> Secret <code>ConnectionStrings--DefaultConnection</code> added to Key Vault</li>
+      <li><input type="checkbox"> Secret <code>Jwt--Secret</code> added to Key Vault</li>
+      <li><input type="checkbox"> App settings: <code>KeyVaultUri</code>, <code>ASPNETCORE_ENVIRONMENT</code>, <code>ApplicationInsights__ConnectionString</code> set</li>
+      <li><input type="checkbox"> <code>AZURE_WEBAPP_PUBLISH_PROFILE</code> GitHub secret added</li>
+      <li><input type="checkbox"> <code>AZURE_STATIC_WEB_APPS_API_TOKEN</code> GitHub secret added</li>
+      <li><input type="checkbox"> GitHub Actions workflows are green on push to <code>main</code></li>
+      <li><input type="checkbox"> <code>https://hcm-prod-api.azurewebsites.net/health</code> returns 200</li>
+      <li><input type="checkbox"> Login works on the deployed SPA URL with <code>admin</code> / <code>Admin@123!</code></li>
+    </ul>
+  </div>
+
+  <p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin-bottom:2rem;">
+    HCMS · Phase 1 · Single prod environment · hcm-prod-* · 2026-06-24
+  </p>
+
+</div>
+</body>
+</html>

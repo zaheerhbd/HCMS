@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-06-23
+**Last Updated:** 2026-06-24
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -11,7 +11,7 @@
 
 | # | Module | Phase | Status | FR References |
 |---|---|---|---|---|
-| 1 | Identity & Access (Auth) | 1 | Not Started | FR-01 – FR-04 |
+| 1 | Identity & Access (Auth) | 1 | Complete | FR-01 – FR-04 |
 | 2 | Patient Management | 2 | Not Started | FR-05 – FR-08 |
 | 3 | Case Management | 2 | Not Started | FR-09 – FR-14 |
 | 4 | Case Notes | 2 | Not Started | FR-15 – FR-18 |
@@ -29,7 +29,7 @@
 
 ## 1. Identity & Access
 
-**Phase:** 1 | **Status:** Not Started
+**Phase:** 1 | **Status:** Complete
 
 ### Features
 - Username + password login with JWT (HS256) access tokens (60 min) and refresh tokens (30 days).

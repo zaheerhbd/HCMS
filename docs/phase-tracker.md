@@ -10,7 +10,7 @@
 
 | Phase | Name | Duration | Status | Deliverable |
 |---|---|---|---|---|
-| 1 | Foundation & Infrastructure | 2 weeks | `[ ]` | Deployable skeleton with auth |
+| 1 | Foundation & Infrastructure | 2 weeks | `[x]` | Deployable skeleton with auth |
 | 2 | Patient & Case Core | 3 weeks | `[ ]` | Full case lifecycle working |
 | 3 | Documents, Tasks & Notes | 2 weeks | `[ ]` | Blob upload + task management |
 | 4 | Appointments & Scheduling | 2 weeks | `[ ]` | Calendar and booking |
@@ -31,33 +31,33 @@
 
 ### Backend Tasks
 
-- [ ] Create solution with Clean Architecture projects: `HCM.Domain`, `HCM.Application`, `HCM.Infrastructure`, `HCM.API`
-- [ ] Configure `appsettings.json` with environment-specific overrides (`appsettings.Development.json`, `appsettings.Production.json`)
+- [x] Create solution with Clean Architecture projects: `HCM.Domain`, `HCM.Application`, `HCM.Infrastructure`, `HCM.API`
+- [x] Configure `appsettings.json` with environment-specific overrides (`appsettings.Development.json`, `appsettings.Production.json`)
 - [ ] Wire Azure Key Vault via `DefaultAzureCredential` (Managed Identity in Azure; local dev uses `az login`)
-- [ ] Add EF Core with SQL Server provider; create initial `ApplicationDbContext`
-- [ ] Create `Users`, `Roles`, `UserRoles`, `RefreshTokens` entities and first migration
-- [ ] Implement JWT authentication: `AuthController` with `/login`, `/refresh`, `/logout`
-- [ ] Implement refresh token rotation with sliding expiration
-- [ ] Add account lockout after 5 failed login attempts
-- [ ] Implement global exception handler middleware returning RFC 7807 ProblemDetails
-- [ ] Add request logging middleware (Serilog → Application Insights)
-- [ ] Add `/health` endpoint checking DB connectivity
-- [ ] Add rate limiting on `/api/auth/login` (10 req/min per IP)
-- [ ] Seed database: Admin user, all roles
+- [x] Add EF Core with SQL Server provider; create initial `ApplicationDbContext`
+- [x] Create `Users`, `Roles`, `UserRoles`, `RefreshTokens` entities and first migration
+- [x] Implement JWT authentication: `AuthController` with `/login`, `/refresh`, `/logout`
+- [x] Implement refresh token rotation with sliding expiration
+- [x] Add account lockout after 5 failed login attempts
+- [x] Implement global exception handler middleware returning RFC 7807 ProblemDetails
+- [x] Add request logging middleware (Serilog → Application Insights)
+- [x] Add `/health` endpoint checking DB connectivity
+- [x] Add rate limiting on `/api/auth/login` (10 req/min per IP)
+- [x] Seed database: Admin user, all roles
 
 ### Frontend Tasks
 
-- [ ] Scaffold Angular project with `ng new hcm-web --routing --style=scss`
-- [ ] Install and configure Angular Material
-- [ ] Set up `CoreModule` (singleton services), `SharedModule` (reusable components)
-- [ ] Implement lazy-loaded `AuthModule`: Login page with Reactive Form
-- [ ] Implement `AuthService`: login, logout, token storage, refresh on 401
-- [ ] Implement `JwtInterceptor`: attach Bearer token to all API requests
-- [ ] Implement `ErrorInterceptor`: map API errors to user-facing toasts
-- [ ] Implement `AuthGuard` and `RoleGuard`
-- [ ] Create `AppShellComponent`: sidebar nav, top bar, notification placeholder
-- [ ] Create placeholder route-guarded stubs for all feature modules (empty components)
-- [ ] Configure environment files: `environment.ts`, `environment.prod.ts`
+- [x] Scaffold Angular project with `ng new hcm-web --routing --style=scss`
+- [x] Install and configure Angular Material
+- [x] Set up core services (standalone pattern — Angular 19 uses functional guards/interceptors)
+- [x] Implement `LoginComponent` (standalone): Login page with Reactive Form
+- [x] Implement `AuthService`: login, logout, token storage, refresh on 401
+- [x] Implement `jwtInterceptor`: attach Bearer token + auto-refresh on 401
+- [x] Implement `errorInterceptor`: map API errors to Material snack bar toasts
+- [x] Implement `authGuard` and `roleGuard`
+- [x] Create `AppShellComponent`: sidebar nav, top bar, notification placeholder
+- [x] Create placeholder route-guarded stubs for all feature modules (empty components)
+- [x] Configure environment files: `environment.ts`, `environment.prod.ts`
 
 ### Infrastructure Tasks
 
@@ -65,11 +65,11 @@
 - [ ] Provision Azure resources (staging env): Resource Group, App Service Plan, App Service, Azure SQL, Key Vault, Application Insights, Storage Account, Static Web Apps
 - [ ] Configure Managed Identity on App Service; grant Key Vault Secrets User role
 - [ ] Store secrets in Key Vault: DB connection string, JWT secret
-- [ ] Create GitHub Actions workflow: `build-api.yml` — restore, build, test, publish, deploy to staging App Service
-- [ ] Create GitHub Actions workflow: `build-angular.yml` — npm ci, lint, test, build prod, deploy to Static Web Apps
-- [ ] Configure CORS on API to accept Angular SWA origin
-- [ ] Add `.github/dependabot.yml` for dependency update PRs
-- [ ] Add `.gitignore` entries: `appsettings.*.json` (local overrides), `*.user`, `bin/`, `obj/`, `node_modules/`
+- [x] Create GitHub Actions workflow: `build-api.yml` — restore, build, test, publish, deploy to staging App Service
+- [x] Create GitHub Actions workflow: `build-angular.yml` — npm ci, lint, test, build prod, deploy to Static Web Apps
+- [x] Configure CORS on API to accept Angular SWA origin
+- [x] Add `.github/dependabot.yml` for dependency update PRs
+- [x] Add `.gitignore` entries: `appsettings.*.json` (local overrides), `*.user`, `bin/`, `obj/`, `node_modules/`
 
 ### Definition of Done — Phase 1
 - [ ] User can log in on the deployed staging URL
@@ -414,7 +414,7 @@ These items are intentionally deferred to keep the project shippable within the 
 
 | Phase | Tasks Total | Complete | Remaining |
 |---|---|---|---|
-| Phase 1 — Foundation | ~29 | 0 | 29 |
+| Phase 1 — Foundation | ~29 | 26 | 3 |
 | Phase 2 — Patient & Case Core | ~38 | 0 | 38 |
 | Phase 3 — Documents & Tasks | ~22 | 0 | 22 |
 | Phase 4 — Appointments | ~16 | 0 | 16 |

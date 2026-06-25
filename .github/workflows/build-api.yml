@@ -1,0 +1,50 @@
+﻿name: Build & Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/build-api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: src/HCM.API
+  PUBLISH_PATH: ./publish
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore src/HCM.slnx
+
+      - name: Build
+        run: dotnet build src/HCM.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test src/HCM.slnx --no-build --configuration Release --verbosity normal
+
+      - name: Publish
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ${{ env.PUBLISH_PATH }}
+
+      - name: Deploy to Azure App Service
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: hcm-prod-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.PUBLISH_PATH }}

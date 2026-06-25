@@ -1,0 +1,6 @@
+@HCM.API_HostAddress = http://localhost:5144
+
+GET {{HCM.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

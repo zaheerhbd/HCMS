@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMS — Angular Architecture Guide</title>
+<style>
+  :root {
+    --red: #e11d48;
+    --blue: #0ea5e9;
+    --dark: #0f172a;
+    --mid: #334155;
+    --light: #64748b;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --code-bg: #1e293b;
+    --accent: #7c3aed;
+    --green: #16a34a;
+    --orange: #ea580c;
+    --sidebar-w: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.65;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--dark);
+    color: #cbd5e1;
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 100;
+    padding-bottom: 2rem;
+  }
+
+  #sidebar .logo {
+    padding: 1.2rem 1.2rem 0.8rem;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  #sidebar .logo h2 {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  #sidebar .logo p {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  #sidebar nav { padding: 0.6rem 0; }
+
+  #sidebar nav .group-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #475569;
+    padding: 0.8rem 1.2rem 0.3rem;
+    font-weight: 700;
+  }
+
+  #sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.42rem 1.2rem;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.84rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+
+  #sidebar nav a:hover,
+  #sidebar nav a.active {
+    color: #fff;
+    background: #1e293b;
+    border-left-color: var(--red);
+  }
+
+  #sidebar nav a .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #334155;
+    flex-shrink: 0;
+  }
+
+  #sidebar nav a:hover .dot,
+  #sidebar nav a.active .dot { background: var(--red); }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 900px;
+    padding: 2.5rem 2.5rem 4rem;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero .badge {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 0.4rem; }
+  .hero p { color: #94a3b8; font-size: 0.95rem; }
+
+  .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+  .pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #e2e8f0;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mid);
+    margin: 1.4rem 0 0.5rem;
+  }
+
+  p { color: var(--mid); font-size: 0.93rem; margin-bottom: 0.75rem; }
+
+  ul, ol { padding-left: 1.4rem; color: var(--mid); font-size: 0.93rem; margin-bottom: 0.75rem; }
+  li { margin-bottom: 0.3rem; }
+
+  /* ── CODE ── */
+  pre {
+    background: var(--code-bg);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    overflow-x: auto;
+    margin: 0.75rem 0;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    color: #e2e8f0;
+  }
+
+  p code, li code, td code {
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.85em;
+  }
+
+  .kw { color: #c084fc; }
+  .fn { color: #60a5fa; }
+  .str { color: #86efac; }
+  .cm { color: #475569; font-style: italic; }
+  .dec { color: #f9a8d4; }
+  .type { color: #fde68a; }
+  .val { color: #fb923c; }
+
+  /* ── DIAGRAM ── */
+  .diagram {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--dark);
+    overflow-x: auto;
+    margin: 0.75rem 0;
+  }
+
+  .diagram .highlight { color: var(--red); font-weight: 700; }
+  .diagram .dim { color: #94a3b8; }
+  .diagram .blue { color: #0ea5e9; font-weight: 700; }
+  .diagram .green { color: #16a34a; font-weight: 700; }
+  .diagram .purple { color: #7c3aed; font-weight: 700; }
+
+  /* ── INTERVIEW BOX ── */
+  .interview-box {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    border-left: 4px solid #eab308;
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+  }
+
+  .interview-box .interview-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #854d0e;
+    margin-bottom: 0.5rem;
+  }
+
+  .interview-box .q {
+    font-weight: 700;
+    color: #713f12;
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .interview-box .a {
+    color: #78350f;
+    font-size: 0.87rem;
+  }
+
+  /* ── FLOW ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 0.75rem 0;
+  }
+
+  .flow-box {
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e40af;
+    white-space: nowrap;
+  }
+
+  .flow-box.red { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+  .flow-box.green { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+  .flow-box.purple { background: #faf5ff; border-color: #d8b4fe; color: #7e22ce; }
+  .flow-box.orange { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+
+  .flow-arrow {
+    font-size: 1rem;
+    color: #94a3b8;
+    padding: 0 0.3rem;
+  }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.87rem; }
+  th { background: #f8fafc; text-align: left; padding: 0.55rem 0.8rem; border: 1px solid var(--border); color: #475569; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 0.55rem 0.8rem; border: 1px solid var(--border); color: var(--mid); vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* ── CALLOUT ── */
+  .tip {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-left: 4px solid #16a34a;
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    color: #14532d;
+    margin: 0.75rem 0;
+  }
+
+  .warn {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid #ea580c;
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    color: #7c2d12;
+    margin: 0.75rem 0;
+  }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════════════ -->
+<aside id="sidebar">
+  <div class="logo">
+    <h2>HCMS Angular Guide</h2>
+    <p>Angular 19 · Interview Ready</p>
+  </div>
+  <nav>
+    <div class="group-label">Project</div>
+    <a href="#overview"><span class="dot"></span>Overview &amp; Version</a>
+    <a href="#folder"><span class="dot"></span>Folder Structure</a>
+
+    <div class="group-label">Architecture</div>
+    <a href="#standalone"><span class="dot"></span>Standalone Components</a>
+    <a href="#bootstrap"><span class="dot"></span>Bootstrap (app.config)</a>
+    <a href="#routing"><span class="dot"></span>Routing</a>
+    <a href="#lazy"><span class="dot"></span>Lazy Loading</a>
+
+    <div class="group-label">Core Layer</div>
+    <a href="#services"><span class="dot"></span>Services &amp; DI</a>
+    <a href="#interceptors"><span class="dot"></span>HTTP Interceptors</a>
+    <a href="#guards"><span class="dot"></span>Route Guards</a>
+    <a href="#models"><span class="dot"></span>Models &amp; Interfaces</a>
+
+    <div class="group-label">Components</div>
+    <a href="#shell"><span class="dot"></span>AppShell Component</a>
+    <a href="#login"><span class="dot"></span>Login Component</a>
+    <a href="#forms"><span class="dot"></span>Reactive Forms</a>
+
+    <div class="group-label">Advanced</div>
+    <a href="#change-detection"><span class="dot"></span>Change Detection</a>
+    <a href="#rxjs"><span class="dot"></span>RxJS in This Project</a>
+    <a href="#material"><span class="dot"></span>Angular Material</a>
+    <a href="#interview-cheatsheet"><span class="dot"></span>Interview Cheatsheet</a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">Interview Guide</div>
+    <h1>HCMS Angular Architecture</h1>
+    <p>A plain-English walkthrough of every design decision in the Angular 19 frontend — built for interview preparation.</p>
+    <div class="pill-row">
+      <span class="pill">Angular 19</span>
+      <span class="pill">Standalone</span>
+      <span class="pill">Lazy Loading</span>
+      <span class="pill">Functional Guards</span>
+      <span class="pill">HTTP Interceptors</span>
+      <span class="pill">Reactive Forms</span>
+      <span class="pill">Angular Material</span>
+      <span class="pill">RxJS</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       1. OVERVIEW & VERSION
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="overview">
+    <div class="section-label">01 · Project</div>
+    <h2>Overview &amp; Angular Version</h2>
+    <p>This project uses <strong>Angular 19</strong> — the latest major release. Here is what that means in practice compared to older Angular you might have used before.</p>
+
+    <table>
+      <thead><tr><th>Feature</th><th>Old Angular (≤14)</th><th>Angular 19 (this project)</th></tr></thead>
+      <tbody>
+        <tr><td>Component style</td><td>NgModule required</td><td>✅ Standalone (no NgModule)</td></tr>
+        <tr><td>Guards</td><td>Classes implementing CanActivate</td><td>✅ Plain functions (CanActivateFn)</td></tr>
+        <tr><td>Interceptors</td><td>Classes implementing HttpInterceptor</td><td>✅ Plain functions (HttpInterceptorFn)</td></tr>
+        <tr><td>Bootstrap</td><td>AppModule + platformBrowserDynamic</td><td>✅ bootstrapApplication() + appConfig</td></tr>
+        <tr><td>Lazy loading</td><td>loadChildren → NgModule</td><td>✅ loadComponent / loadChildren → routes array</td></tr>
+        <tr><td>Animations</td><td>BrowserAnimationsModule in AppModule</td><td>✅ provideAnimationsAsync()</td></tr>
+      </tbody>
+    </table>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is new in Angular 19 / recent Angular versions?</div>
+      <div class="a">A: The biggest shift is <strong>standalone components</strong> — you no longer need NgModules. Every component declares its own imports. Angular also moved guards and interceptors to plain functions instead of classes, which makes them simpler and easier to test. The app bootstraps using <code>bootstrapApplication()</code> with an <code>appConfig</code> object instead of an AppModule.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       2. FOLDER STRUCTURE
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="folder">
+    <div class="section-label">02 · Project</div>
+    <h2>Folder Structure</h2>
+    <p>The project follows a <strong>feature-first</strong> structure. Every feature area lives in its own folder under <code>features/</code>. Shared infrastructure (services, guards, interceptors) lives in <code>core/</code>.</p>
+
+    <div class="diagram">
+<span class="blue">src/app/</span>
+│
+├── <span class="highlight">core/</span>                    <span class="dim">← shared infrastructure, loaded ONCE</span>
+│   ├── guards/
+│   │   ├── auth.guard.ts          <span class="dim">← checks if logged in</span>
+│   │   └── role.guard.ts          <span class="dim">← checks user role</span>
+│   ├── interceptors/
+│   │   ├── jwt.interceptor.ts     <span class="dim">← attaches Bearer token to every request</span>
+│   │   └── error.interceptor.ts   <span class="dim">← shows snackbar on 500/network errors</span>
+│   ├── models/
+│   │   └── auth.models.ts         <span class="dim">← TypeScript interfaces</span>
+│   └── services/
+│       └── auth.service.ts        <span class="dim">← login, logout, token storage</span>
+│
+├── <span class="green">features/</span>                <span class="dim">← one folder per feature area (lazy loaded)</span>
+│   ├── auth/login/               <span class="dim">← login page</span>
+│   ├── dashboard/
+│   ├── patients/                 <span class="dim">← has its own routes file</span>
+│   ├── cases/                    <span class="dim">← has its own routes file</span>
+│   ├── tasks/
+│   ├── documents/
+│   ├── appointments/
+│   ├── reports/
+│   ├── admin/
+│   └── unauthorized/
+│
+├── <span class="purple">shell/app-shell/</span>         <span class="dim">← main layout (sidebar + top bar + router-outlet)</span>
+│
+├── app.component.ts              <span class="dim">← root component, just has &lt;router-outlet&gt;</span>
+├── app.config.ts                 <span class="dim">← providers (DI root, replaces AppModule)</span>
+└── app.routes.ts                 <span class="dim">← all top-level routes
+</span>    </div>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: Why separate core/ from features/?</div>
+      <div class="a">A: <code>core/</code> contains things that are instantiated <strong>once</strong> for the whole app — services, guards, interceptors. <code>features/</code> contains everything specific to a feature. This separation makes it easy to find code, avoids circular imports, and mirrors the principle of <em>single responsibility</em>.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       3. STANDALONE COMPONENTS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="standalone">
+    <div class="section-label">03 · Architecture</div>
+    <h2>Standalone Components</h2>
+    <p>In Angular 19 every component in this project is <strong>standalone</strong>. That means it declares its own dependencies directly in the <code>imports</code> array — no NgModule in between.</p>
+
+    <h3>What does standalone look like?</h3>
+    <pre><code><span class="dec">@Component</span>({
+  selector: <span class="str">'app-login'</span>,
+  <span class="highlight">standalone: true</span>,           <span class="cm">// ← this makes it standalone</span>
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,      <span class="cm">// ← import what THIS component needs</span>
+    MatFormFieldModule,
+    MatButtonModule,
+  ],
+  templateUrl: <span class="str">'./login.component.html'</span>,
+})
+<span class="kw">export class</span> <span class="type">LoginComponent</span> { ... }</code></pre>
+
+    <h3>Old way (NgModule) vs new way (Standalone)</h3>
+    <table>
+      <thead><tr><th></th><th>NgModule (old)</th><th>Standalone (this project)</th></tr></thead>
+      <tbody>
+        <tr><td>Where do you declare a component?</td><td>In an NgModule's <code>declarations</code> array</td><td>Nowhere — each component is self-contained</td></tr>
+        <tr><td>Where do you import dependencies?</td><td>In the NgModule's <code>imports</code> array</td><td>Directly in the component's <code>imports</code> array</td></tr>
+        <tr><td>How many files per feature?</td><td>Component + Module (at minimum)</td><td>Just the component</td></tr>
+        <tr><td>Lazy loading</td><td><code>loadChildren</code> → NgModule</td><td><code>loadComponent</code> → Component directly</td></tr>
+      </tbody>
+    </table>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is a standalone component and why use it?</div>
+      <div class="a">A: A standalone component manages its own imports instead of relying on an NgModule. Benefits: less boilerplate (no module file to maintain), easier tree-shaking (only import what you actually use), simpler lazy loading (you can lazy-load a single component, not a whole module), and clearer ownership — you can see exactly what a component depends on just by looking at it.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       4. BOOTSTRAP
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="bootstrap">
+    <div class="section-label">04 · Architecture</div>
+    <h2>Bootstrap — app.config.ts</h2>
+    <p>The app starts in <code>main.ts</code> which calls <code>bootstrapApplication()</code> with an <code>AppComponent</code> and an <code>appConfig</code> object. Think of <code>appConfig</code> as the replacement for the old <code>AppModule</code>.</p>
+
+    <pre><code><span class="cm">// main.ts</span>
+<span class="fn">bootstrapApplication</span>(AppComponent, appConfig)
+
+<span class="cm">// app.config.ts — the DI root for the whole app</span>
+<span class="kw">export const</span> appConfig: <span class="type">ApplicationConfig</span> = {
+  providers: [
+    <span class="fn">provideZoneChangeDetection</span>({ eventCoalescing: <span class="val">true</span> }),  <span class="cm">// change detection</span>
+    <span class="fn">provideRouter</span>(routes, <span class="fn">withComponentInputBinding</span>()),       <span class="cm">// routing</span>
+    <span class="fn">provideHttpClient</span>(<span class="fn">withInterceptors</span>([                      <span class="cm">// HTTP + interceptors</span>
+      jwtInterceptor,
+      errorInterceptor
+    ])),
+    <span class="fn">provideAnimationsAsync</span>()                                   <span class="cm">// Material animations</span>
+  ]
+};</code></pre>
+
+    <h3>What each provider does</h3>
+    <table>
+      <thead><tr><th>Provider</th><th>What it sets up</th></tr></thead>
+      <tbody>
+        <tr><td><code>provideZoneChangeDetection</code></td><td>Enables Zone.js-based change detection. <code>eventCoalescing: true</code> batches multiple DOM events into one detection cycle — better performance.</td></tr>
+        <tr><td><code>provideRouter</code></td><td>Sets up the Angular Router with our route definitions. <code>withComponentInputBinding()</code> allows route params to be passed as <code>@Input()</code> to components.</td></tr>
+        <tr><td><code>provideHttpClient</code></td><td>Sets up the HttpClient service. <code>withInterceptors()</code> registers the functional interceptors in order.</td></tr>
+        <tr><td><code>provideAnimationsAsync</code></td><td>Loads Angular Material animation support asynchronously (better initial load time than the old synchronous version).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What replaced AppModule in Angular 19?</div>
+      <div class="a">A: <code>bootstrapApplication()</code> with an <code>ApplicationConfig</code> object (defined in <code>app.config.ts</code>). Instead of putting imports and providers in an NgModule class, you use provider functions like <code>provideRouter()</code>, <code>provideHttpClient()</code>, and <code>provideAnimationsAsync()</code>. This is more tree-shakable and explicit.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       5. ROUTING
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="routing">
+    <div class="section-label">05 · Architecture</div>
+    <h2>Routing</h2>
+    <p>All routes are defined in <code>app.routes.ts</code> as a plain array of <code>Route</code> objects. There is no NgModule involved.</p>
+
+    <h3>Route structure at a glance</h3>
+    <div class="diagram">
+/ (root)
+│
+├── /login             → LoginComponent         [AllowAnonymous]
+│
+├── / (empty path)     → AppShellComponent       [<span class="highlight">canActivate: authGuard</span>]
+│   ├── /dashboard     → DashboardComponent
+│   ├── /patients      → PATIENTS_ROUTES (child route set)
+│   ├── /cases         → CASES_ROUTES (child route set)
+│   ├── /tasks         → TasksComponent
+│   ├── /documents     → DocumentsComponent
+│   ├── /appointments  → AppointmentsComponent
+│   ├── /reports       → ReportsComponent
+│   └── /admin         → AdminComponent          [<span class="highlight">canActivate: roleGuard (Admin only)</span>]
+│
+├── /unauthorized      → UnauthorizedComponent
+└── **                 → redirect to /
+    </div>
+
+    <h3>Key routing concepts used</h3>
+    <table>
+      <thead><tr><th>Concept</th><th>Where in this project</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Nested routes</strong></td><td>All feature routes are children of <code>AppShellComponent</code>, so the shell (sidebar + topbar) stays visible while the inner content changes</td></tr>
+        <tr><td><strong>Route guards</strong></td><td><code>authGuard</code> on the shell route protects all children at once. <code>roleGuard</code> additionally on <code>/admin</code></td></tr>
+        <tr><td><strong>Route data</strong></td><td><code>data: { roles: ['Admin'] }</code> passes config to the roleGuard without hardcoding it inside the guard</td></tr>
+        <tr><td><strong>Wildcard route</strong></td><td><code>**</code> at the bottom catches all unknown URLs and redirects to root</td></tr>
+        <tr><td><strong>pathMatch: 'full'</strong></td><td>Used on the empty path so only the exact empty string matches, not every route</td></tr>
+      </tbody>
+    </table>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: Why are all feature routes nested inside AppShellComponent?</div>
+      <div class="a">A: Because <code>AppShellComponent</code> contains the sidebar navigation and top bar. Nesting keeps that layout persistent while only the inner <code>&lt;router-outlet&gt;</code> content changes as you navigate. Without nesting, the sidebar would re-render or disappear on every route change.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       6. LAZY LOADING
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="lazy">
+    <div class="section-label">06 · Architecture</div>
+    <h2>Lazy Loading</h2>
+    <p>Every component and route set in this app is <strong>lazy loaded</strong>. The browser only downloads the JavaScript for a feature when the user actually navigates to it. This keeps the initial bundle small and the app fast.</p>
+
+    <h3>Two types of lazy loading used here</h3>
+
+    <h3>1 — loadComponent (single lazy component)</h3>
+    <pre><code>{
+  path: <span class="str">'dashboard'</span>,
+  <span class="fn">loadComponent</span>: () =>
+    <span class="kw">import</span>(<span class="str">'./features/dashboard/dashboard.component'</span>)
+      .then(m => m.DashboardComponent)
+}</code></pre>
+    <p>The <code>import()</code> is a <strong>dynamic import</strong> — a browser/JS feature. Angular's router calls this function only when the user navigates to <code>/dashboard</code>. Until then, that code is not downloaded.</p>
+
+    <h3>2 — loadChildren (lazy route set)</h3>
+    <pre><code>{
+  path: <span class="str">'patients'</span>,
+  <span class="fn">loadChildren</span>: () =>
+    <span class="kw">import</span>(<span class="str">'./features/patients/patients.routes'</span>)
+      .then(m => m.PATIENTS_ROUTES)
+}</code></pre>
+    <p>Used for features with <strong>multiple sub-routes</strong> (e.g. <code>/patients/list</code>, <code>/patients/:id</code>). The router lazily loads the entire route array for that feature at once.</p>
+
+    <h3>How the browser loads it — step by step</h3>
+    <div class="flow">
+      <div class="flow-box red">User visits /patients</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Router sees loadChildren</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box orange">Dynamic import() fires</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box purple">Browser downloads patients chunk</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box green">Component renders</div>
+    </div>
+
+    <h3>What you see in the Network tab</h3>
+    <p>On first load you get <code>main.js</code> (small). When you navigate to <code>/patients</code> for the first time you see a new JS file like <code>patients-routes-XXXXX.js</code> download. On second visit — already cached, instant.</p>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is lazy loading and why do we use it?</div>
+      <div class="a">A: Lazy loading means code is only downloaded when it is needed. Without it, the browser would download JavaScript for every page — including pages the user may never visit. In a large app like HCMS with 8 feature areas, lazy loading can reduce the initial bundle by 60–80%, making the first page load significantly faster.</div>
+      <br>
+      <div class="q">Q: What is the difference between loadComponent and loadChildren?</div>
+      <div class="a">A: <code>loadComponent</code> lazily loads a single standalone component. <code>loadChildren</code> lazily loads a whole route configuration (an array of routes), which is useful when a feature has multiple sub-pages like list and detail views.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       7. SERVICES & DI
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="services">
+    <div class="section-label">07 · Core Layer</div>
+    <h2>Services &amp; Dependency Injection</h2>
+    <p><code>AuthService</code> is the only service built so far. It handles login, logout, token storage, and exposes the authentication state.</p>
+
+    <pre><code><span class="dec">@Injectable</span>({ <span class="highlight">providedIn: <span class="str">'root'</span></span> })   <span class="cm">// ← singleton for the whole app</span>
+<span class="kw">export class</span> <span class="type">AuthService</span> { ... }</code></pre>
+
+    <h3>What providedIn: 'root' means</h3>
+    <p><code>providedIn: 'root'</code> tells Angular to create <strong>one single instance</strong> of this service and share it everywhere. You do not need to add it to any providers array. Angular's tree-shaker will also remove it from the bundle if nothing actually uses it.</p>
+
+    <h3>What AuthService does</h3>
+    <table>
+      <thead><tr><th>Method / Property</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>login(request)</code></td><td>POST to <code>/api/auth/login</code>, stores tokens in localStorage on success</td></tr>
+        <tr><td><code>refreshToken()</code></td><td>POST to <code>/api/auth/refresh</code>, swaps old refresh token for new tokens</td></tr>
+        <tr><td><code>logout()</code></td><td>Calls <code>/api/auth/logout</code>, clears localStorage, redirects to /login</td></tr>
+        <tr><td><code>getAccessToken()</code></td><td>Returns JWT from localStorage (used by jwtInterceptor)</td></tr>
+        <tr><td><code>hasRole(role)</code></td><td>Checks if current user has a given role (used by roleGuard + AppShell)</td></tr>
+        <tr><td><code>isAuthenticated$</code></td><td>BehaviorSubject observable — emits true/false when auth state changes</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Token storage — why localStorage?</h3>
+    <p>Tokens are stored in <code>localStorage</code> under keys like <code>hcms_access_token</code>. This survives page refresh. The trade-off is XSS risk — if an attacker injects script, they can read localStorage. For a portfolio project this is acceptable; in production HCMS uses <code>HttpOnly</code> cookies for extra security.</p>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is Dependency Injection in Angular?</div>
+      <div class="a">A: DI is Angular's system for providing objects (services) to classes that need them, without those classes creating the objects themselves. You declare what you need in the constructor, and Angular's injector provides it. This makes code easier to test (you can inject a mock) and avoids duplicating instances.</div>
+      <br>
+      <div class="q">Q: What is the difference between providedIn: 'root' and adding a service to a component's providers array?</div>
+      <div class="a">A: <code>providedIn: 'root'</code> creates one singleton shared by the whole app. Adding to a component's <code>providers</code> creates a new instance scoped to that component and its children — destroyed when the component is destroyed. For <code>AuthService</code> we want a single instance everywhere, so we use <code>root</code>.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       8. INTERCEPTORS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="interceptors">
+    <div class="section-label">08 · Core Layer</div>
+    <h2>HTTP Interceptors</h2>
+    <p>Interceptors sit between your code and every HTTP request/response. Think of them as middleware for the browser. This project has two.</p>
+
+    <h3>How they are registered (app.config.ts)</h3>
+    <pre><code><span class="fn">provideHttpClient</span>(<span class="fn">withInterceptors</span>([jwtInterceptor, errorInterceptor]))</code></pre>
+    <p>They run <strong>in order</strong>: jwt first, then error. Both are plain functions (not classes) — the Angular 19 way.</p>
+
+    <hr>
+
+    <h3>Interceptor 1 — jwtInterceptor</h3>
+    <p><strong>Job:</strong> Attach the JWT Bearer token to every outgoing request. If a request gets a 401 (token expired), automatically refresh and retry once.</p>
+
+    <div class="flow" style="margin-bottom:1rem;">
+      <div class="flow-box red">Outgoing request</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Has token?</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box green">Add Authorization header</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Send</div>
+    </div>
+    <div class="flow">
+      <div class="flow-box red">Response = 401</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box orange">Call refreshToken()</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box green">Retry original request</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box purple">If refresh fails → logout</div>
+    </div>
+
+    <pre><code><span class="kw">export const</span> jwtInterceptor: <span class="type">HttpInterceptorFn</span> = (req, next) => {
+  <span class="kw">const</span> auth = <span class="fn">inject</span>(AuthService);
+  <span class="kw">const</span> token = auth.<span class="fn">getAccessToken</span>();
+
+  <span class="cm">// Clone the request — requests are immutable</span>
+  <span class="kw">const</span> authReq = token
+    ? req.<span class="fn">clone</span>({ setHeaders: { Authorization: <span class="str">`Bearer ${token}`</span> } })
+    : req;
+
+  <span class="kw">return</span> <span class="fn">next</span>(authReq).<span class="fn">pipe</span>(
+    <span class="fn">catchError</span>((err) => {
+      <span class="kw">if</span> (err.status === <span class="val">401</span> && !req.url.<span class="fn">includes</span>(<span class="str">'/auth/'</span>)) {
+        <span class="kw">return</span> auth.<span class="fn">refreshToken</span>().<span class="fn">pipe</span>(
+          <span class="fn">switchMap</span>(res => <span class="fn">next</span>(req.<span class="fn">clone</span>({
+            setHeaders: { Authorization: <span class="str">`Bearer ${res.accessToken}`</span> }
+          })))
+        );
+      }
+      <span class="kw">return</span> <span class="fn">throwError</span>(() => err);
+    })
+  );
+};</code></pre>
+
+    <div class="tip"><strong>Why clone the request?</strong> HttpRequest objects in Angular are immutable. You cannot modify them — you must call <code>.clone()</code> with the changes you want.</div>
+
+    <hr>
+
+    <h3>Interceptor 2 — errorInterceptor</h3>
+    <p><strong>Job:</strong> Show user-friendly snackbar toasts for network errors (status 0) and server errors (5xx). Lower-level errors like 401/403 are handled elsewhere.</p>
+
+    <pre><code><span class="kw">export const</span> errorInterceptor: <span class="type">HttpInterceptorFn</span> = (req, next) => {
+  <span class="kw">const</span> snackBar = <span class="fn">inject</span>(MatSnackBar);
+
+  <span class="kw">return</span> <span class="fn">next</span>(req).<span class="fn">pipe</span>(
+    <span class="fn">catchError</span>((err: <span class="type">HttpErrorResponse</span>) => {
+      <span class="kw">if</span> (err.status === <span class="val">0</span>)        <span class="cm">// no internet / server down</span>
+        snackBar.<span class="fn">open</span>(<span class="str">'Unable to connect...'</span>, <span class="str">'Close'</span>);
+      <span class="kw">else if</span> (err.status >= <span class="val">500</span>)  <span class="cm">// server crashed</span>
+        snackBar.<span class="fn">open</span>(<span class="str">'A server error occurred...'</span>, <span class="str">'Close'</span>);
+      <span class="kw">return</span> <span class="fn">throwError</span>(() => err);  <span class="cm">// still propagate error</span>
+    })
+  );
+};</code></pre>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is an HTTP interceptor and what can you use it for?</div>
+      <div class="a">A: An interceptor is middleware that intercepts every HTTP request or response before it reaches your component. Common uses: adding auth headers (like we do with JWT), logging, showing loading spinners, transforming response shapes, handling errors globally, and retrying failed requests.</div>
+      <br>
+      <div class="q">Q: Why do we check <code>!req.url.includes('/auth/')</code> in jwtInterceptor?</div>
+      <div class="a">A: To prevent an infinite loop. If the refresh token call itself returns a 401, we don't want to try refreshing again — that would loop forever. By excluding <code>/auth/</code> URLs from the retry logic, we ensure only non-auth requests trigger the refresh flow.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       9. GUARDS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="guards">
+    <div class="section-label">09 · Core Layer</div>
+    <h2>Route Guards</h2>
+    <p>Guards decide whether a route can be activated. Both guards in this project are <strong>plain functions</strong> — the modern Angular approach.</p>
+
+    <h3>authGuard — is the user logged in?</h3>
+    <pre><code><span class="kw">export const</span> authGuard: <span class="type">CanActivateFn</span> = () => {
+  <span class="kw">const</span> auth = <span class="fn">inject</span>(AuthService);
+  <span class="kw">const</span> router = <span class="fn">inject</span>(Router);
+
+  <span class="kw">if</span> (auth.<span class="fn">getAccessToken</span>()) <span class="kw">return true</span>;  <span class="cm">// has token → allow</span>
+
+  router.<span class="fn">navigate</span>([<span class="str">'/login'</span>]);
+  <span class="kw">return false</span>;                               <span class="cm">// no token → redirect to login</span>
+};</code></pre>
+
+    <p>Applied to the <code>AppShellComponent</code> route — which means <strong>all child routes</strong> (dashboard, patients, cases…) are protected by a single guard.</p>
+
+    <h3>roleGuard — does the user have the right role?</h3>
+    <pre><code><span class="kw">export const</span> roleGuard: <span class="type">CanActivateFn</span> = (route) => {
+  <span class="kw">const</span> auth = <span class="fn">inject</span>(AuthService);
+  <span class="kw">const</span> requiredRoles = route.data[<span class="str">'roles'</span>] ?? [];  <span class="cm">// read from route config</span>
+
+  <span class="kw">if</span> (!auth.<span class="fn">getAccessToken</span>()) { router.<span class="fn">navigate</span>([<span class="str">'/login'</span>]); <span class="kw">return false</span>; }
+
+  <span class="kw">const</span> hasRole = requiredRoles.<span class="fn">some</span>(r => auth.<span class="fn">hasRole</span>(r));
+  <span class="kw">if</span> (!hasRole) { router.<span class="fn">navigate</span>([<span class="str">'/unauthorized'</span>]); <span class="kw">return false</span>; }
+
+  <span class="kw">return true</span>;
+};</code></pre>
+
+    <p>Applied only to <code>/admin</code> route with <code>data: { roles: ['Admin'] }</code>.</p>
+
+    <div class="warn"><strong>Guards protect routes — not UI elements.</strong> A clever user could still see a nav link they shouldn't click. That's why <code>AppShellComponent</code> also filters <code>visibleNav</code> based on roles — double protection.</div>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is the difference between authGuard and roleGuard?</div>
+      <div class="a">A: <code>authGuard</code> only checks <em>if</em> you are logged in (has a token). <code>roleGuard</code> checks <em>who</em> you are — it reads the required roles from the route's <code>data</code> property and checks if the current user has any of them. They work together: authGuard is the bouncer at the door, roleGuard is the VIP list check inside.</div>
+      <br>
+      <div class="q">Q: Why are guards plain functions now instead of classes?</div>
+      <div class="a">A: Functional guards (introduced in Angular 14) are simpler — no class boilerplate, no implements interface, and they can use <code>inject()</code> to get dependencies just like components. They're also easier to unit test since you can call them as regular functions.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       10. MODELS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="models">
+    <div class="section-label">10 · Core Layer</div>
+    <h2>Models &amp; Interfaces</h2>
+    <p>TypeScript interfaces define the shape of data. They exist only at compile time — no runtime overhead.</p>
+
+    <pre><code><span class="cm">// auth.models.ts</span>
+
+<span class="kw">interface</span> <span class="type">LoginRequest</span> {
+  username: <span class="type">string</span>;
+  password: <span class="type">string</span>;
+}
+
+<span class="kw">interface</span> <span class="type">AuthResponse</span> {       <span class="cm">// shape of what the API returns</span>
+  accessToken: <span class="type">string</span>;
+  refreshToken: <span class="type">string</span>;
+  expiresAt: <span class="type">string</span>;
+  username: <span class="type">string</span>;
+  roles: <span class="type">string</span>[];
+}
+
+<span class="kw">interface</span> <span class="type">AuthState</span> {          <span class="cm">// shape of local auth state</span>
+  accessToken: <span class="type">string | null</span>;
+  refreshToken: <span class="type">string | null</span>;
+  username: <span class="type">string | null</span>;
+  roles: <span class="type">string</span>[];
+  isAuthenticated: <span class="type">boolean</span>;
+}</code></pre>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: Interface vs class in TypeScript — when do you use each?</div>
+      <div class="a">A: Use an <strong>interface</strong> when you just need to describe the <em>shape</em> of data (like an API response). They compile away completely — zero runtime cost. Use a <strong>class</strong> when you need behavior (methods), constructor logic, or dependency injection. In this project, data contracts are interfaces and injectables are classes.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       11. APP SHELL
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="shell">
+    <div class="section-label">11 · Components</div>
+    <h2>AppShell Component</h2>
+    <p><code>AppShellComponent</code> is the main layout wrapper. It contains the sidebar, the top toolbar, and a <code>&lt;router-outlet&gt;</code> where feature components render.</p>
+
+    <div class="diagram">
+┌─────────────────────────────────────────────────────┐
+│  Top Toolbar (mat-toolbar)                          │
+│  [☰ Menu]  HCMS                    [👤 admin] [→]  │
+├──────────────┬──────────────────────────────────────┤
+│  Sidebar     │                                      │
+│  (mat-nav)   │   &lt;router-outlet&gt;                    │
+│              │   (feature component loads here)     │
+│  Dashboard   │                                      │
+│  Patients    │                                      │
+│  Cases       │                                      │
+│  Tasks       │                                      │
+│  Documents   │                                      │
+│  Reports     │                                      │
+│  [Admin]     │                                      │
+│  (role only) │                                      │
+└──────────────┴──────────────────────────────────────┘
+    </div>
+
+    <h3>Role-based nav filtering</h3>
+    <pre><code><span class="cm">// Only show nav items the current user is allowed to see</span>
+<span class="fn">get</span> <span class="fn">visibleNav</span>(): <span class="type">NavItem</span>[] {
+  <span class="kw">return</span> <span class="kw">this</span>.navItems.<span class="fn">filter</span>(item =>
+    !item.roles || item.roles.<span class="fn">some</span>(r => <span class="kw">this</span>.auth.<span class="fn">hasRole</span>(r))
+  );
+}</code></pre>
+    <p>Admin nav item has <code>roles: ['Admin']</code> — so it only appears in the sidebar for Admin users. The <code>roleGuard</code> on the route provides a second layer of protection.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       12. LOGIN
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="login">
+    <div class="section-label">12 · Components</div>
+    <h2>Login Component</h2>
+    <p>The login page is a standalone component with a Reactive Form. It calls <code>AuthService.login()</code> and handles both success and error.</p>
+
+    <div class="flow">
+      <div class="flow-box red">User submits form</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Validate (Reactive Form)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box orange">POST /api/auth/login</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box green">Store tokens → /dashboard</div>
+    </div>
+    <div class="flow" style="margin-top:0.4rem;">
+      <div class="flow-box" style="visibility:hidden">x</div>
+      <span class="flow-arrow" style="visibility:hidden">→</span>
+      <div class="flow-box" style="visibility:hidden">x</div>
+      <span class="flow-arrow" style="visibility:hidden">→</span>
+      <div class="flow-box" style="visibility:hidden">x</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box red">Error → show snackbar message</div>
+    </div>
+
+    <h3>Error message extraction</h3>
+    <pre><code><span class="cm">// The API returns RFC 7807 ProblemDetails format</span>
+<span class="kw">const</span> msg = err.error?.<span class="val">detail</span>   <span class="cm">// specific message from API</span>
+          ?? err.error?.<span class="val">title</span>    <span class="cm">// fallback title</span>
+          ?? <span class="str">'Login failed. Please try again.'</span>;  <span class="cm">// last resort</span></code></pre>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       13. REACTIVE FORMS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="forms">
+    <div class="section-label">13 · Components</div>
+    <h2>Reactive Forms</h2>
+    <p>This project uses <strong>Reactive Forms</strong> exclusively (no template-driven forms). Reactive forms are defined in the component class, not in the template.</p>
+
+    <h3>Why Reactive Forms?</h3>
+    <table>
+      <thead><tr><th></th><th>Template-driven</th><th>Reactive (this project)</th></tr></thead>
+      <tbody>
+        <tr><td>Form defined in</td><td>HTML template (ngModel)</td><td>Component TypeScript class</td></tr>
+        <tr><td>Validation</td><td>HTML attributes</td><td>Validators in code — easier to test</td></tr>
+        <tr><td>Testability</td><td>Harder — needs DOM</td><td>Easy — just call methods on FormGroup</td></tr>
+        <tr><td>Complex forms</td><td>Gets messy</td><td>Scales well with FormArray, nested groups</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code><span class="cm">// Define the form in the constructor</span>
+<span class="kw">this</span>.form = <span class="kw">this</span>.fb.<span class="fn">group</span>({
+  username: [<span class="str">''</span>, [Validators.required]],
+  password: [<span class="str">''</span>, [Validators.required]]
+});
+
+<span class="cm">// In template — bind with formGroup / formControlName</span>
+<span class="cm">// &lt;form [formGroup]="form" (ngSubmit)="submit()"&gt;</span>
+<span class="cm">//   &lt;input formControlName="username" /&gt;</span></code></pre>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is the difference between Reactive Forms and Template-driven Forms?</div>
+      <div class="a">A: Reactive forms are defined in the component class using <code>FormGroup</code> and <code>FormControl</code> — the form model lives in TypeScript. Template-driven forms use <code>ngModel</code> directives in the HTML and the framework infers the model. Reactive forms are more predictable, easier to unit test, and better for complex or dynamic forms. That's why this project uses them exclusively.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       14. CHANGE DETECTION
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="change-detection">
+    <div class="section-label">14 · Advanced</div>
+    <h2>Change Detection</h2>
+    <p>Change detection is how Angular knows when to update the DOM. This is one of the most common interview topics.</p>
+
+    <h3>Default strategy — Zone.js</h3>
+    <p>By default Angular uses <strong>Zone.js</strong> which patches browser APIs (setTimeout, click events, HTTP calls) to detect when something might have changed. After any async event, Angular checks the <em>whole component tree</em> from top to bottom.</p>
+
+    <div class="diagram">
+User clicks button
+        ↓
+Zone.js detects the event
+        ↓
+Angular runs change detection
+on EVERY component in the tree
+        ↓
+Updates DOM where needed
+    </div>
+
+    <h3>eventCoalescing: true (used in this project)</h3>
+    <pre><code><span class="fn">provideZoneChangeDetection</span>({ <span class="highlight">eventCoalescing: <span class="val">true</span></span> })</code></pre>
+    <p>If multiple events fire close together (e.g. mousedown + mouseup + click), without coalescing Angular runs change detection three times. With <code>eventCoalescing: true</code> it batches them into one run. Better performance, especially in forms and drag interactions.</p>
+
+    <h3>OnPush strategy (not used yet — but know it for interviews)</h3>
+    <p>With <code>ChangeDetectionStrategy.OnPush</code> Angular skips a component unless:</p>
+    <ul>
+      <li>An <code>@Input()</code> reference changes</li>
+      <li>An event originates from the component itself</li>
+      <li>An Observable it's subscribed to via <code>async</code> pipe emits</li>
+    </ul>
+    <p>OnPush components are much faster in large apps. Phase 2+ of HCMS will use OnPush for data-heavy list components.</p>
+
+    <h3>Signals — the future (Angular 16+)</h3>
+    <p>Angular 16 introduced <strong>Signals</strong> — a new reactive primitive. A signal is like a box that holds a value and tells Angular exactly which templates to update when it changes. No Zone.js needed.</p>
+    <pre><code><span class="kw">const</span> count = <span class="fn">signal</span>(<span class="val">0</span>);       <span class="cm">// create signal</span>
+count.<span class="fn">set</span>(<span class="val">1</span>);                  <span class="cm">// update it</span>
+<span class="fn">computed</span>(() => count() * <span class="val">2</span>);  <span class="cm">// derived value</span></code></pre>
+    <p>The <code>AuthService</code> currently uses <code>BehaviorSubject</code>. In a future refactor this could become a signal.</p>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is change detection in Angular?</div>
+      <div class="a">A: Change detection is the process Angular uses to synchronize the component's data model with the DOM. The default strategy uses Zone.js to detect any async activity and then walks the component tree checking for changes. <code>OnPush</code> is an optimization where Angular only checks a component when its inputs change, reducing the number of checks. Angular 16+ introduces Signals as a more granular, Zone-free alternative.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       15. RXJS
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="rxjs">
+    <div class="section-label">15 · Advanced</div>
+    <h2>RxJS in This Project</h2>
+    <p>RxJS is a library for handling asynchronous data using <strong>Observables</strong>. Angular's HttpClient, Router, and Forms all use it heavily.</p>
+
+    <h3>Key RxJS pieces used here</h3>
+    <table>
+      <thead><tr><th>Operator / Class</th><th>Used where</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>BehaviorSubject</code></td><td>AuthService <code>isAuthenticated$</code></td><td>An Observable that remembers its last value and immediately gives it to new subscribers</td></tr>
+        <tr><td><code>tap</code></td><td>After login/refresh</td><td>Side effect — do something (store tokens) without changing the value flowing through</td></tr>
+        <tr><td><code>catchError</code></td><td>Interceptors, AuthService</td><td>Handle errors in an Observable stream — return a new Observable or rethrow</td></tr>
+        <tr><td><code>switchMap</code></td><td>jwtInterceptor retry</td><td>Cancel the current inner Observable and switch to a new one — perfect for retry logic</td></tr>
+        <tr><td><code>throwError</code></td><td>Error propagation</td><td>Creates an Observable that immediately errors — used to pass errors to subscribers</td></tr>
+        <tr><td><code>pipe</code></td><td>Everywhere</td><td>Chains operators together in sequence</td></tr>
+      </tbody>
+    </table>
+
+    <h3>BehaviorSubject vs Observable</h3>
+    <pre><code><span class="cm">// BehaviorSubject — holds current value, emits to new subscribers immediately</span>
+<span class="kw">private</span> _isAuthenticated = <span class="kw">new</span> <span class="type">BehaviorSubject</span>&lt;<span class="type">boolean</span>&gt;(<span class="kw">this</span>.<span class="fn">hasValidToken</span>());
+
+<span class="cm">// Expose as read-only Observable — components can subscribe but not .next()</span>
+<span class="kw">readonly</span> isAuthenticated$ = <span class="kw">this</span>._isAuthenticated.<span class="fn">asObservable</span>();
+
+<span class="cm">// Update from inside the service only</span>
+<span class="kw">this</span>._isAuthenticated.<span class="fn">next</span>(<span class="val">true</span>);</code></pre>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: What is the difference between Subject and BehaviorSubject?</div>
+      <div class="a">A: A plain <code>Subject</code> only emits to subscribers that were subscribed <em>before</em> the emit. A <code>BehaviorSubject</code> stores the last emitted value and immediately gives it to any new subscriber. For auth state, we use <code>BehaviorSubject</code> so that any component that subscribes to <code>isAuthenticated$</code> — even after login already happened — immediately gets the correct current value.</div>
+      <br>
+      <div class="q">Q: What does switchMap do and why use it for token refresh?</div>
+      <div class="a">A: <code>switchMap</code> cancels the current inner subscription and switches to a new Observable. In the refresh flow: when a 401 comes in, we call <code>refreshToken()</code> which returns an Observable. We then <code>switchMap</code> into a retry of the original request using the new token. If another 401 came in before the refresh finished, switchMap would cancel the previous refresh and start a new one — preventing duplicate refresh calls.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       16. ANGULAR MATERIAL
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="material">
+    <div class="section-label">16 · Advanced</div>
+    <h2>Angular Material</h2>
+    <p>Angular Material is Google's official UI component library for Angular. It implements Material Design and includes pre-built, accessible components.</p>
+
+    <h3>Components used in this project</h3>
+    <table>
+      <thead><tr><th>Material Component</th><th>Module</th><th>Used in</th></tr></thead>
+      <tbody>
+        <tr><td>Toolbar</td><td><code>MatToolbarModule</code></td><td>AppShell top bar</td></tr>
+        <tr><td>Sidenav</td><td><code>MatSidenavModule</code></td><td>AppShell sidebar</td></tr>
+        <tr><td>Nav List</td><td><code>MatListModule</code></td><td>Sidebar navigation items</td></tr>
+        <tr><td>Icon</td><td><code>MatIconModule</code></td><td>Nav icons (dashboard, people…)</td></tr>
+        <tr><td>Button</td><td><code>MatButtonModule</code></td><td>Login button, nav buttons</td></tr>
+        <tr><td>Badge</td><td><code>MatBadgeModule</code></td><td>Notification count on bell icon</td></tr>
+        <tr><td>Form Field</td><td><code>MatFormFieldModule</code></td><td>Login form inputs</td></tr>
+        <tr><td>Input</td><td><code>MatInputModule</code></td><td>Login username/password fields</td></tr>
+        <tr><td>Snack Bar</td><td><code>MatSnackBarModule</code></td><td>Error/success toast messages</td></tr>
+        <tr><td>Progress Spinner</td><td><code>MatProgressSpinnerModule</code></td><td>Login loading state</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip"><strong>Each standalone component imports only the Material modules it uses.</strong> This is why standalone components are better for tree-shaking — unused Material components never end up in the bundle.</div>
+
+    <div class="interview-box">
+      <div class="interview-label">🎤 Interview Q&amp;A</div>
+      <div class="q">Q: Why use Angular Material instead of plain CSS or Bootstrap?</div>
+      <div class="a">A: Angular Material gives you WCAG 2.1 AA accessible components out of the box — keyboard navigation, ARIA attributes, focus management are all handled. It also has deep Angular integration (reactive form support, theme system via SCSS variables). For a healthcare app like HCMS, accessibility compliance is important, so Material was the right choice.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       17. INTERVIEW CHEATSHEET
+  ══════════════════════════════════════════════ -->
+  <div class="section" id="interview-cheatsheet">
+    <div class="section-label">17 · Interview</div>
+    <h2>Interview Cheatsheet</h2>
+    <p>Quick answers you should be able to say out loud in 30 seconds.</p>
+
+    <h3>Angular 19 / Modern Angular</h3>
+    <table>
+      <thead><tr><th>Question</th><th>One-line answer</th></tr></thead>
+      <tbody>
+        <tr><td>What's new in Angular 19?</td><td>Standalone components are the default, functional guards/interceptors, signals, bootstrapApplication replaces AppModule</td></tr>
+        <tr><td>What is a standalone component?</td><td>A component that manages its own imports instead of relying on an NgModule</td></tr>
+        <tr><td>What replaced AppModule?</td><td>bootstrapApplication() + ApplicationConfig (app.config.ts)</td></tr>
+        <tr><td>What are Signals?</td><td>A new reactive primitive (Angular 16+) that notifies Angular of exactly which templates to update, without Zone.js</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Architecture</h3>
+    <table>
+      <thead><tr><th>Question</th><th>One-line answer</th></tr></thead>
+      <tbody>
+        <tr><td>What is lazy loading?</td><td>Deferring download of a component/route until the user navigates to it, using dynamic import()</td></tr>
+        <tr><td>loadComponent vs loadChildren?</td><td>loadComponent = one standalone component; loadChildren = a whole route array (for features with sub-routes)</td></tr>
+        <tr><td>Why nest routes inside AppShell?</td><td>So the sidebar stays rendered while only the inner content changes on navigation</td></tr>
+        <tr><td>What is an interceptor?</td><td>Middleware that runs on every HTTP request/response — used for auth headers, error handling, logging</td></tr>
+        <tr><td>What is a route guard?</td><td>A function that runs before a route activates — returns true to allow, false or a UrlTree to redirect</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Change Detection</h3>
+    <table>
+      <thead><tr><th>Question</th><th>One-line answer</th></tr></thead>
+      <tbody>
+        <tr><td>What is change detection?</td><td>Angular's mechanism to sync component data with the DOM after async events</td></tr>
+        <tr><td>Default vs OnPush?</td><td>Default checks whole tree after any event; OnPush only checks a component when its @Input changes or async pipe emits</td></tr>
+        <tr><td>What is Zone.js?</td><td>A library that patches browser async APIs so Angular knows when to run change detection</td></tr>
+        <tr><td>eventCoalescing?</td><td>Batches multiple rapid DOM events into a single change detection cycle for better performance</td></tr>
+      </tbody>
+    </table>
+
+    <h3>RxJS</h3>
+    <table>
+      <thead><tr><th>Question</th><th>One-line answer</th></tr></thead>
+      <tbody>
+        <tr><td>Observable vs Promise?</td><td>Observable is lazy (runs when subscribed), cancellable, can emit multiple values; Promise runs immediately and resolves once</td></tr>
+        <tr><td>BehaviorSubject vs Subject?</td><td>BehaviorSubject remembers its last value and replays it to new subscribers; Subject does not</td></tr>
+        <tr><td>switchMap vs mergeMap?</td><td>switchMap cancels previous inner observable on new emit; mergeMap keeps all running in parallel</td></tr>
+        <tr><td>tap?</td><td>Side effect operator — runs a function without changing the value in the stream</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Forms</h3>
+    <table>
+      <thead><tr><th>Question</th><th>One-line answer</th></tr></thead>
+      <tbody>
+        <tr><td>Reactive vs Template-driven?</td><td>Reactive = form model in TypeScript class, easier to test; Template-driven = model in HTML via ngModel</td></tr>
+        <tr><td>FormGroup vs FormControl?</td><td>FormGroup wraps multiple FormControls into one unit; FormControl tracks a single input's value and validity</td></tr>
+        <tr><td>How to validate?</td><td>Pass Validators (Validators.required, Validators.email etc.) when creating the FormControl</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  // Highlight active sidebar link based on scroll position
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

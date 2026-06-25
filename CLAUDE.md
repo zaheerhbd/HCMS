@@ -83,7 +83,15 @@ dotnet user-secrets init
 dotnet user-secrets set "Jwt:Secret" "your-dev-secret-here"
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 ```
+## Code Style Guidelines
 
+- Write code that prioritizes readability over cleverness
+- Use clear, descriptive variable and function names (no single-letter vars except loop counters)
+- Add a comment above every function explaining what it does, its inputs, and what it returns
+- Add inline comments for any logic that isn't immediately obvious
+- Break complex operations into small, named helper functions
+- Prefer explicit over implicit — avoid magic numbers, use named constants
+- Group related code together and separate groups with a blank line and a section comment
 ---
 
 ## Hard Rules (Always Follow)

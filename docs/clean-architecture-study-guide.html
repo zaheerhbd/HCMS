@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clean Architecture Web API — Interview Study Guide</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #0f1117;
+    --bg-card:   #1a1d27;
+    --bg-code:   #12141e;
+    --border:    #2a2d3e;
+    --accent:    #7c6af7;
+    --accent2:   #4ec9b0;
+    --accent3:   #f39c12;
+    --accent4:   #e74c3c;
+    --text:      #c9d1d9;
+    --text-dim:  #8b949e;
+    --text-head: #e6edf3;
+    --tag-bg:    #2d2f44;
+    --sidebar-w: 260px;
+    --font-mono: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    --font-sans: "Segoe UI", system-ui, sans-serif;
+    --radius:    8px;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    flex-shrink: 0;
+  }
+  #sidebar .logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  #sidebar .logo h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #sidebar .logo p {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  #sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  #sidebar nav a:hover,
+  #sidebar nav a.active {
+    color: var(--text-head);
+    background: rgba(124,106,247,0.08);
+    border-left-color: var(--accent);
+  }
+  #sidebar nav a .num {
+    background: var(--tag-bg);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    min-width: 22px;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+
+  /* ── Main Content ── */
+  #main {
+    flex: 1;
+    padding: 48px 56px;
+    max-width: 960px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    margin-bottom: 56px;
+    padding: 40px;
+    background: linear-gradient(135deg, #1a1d27 0%, #1e1a35 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(124,106,247,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero h1 { font-size: 28px; color: var(--text-head); font-weight: 700; }
+  .hero p  { color: var(--text-dim); margin-top: 8px; font-size: 14px; }
+  .hero .tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .hero .tag {
+    background: var(--tag-bg);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Section ── */
+  section { margin-bottom: 64px; }
+  section h2 {
+    font-size: 22px;
+    color: var(--text-head);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  section h2 .section-num {
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  section h3 {
+    font-size: 16px;
+    color: var(--accent2);
+    font-weight: 600;
+    margin: 28px 0 10px;
+  }
+  section p { margin-bottom: 12px; }
+  section ul, section ol { padding-left: 20px; margin-bottom: 12px; }
+  section li { margin-bottom: 6px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card.accent-left { border-left: 3px solid var(--accent); }
+  .card.green-left  { border-left: 3px solid var(--accent2); }
+  .card.orange-left { border-left: 3px solid var(--accent3); }
+  .card.red-left    { border-left: 3px solid var(--accent4); }
+  .card h4 { font-size: 13px; font-weight: 700; color: var(--text-head); margin-bottom: 8px; }
+
+  /* ── Analogy box ── */
+  .analogy {
+    background: linear-gradient(135deg, #1c1e2e, #1a2030);
+    border: 1px solid #2a3550;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .analogy::before {
+    content: '💡 Analogy';
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .analogy p { color: var(--text); font-style: italic; margin: 0; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+  pre .label {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  /* Inline code */
+  p code, li code {
+    background: var(--tag-bg);
+    color: var(--accent2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+
+  /* Syntax highlight tokens */
+  .k  { color: #c792ea; }  /* keyword */
+  .t  { color: #82aaff; }  /* type/class */
+  .s  { color: #c3e88d; }  /* string */
+  .c  { color: #546e7a; }  /* comment */
+  .m  { color: #f78c6c; }  /* number/method call */
+  .p  { color: #89ddff; }  /* punctuation/attr */
+  .i  { color: #ffcb6b; }  /* interface/annotation */
+  .n  { color: var(--text); } /* normal */
+
+  /* ── Q&A box ── */
+  .qa-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-top: 24px;
+  }
+  .qa-section h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qa-section h4::before { content: '🎯'; }
+  .qa {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+  }
+  .qa:last-child { border-bottom: none; padding-bottom: 0; }
+  .qa .q {
+    color: var(--text-head);
+    font-weight: 600;
+    font-size: 13.5px;
+    margin-bottom: 6px;
+  }
+  .qa .a {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .qa .a strong { color: var(--text); }
+
+  /* ── Layer diagram ── */
+  .layer-diagram {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+  .layer {
+    border: 1px solid;
+    border-radius: 4px;
+    padding: 8px 20px;
+    margin: 4px auto;
+    max-width: 420px;
+  }
+  .layer.api    { border-color: #e74c3c; color: #e74c3c; background: rgba(231,76,60,0.08); }
+  .layer.infra  { border-color: #f39c12; color: #f39c12; background: rgba(243,156,18,0.08); }
+  .layer.app    { border-color: #4ec9b0; color: #4ec9b0; background: rgba(78,201,176,0.08); }
+  .layer.domain { border-color: #7c6af7; color: #7c6af7; background: rgba(124,106,247,0.08); }
+  .arrow { color: var(--text-dim); margin: 2px 0; font-size: 16px; }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin: 16px 0;
+  }
+  .pipe-step {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .pipe-arrow { color: var(--accent); font-size: 16px; padding: 0 2px; }
+  .pipe-step.hl { border-color: var(--accent); color: var(--accent); }
+  .pipe-step.gl { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: var(--tag-bg);
+    color: var(--accent);
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .badge-purple { background: rgba(124,106,247,0.2); color: var(--accent); }
+  .badge-green  { background: rgba(78,201,176,0.2);  color: var(--accent2); }
+  .badge-orange { background: rgba(243,156,18,0.2);  color: var(--accent3); }
+  .badge-red    { background: rgba(231,76,60,0.2);   color: var(--accent4); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    #sidebar { width: 100%; height: auto; position: static; }
+    #main { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ SIDEBAR -->
+<aside id="sidebar">
+  <div class="logo">
+    <h2>Study Guide</h2>
+    <p>Clean Architecture · .NET Web API</p>
+  </div>
+  <nav>
+    <a href="#s1"><span class="num">01</span> Project Structure</a>
+    <a href="#s2"><span class="num">02</span> Security Middleware</a>
+    <a href="#s3"><span class="num">03</span> Logging</a>
+    <a href="#s4"><span class="num">04</span> Why Clean Arch</a>
+    <a href="#s5"><span class="num">05</span> Mediator / MediatR</a>
+    <a href="#s6"><span class="num">06</span> Host Configuration</a>
+  </nav>
+</aside>
+
+<!-- ════════════════════════════════════════════════ MAIN -->
+<main id="main">
+
+  <div class="hero">
+    <h1>Clean Architecture Web API</h1>
+    <p>A comprehensive, interview-ready reference covering every layer of a production .NET API — from project layout to middleware pipeline to host bootstrap.</p>
+    <div class="tags">
+      <span class="tag">.NET 8</span>
+      <span class="tag">Clean Architecture</span>
+      <span class="tag">MediatR / CQRS</span>
+      <span class="tag">Serilog</span>
+      <span class="tag">JWT Auth</span>
+      <span class="tag">FluentValidation</span>
+      <span class="tag">EF Core</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ SECTION 1 -->
+  <section id="s1">
+    <h2><span class="section-num">01</span> Project Structure &amp; Organisation</h2>
+
+    <p>Clean Architecture splits a solution into four concentric layers. Each layer has a <strong>single, explicit responsibility</strong> and a strict rule about which other layers it may reference. Dependencies always point <em>inward</em> — toward the domain — never outward.</p>
+
+    <div class="layer-diagram">
+      <div style="color:var(--text-dim);font-size:11px;margin-bottom:12px;">Dependencies point INWARD ↓</div>
+      <div class="layer api">🌐 &nbsp;API Layer — Controllers, Filters, Middleware, Program.cs</div>
+      <div class="arrow">↓ depends on</div>
+      <div class="layer infra">🗄 &nbsp;Infrastructure Layer — EF Core, Repositories, External Services</div>
+      <div class="arrow">↓ depends on</div>
+      <div class="layer app">⚙️ &nbsp;Application Layer — Use Cases, Commands, Queries, Interfaces</div>
+      <div class="arrow">↓ depends on</div>
+      <div class="layer domain">💎 &nbsp;Domain Layer — Entities, Value Objects, Domain Events, Rules</div>
+      <div style="color:var(--text-dim);font-size:11px;margin-top:12px;">Domain has ZERO external dependencies</div>
+    </div>
+
+    <h3>Folder Layout (typical solution)</h3>
+<pre><span class="label">Shell</span><code><span class="n">MyApp.sln
+├── src/
+│   ├── <span class="t">MyApp.Domain</span>/          <span class="c">← no NuGet refs, pure C#</span>
+│   │   ├── Entities/
+│   │   ├── ValueObjects/
+│   │   ├── Enums/
+│   │   ├── Events/               <span class="c">← domain events</span>
+│   │   └── Exceptions/           <span class="c">← domain-specific errors</span>
+│   │
+│   ├── <span class="t">MyApp.Application</span>/      <span class="c">← refs Domain only</span>
+│   │   ├── Common/
+│   │   │   ├── Behaviours/       <span class="c">← MediatR pipeline (validation, logging)</span>
+│   │   │   └── Interfaces/       <span class="c">← IRepository, IFileStore, IEmailService…</span>
+│   │   ├── Features/
+│   │   │   └── Cases/
+│   │   │       ├── Commands/
+│   │   │       │   └── CreateCase/
+│   │   │       │       ├── CreateCaseCommand.cs
+│   │   │       │       ├── CreateCaseCommandHandler.cs
+│   │   │       │       └── CreateCaseCommandValidator.cs
+│   │   │       └── Queries/
+│   │   │           └── GetCaseById/
+│   │   └── DTOs/
+│   │
+│   ├── <span class="t">MyApp.Infrastructure</span>/   <span class="c">← refs Application + Domain</span>
+│   │   ├── Persistence/
+│   │   │   ├── AppDbContext.cs
+│   │   │   ├── Migrations/
+│   │   │   └── Repositories/
+│   │   ├── Services/             <span class="c">← IEmailService impl, IAzureBlob impl…</span>
+│   │   └── DependencyInjection.cs
+│   │
+│   └── <span class="t">MyApp.API</span>/             <span class="c">← refs Application (NOT Infrastructure directly)</span>
+│       ├── Controllers/
+│       ├── Filters/
+│       ├── Middleware/
+│       └── Program.cs            <span class="c">← DI root: wires Infrastructure</span>
+│
+└── tests/
+    ├── MyApp.Domain.Tests/
+    ├── MyApp.Application.Tests/  <span class="c">← mock the interfaces, not EF</span>
+    └── MyApp.Integration.Tests/</span></code></pre>
+
+    <h3>What Each Layer Owns (and Must Never Do)</h3>
+    <table>
+      <thead><tr><th>Layer</th><th>Owns</th><th>Must Never…</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-purple">Domain</span></td>
+          <td>Entities, value objects, business rules, domain events, custom exceptions</td>
+          <td>Reference EF Core, ASP.NET, MediatR, or any NuGet package</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">Application</span></td>
+          <td>Use-case handlers (Commands/Queries), DTO mappings, interface contracts, validation rules</td>
+          <td>Reference EF Core directly, know about HTTP, touch the file system</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">Infrastructure</span></td>
+          <td>DbContext, EF migrations, repository implementations, third-party API clients, Azure storage</td>
+          <td>Contain business logic — it's plumbing only</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-red">API</span></td>
+          <td>Controllers, middleware, filters, Program.cs, request/response shaping</td>
+          <td>Call repositories or DbContext directly; run business logic</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="analogy">
+      <p><strong>Restaurant kitchen brigade analogy:</strong> The <em>Domain</em> is the head chef's recipe book — pure culinary knowledge, no awareness of suppliers or diners. The <em>Application</em> is the expediter station — it orchestrates which recipes to run in response to a ticket. <em>Infrastructure</em> is the walk-in fridge and the delivery dock — raw ingredients and external suppliers. The <em>API</em> is the front-of-house — it takes orders from diners (HTTP clients) and hands tickets to the expediter. The front-of-house never goes into the walk-in fridge directly; it always goes through the expediter.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: Why can't the Application layer reference EF Core directly?</div>
+        <div class="a">A: It would couple your business logic to a specific persistence technology. If you ever switch from SQL Server to Cosmos DB, you'd have to rewrite use-case code. By defining <strong>IRepository&lt;T&gt;</strong> in Application and implementing it in Infrastructure, you can swap EF for anything — the use cases never change.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Why does Program.cs reference Infrastructure even though the API layer "shouldn't"?</div>
+        <div class="a">A: <strong>Program.cs is the DI composition root</strong> — the one place in the entire application that is allowed to know about concrete implementations. It wires interfaces (defined in Application) to implementations (defined in Infrastructure). This is the Dependency Inversion Principle in action. The controllers and handlers themselves never see Infrastructure types.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: What goes in a Domain Entity vs a DTO?</div>
+        <div class="a">A: An <strong>Entity</strong> encapsulates business state and behaviour — it has identity, enforces invariants, and raises domain events. A <strong>DTO</strong> is a dumb data-transfer bag shaped to what a particular API consumer needs — no logic, no identity. Mapping happens in the Application layer (via AutoMapper or manual projection).</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How do you enforce that lower layers never depend on higher ones?</div>
+        <div class="a">A: Via <strong>ProjectReference direction</strong> in .csproj files: Domain.csproj has zero references. Application.csproj references only Domain. Infrastructure.csproj references Domain and Application. API.csproj references Application and Infrastructure. A CI lint step (or NDepend / architecture tests using NetArchTest) can fail the build if any reference points the wrong way.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════ SECTION 2 -->
+  <section id="s2">
+    <h2><span class="section-num">02</span> Security Middleware</h2>
+
+    <p>In ASP.NET Core, the middleware pipeline is a <strong>chain of responsibility</strong>. Each piece of middleware can inspect the request, pass it to the next handler, and post-process the response. <strong>Order is critical</strong> — middleware registered earlier wraps everything that follows it.</p>
+
+    <h3>Canonical Security Middleware Order</h3>
+<pre><span class="label">C# — Program.cs</span><code><span class="k">var</span> <span class="n">app</span> = <span class="n">builder</span><span class="p">.</span><span class="m">Build</span><span class="n">();</span>
+
+<span class="c">// ① Redirect HTTP → HTTPS before anything else sees the request</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseHttpsRedirection</span><span class="n">();</span>
+
+<span class="c">// ② HSTS header — tells browsers to only use HTTPS for N days</span>
+<span class="k">if</span> <span class="n">(!</span><span class="n">app</span><span class="p">.</span><span class="n">Environment</span><span class="p">.</span><span class="m">IsDevelopment</span><span class="n">())</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseHsts</span><span class="n">();</span>
+
+<span class="c">// ③ CORS — must be before routing so preflight OPTIONS requests are handled</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseCors</span><span class="n">(</span><span class="s">"DefaultPolicy"</span><span class="n">);</span>
+
+<span class="c">// ④ Rate limiting — block abusive clients before they hit auth/routing</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseRateLimiter</span><span class="n">();</span>
+
+<span class="c">// ⑤ Request logging / correlation ID injection (custom middleware)</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">CorrelationIdMiddleware</span><span class="n">&gt;();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">RequestLoggingMiddleware</span><span class="n">&gt;();</span>
+
+<span class="c">// ⑥ Routing — must come before auth so route metadata is available</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseRouting</span><span class="n">();</span>
+
+<span class="c">// ⑦ Authentication — WHO is calling? (validates the JWT)</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseAuthentication</span><span class="n">();</span>
+
+<span class="c">// ⑧ Authorization — are they ALLOWED to? (checks [Authorize] policies)</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseAuthorization</span><span class="n">();</span>
+
+<span class="c">// ⑨ Global exception handler (custom middleware) — must wrap endpoints</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">GlobalExceptionMiddleware</span><span class="n">&gt;();</span>
+
+<span class="c">// ⑩ Map endpoints last</span>
+<span class="n">app</span><span class="p">.</span><span class="m">MapControllers</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">MapHealthChecks</span><span class="n">(</span><span class="s">"/health"</span><span class="n">);</span></code></pre>
+
+    <h3>What Breaks if Order is Wrong</h3>
+    <table>
+      <thead><tr><th>Mistake</th><th>Consequence</th></tr></thead>
+      <tbody>
+        <tr><td><code>UseAuthorization()</code> before <code>UseAuthentication()</code></td><td><code>HttpContext.User</code> is anonymous — every <code>[Authorize]</code> endpoint returns 401 even for valid tokens</td></tr>
+        <tr><td><code>UseCors()</code> after <code>UseRouting()</code></td><td>CORS headers not set on preflight responses — browsers block the request with a CORS error</td></tr>
+        <tr><td><code>UseRateLimiter()</code> after <code>UseAuthentication()</code></td><td>Auth code runs for every request before it's throttled — DDoS or credential-stuffing attack hammers your JWT validation logic</td></tr>
+        <tr><td>Exception handler middleware inside <code>UseRouting()</code>/<code>MapControllers()</code></td><td>Unhandled exceptions in endpoint execution leak stack traces to the client instead of being caught and shaped as RFC 7807 ProblemDetails</td></tr>
+        <tr><td><code>UseHttpsRedirection()</code> after business middleware</td><td>Business middleware runs on plain-text HTTP requests before the redirect — potential data interception window</td></tr>
+      </tbody>
+    </table>
+
+    <h3>JWT Authentication Registration</h3>
+<pre><span class="label">C# — Service Registration</span><code><span class="n">builder</span><span class="p">.</span><span class="n">Services</span>
+    <span class="p">.</span><span class="m">AddAuthentication</span><span class="n">(</span><span class="t">JwtBearerDefaults</span><span class="n">.</span><span class="p">AuthenticationScheme</span><span class="n">)</span>
+    <span class="p">.</span><span class="m">AddJwtBearer</span><span class="n">(options =&gt;</span>
+    <span class="n">{</span>
+        <span class="n">options</span><span class="p">.</span><span class="n">TokenValidationParameters</span> <span class="n">= </span><span class="k">new</span> <span class="t">TokenValidationParameters</span>
+        <span class="n">{</span>
+            <span class="n">ValidateIssuer           = </span><span class="k">true</span><span class="n">,</span>
+            <span class="n">ValidateAudience         = </span><span class="k">true</span><span class="n">,</span>
+            <span class="n">ValidateLifetime         = </span><span class="k">true</span><span class="n">,</span>
+            <span class="n">ValidateIssuerSigningKey = </span><span class="k">true</span><span class="n">,</span>
+            <span class="n">ValidIssuer              = config[</span><span class="s">"Jwt:Issuer"</span><span class="n">],</span>
+            <span class="n">ValidAudience            = config[</span><span class="s">"Jwt:Audience"</span><span class="n">],</span>
+            <span class="n">IssuerSigningKey         = </span><span class="k">new</span> <span class="t">SymmetricSecurityKey</span><span class="n">(</span>
+                <span class="t">Encoding</span><span class="n">.</span><span class="p">UTF8</span><span class="n">.</span><span class="m">GetBytes</span><span class="n">(config[</span><span class="s">"Jwt:Secret"</span><span class="n">]!))</span>
+        <span class="n">};</span>
+    <span class="n">});</span>
+
+<span class="c">// Policy-based authorization</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddAuthorization</span><span class="n">(opts =&gt;</span>
+<span class="n">{</span>
+    <span class="n">opts</span><span class="p">.</span><span class="m">AddPolicy</span><span class="n">(</span><span class="s">"CareCoordinator"</span><span class="n">,</span>
+        <span class="n">p =&gt; p</span><span class="p">.</span><span class="m">RequireRole</span><span class="n">(</span><span class="s">"CareCoordinator"</span><span class="n">,</span> <span class="s">"Admin"</span><span class="n">,</span> <span class="s">"Supervisor"</span><span class="n">));</span>
+    <span class="n">opts</span><span class="p">.</span><span class="m">AddPolicy</span><span class="n">(</span><span class="s">"AdminOnly"</span><span class="n">, p =&gt; p</span><span class="p">.</span><span class="m">RequireRole</span><span class="n">(</span><span class="s">"Admin"</span><span class="n">));</span>
+<span class="n">});</span></code></pre>
+
+    <h3>CORS Configuration</h3>
+<pre><span class="label">C# — CORS Policy</span><code><span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddCors</span><span class="n">(options =&gt;</span>
+<span class="n">{</span>
+    <span class="n">options</span><span class="p">.</span><span class="m">AddPolicy</span><span class="n">(</span><span class="s">"DefaultPolicy"</span><span class="n">, policy =&gt;</span>
+        <span class="n">policy</span>
+            <span class="p">.</span><span class="m">WithOrigins</span><span class="n">(</span><span class="s">"https://app.myapp.com"</span><span class="n">)  </span><span class="c">// explicit, never "*" in prod</span>
+            <span class="p">.</span><span class="m">WithMethods</span><span class="n">(</span><span class="s">"GET"</span><span class="n">,</span> <span class="s">"POST"</span><span class="n">,</span> <span class="s">"PUT"</span><span class="n">,</span> <span class="s">"DELETE"</span><span class="n">)</span>
+            <span class="p">.</span><span class="m">WithHeaders</span><span class="n">(</span><span class="s">"Authorization"</span><span class="n">,</span> <span class="s">"Content-Type"</span><span class="n">,</span> <span class="s">"X-Correlation-ID"</span><span class="n">)</span>
+            <span class="p">.</span><span class="m">AllowCredentials</span><span class="n">());</span>
+<span class="n">});</span></code></pre>
+
+    <div class="analogy">
+      <p><strong>Airport security analogy:</strong> The middleware pipeline is like airport security lanes. <em>HTTPS redirect</em> is the entrance check — if you're not using the right door, you're turned around immediately. <em>Rate limiting</em> is the queue management system that stops one person from monopolising all lanes. <em>Authentication</em> is passport control — "who are you?" <em>Authorization</em> is the boarding gate check — "you have a passport, but is it for this flight?" Letting someone skip passport control and go straight to the gate breaks everything.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: What is the difference between Authentication and Authorization?</div>
+        <div class="a">A: <strong>Authentication</strong> verifies <em>identity</em> — it answers "who are you?" by validating credentials (e.g., a JWT token signature and claims). <strong>Authorization</strong> verifies <em>permission</em> — it answers "are you allowed to do this?" by checking roles or policies against the authenticated identity. You must authenticate before you can authorize.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Why should you never use a wildcard (*) CORS origin in production?</div>
+        <div class="a">A: A wildcard allows any website to make cross-origin requests to your API with the user's browser cookies and credentials. This enables <strong>Cross-Site Request Forgery (CSRF)</strong> attacks — a malicious site could silently make authenticated API calls on behalf of a logged-in user. Always enumerate exact allowed origins.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How does rate limiting protect the API?</div>
+        <div class="a">A: It caps how many requests a client (by IP, API key, or user ID) can make within a time window. This prevents <strong>brute-force login attacks</strong>, <strong>credential stuffing</strong>, and <strong>resource exhaustion DoS attacks</strong>. In .NET 7+ the built-in <code>RateLimiter</code> middleware supports fixed window, sliding window, token bucket, and concurrency policies.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: What is HSTS and why is it separate from HTTPS redirection?</div>
+        <div class="a">A: <strong>HTTPS redirection</strong> is a server-side redirect — the server responds to HTTP with 301/307 to HTTPS. <strong>HSTS (HTTP Strict Transport Security)</strong> is a browser-side instruction — once seen, the browser will refuse to make plain HTTP connections to the domain at all, for up to N days. It prevents SSL-stripping attacks where a MITM intercepts the first redirect.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════ SECTION 3 -->
+  <section id="s3">
+    <h2><span class="section-num">03</span> Logging</h2>
+
+    <p>Production logging answers three questions: <em>what happened</em>, <em>when</em>, and <em>which request caused it</em>. Structured logging (outputting JSON instead of plain text) makes logs machine-queryable — you can filter by <code>UserId</code>, <code>CaseId</code>, or HTTP status code in tools like Seq, Azure Monitor, or Kibana.</p>
+
+    <h3>Serilog Setup (the .NET standard)</h3>
+<pre><span class="label">C# — Program.cs bootstrap</span><code><span class="c">// Create the logger BEFORE the host builds</span>
+<span class="c">// so startup errors are captured too</span>
+<span class="t">Log</span><span class="n">.</span><span class="n">Logger</span> <span class="n">= </span><span class="k">new</span> <span class="t">LoggerConfiguration</span><span class="n">()</span>
+    <span class="p">.</span><span class="m">ReadFrom</span><span class="p">.</span><span class="m">Configuration</span><span class="n">(configuration)       </span><span class="c">// reads from appsettings.json</span>
+    <span class="p">.</span><span class="m">Enrich</span><span class="p">.</span><span class="m">FromLogContext</span><span class="n">()                      </span><span class="c">// picks up LogContext.PushProperty()</span>
+    <span class="p">.</span><span class="m">Enrich</span><span class="p">.</span><span class="m">WithMachineName</span><span class="n">()</span>
+    <span class="p">.</span><span class="m">Enrich</span><span class="p">.</span><span class="m">WithEnvironmentName</span><span class="n">()</span>
+    <span class="p">.</span><span class="m">WriteTo</span><span class="p">.</span><span class="m">Console</span><span class="n">(</span><span class="k">new</span> <span class="t">RenderedCompactJsonFormatter</span><span class="n">())</span>
+    <span class="p">.</span><span class="m">WriteTo</span><span class="p">.</span><span class="m">File</span><span class="n">(</span>
+        <span class="k">new</span> <span class="t">JsonFormatter</span><span class="n">(),</span>
+        <span class="s">"logs/app-.json"</span><span class="n">,</span>
+        <span class="n">rollingInterval: </span><span class="t">RollingInterval</span><span class="n">.</span><span class="p">Day</span><span class="n">)</span>
+    <span class="p">.</span><span class="m">WriteTo</span><span class="p">.</span><span class="m">ApplicationInsights</span><span class="n">(</span>                 <span class="c">// Azure telemetry</span>
+        <span class="n">telemetryClient, </span><span class="t">TelemetryConverter</span><span class="n">.</span><span class="p">Traces</span><span class="n">)</span>
+    <span class="p">.</span><span class="m">CreateLogger</span><span class="n">();</span>
+
+<span class="k">try</span>
+<span class="n">{</span>
+    <span class="t">Log</span><span class="n">.</span><span class="m">Information</span><span class="n">(</span><span class="s">"Starting host"</span><span class="n">);</span>
+    <span class="n">builder</span><span class="p">.</span><span class="n">Host</span><span class="p">.</span><span class="m">UseSerilog</span><span class="n">();</span>   <span class="c">// replaces built-in ILogger</span>
+    <span class="k">var</span> <span class="n">app</span> = <span class="n">builder</span><span class="p">.</span><span class="m">Build</span><span class="n">();</span>
+    <span class="c">// ... middleware + run</span>
+<span class="n">}</span>
+<span class="k">catch</span> <span class="n">(</span><span class="t">Exception</span> <span class="n">ex)</span>
+<span class="n">{</span>
+    <span class="t">Log</span><span class="n">.</span><span class="m">Fatal</span><span class="n">(ex,</span> <span class="s">"Host terminated unexpectedly"</span><span class="n">);</span>
+<span class="n">}</span>
+<span class="k">finally</span> <span class="n">{</span> <span class="t">Log</span><span class="n">.</span><span class="m">CloseAndFlush</span><span class="n">(); }</span></code></pre>
+
+    <h3>Correlation IDs — Tracing a Request End-to-End</h3>
+<pre><span class="label">C# — CorrelationIdMiddleware.cs</span><code><span class="k">public class</span> <span class="t">CorrelationIdMiddleware</span>
+<span class="n">{</span>
+    <span class="k">private const string</span> <span class="n">HeaderName = </span><span class="s">"X-Correlation-ID"</span><span class="n">;</span>
+    <span class="k">private readonly</span> <span class="t">RequestDelegate</span> <span class="n">_next;</span>
+
+    <span class="k">public</span> <span class="t">CorrelationIdMiddleware</span><span class="n">(</span><span class="t">RequestDelegate</span> <span class="n">next) =&gt; _next = next;</span>
+
+    <span class="k">public async</span> <span class="t">Task</span> <span class="m">InvokeAsync</span><span class="n">(</span><span class="t">HttpContext</span> <span class="n">ctx)</span>
+    <span class="n">{</span>
+        <span class="c">// Reuse caller's ID or generate a fresh one</span>
+        <span class="k">var</span> <span class="n">correlationId = ctx</span><span class="p">.</span><span class="n">Request</span><span class="p">.</span><span class="n">Headers</span><span class="n">[HeaderName]</span>
+            <span class="p">.</span><span class="m">FirstOrDefault</span><span class="n">() ?? </span><span class="t">Guid</span><span class="n">.</span><span class="m">NewGuid</span><span class="n">().</span><span class="m">ToString</span><span class="n">(</span><span class="s">"N"</span><span class="n">);</span>
+
+        <span class="c">// Inject into Serilog's LogContext so every log in this request</span>
+        <span class="c">// automatically carries the CorrelationId property</span>
+        <span class="k">using</span> <span class="n">(</span><span class="t">LogContext</span><span class="p">.</span><span class="m">PushProperty</span><span class="n">(</span><span class="s">"CorrelationId"</span><span class="n">, correlationId))</span>
+        <span class="n">{</span>
+            ctx<span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">Headers</span><span class="n">[HeaderName] = correlationId;</span>
+            <span class="k">await</span> <span class="n">_next(ctx);</span>
+        <span class="n">}</span>
+    <span class="n">}</span>
+<span class="n">}</span></code></pre>
+
+    <h3>Log Levels — When to Use Each</h3>
+    <table>
+      <thead><tr><th>Level</th><th>Use When</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-purple">Verbose/Trace</span></td><td>Detailed diagnostic noise — disabled in prod</td><td>SQL query parameters, every cache hit/miss</td></tr>
+        <tr><td><span class="badge badge-green">Debug</span></td><td>Dev/staging only — useful for diagnosing logic</td><td>"Validation passed for command {CommandType}"</td></tr>
+        <tr><td><span class="badge badge-green">Information</span></td><td>Normal operational events</td><td>"Case {CaseId} created by user {UserId}"</td></tr>
+        <tr><td><span class="badge badge-orange">Warning</span></td><td>Something unexpected but recoverable</td><td>Retry attempt 2/3 for downstream service</td></tr>
+        <tr><td><span class="badge badge-red">Error</span></td><td>A request failed — requires investigation</td><td>Unhandled exception in handler, DB timeout</td></tr>
+        <tr><td><span class="badge badge-red">Fatal</span></td><td>Process cannot continue</td><td>Cannot connect to DB at startup</td></tr>
+      </tbody>
+    </table>
+
+    <div class="card accent-left">
+      <h4>What NOT to Log (HIPAA / security)</h4>
+      <ul>
+        <li>Patient names, dates of birth, SSN, insurance numbers (PHI)</li>
+        <li>JWT tokens, passwords, API keys</li>
+        <li>SAS URLs (contain embedded credentials)</li>
+        <li>Full request/response bodies in production</li>
+      </ul>
+      <p style="margin-top:8px;margin-bottom:0;color:var(--text-dim);font-size:13px;">Log entity IDs only: <code>"Patient {PatientId} updated"</code> not <code>"Patient John Smith updated"</code>.</p>
+    </div>
+
+    <div class="analogy">
+      <p><strong>Black box flight recorder analogy:</strong> A correlation ID is like a flight's tail number — every single event (takeoff thrust, altitude changes, conversations with ATC) is tagged with it. After an incident, investigators can pull all events for tail number <code>N12345</code> from multiple systems and reconstruct exactly what happened, in order. Without a correlation ID, your logs from the API, the background job, and the database are three separate narratives with no way to join them.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: What is structured logging and why is it better than string concatenation?</div>
+        <div class="a">A: Structured logging emits log entries as key-value pairs (JSON) rather than a flat string. <code>_logger.Information("Case {CaseId} created", caseId)</code> stores <code>CaseId</code> as a queryable field. In contrast, <code>"Case " + caseId + " created"</code> buries the value in a string — you can only text-search it, not filter, aggregate, or alert on it. Structured logs enable queries like "show me all errors for CaseId 42 in the last hour."</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Where in the middleware pipeline should request logging sit?</div>
+        <div class="a">A: After the correlation-ID middleware (so the log entries carry the ID) but before authentication — so you capture even failed/rejected requests. Serilog's <code>UseSerilogRequestLogging()</code> adds a single summary log at the end of each request with method, path, status code, and duration — far less noise than logging every step.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How do you prevent log flooding in production?</div>
+        <div class="a">A: Set <strong>minimum level overrides</strong> per namespace in appsettings.json — e.g., set Microsoft.EntityFrameworkCore to Warning so EF doesn't log every SQL query. Use <strong>log sampling</strong> for high-volume endpoints (log 1 in 100 successful health-check hits). Use <strong>destructuring policies</strong> to cap the size of logged objects.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════ SECTION 4 -->
+  <section id="s4">
+    <h2><span class="section-num">04</span> Why Clean Architecture</h2>
+
+    <p>Clean Architecture is not about layers for the sake of layers — it's about <strong>protecting what changes slowly (business rules) from what changes fast (technology choices)</strong>. It operationalises the Dependency Inversion Principle: high-level policy should not depend on low-level detail; both should depend on abstractions.</p>
+
+    <h3>Clean Architecture vs Traditional Layered Architecture</h3>
+    <table>
+      <thead><tr><th>Concern</th><th>Traditional Layers</th><th>Clean Architecture</th></tr></thead>
+      <tbody>
+        <tr><td>Dependency direction</td><td>UI → Business → Data — flows one way, but dependencies cascade downward and upward</td><td>All layers depend on Domain; Domain depends on nothing</td></tr>
+        <tr><td>Testability</td><td>Hard: must mock or spin up the DB to unit-test business logic</td><td>Easy: Application layer mocks IRepository — no EF Core needed</td></tr>
+        <tr><td>Database swap</td><td>Painful — SQL is woven into the business layer</td><td>Implement a new IRepository — Application/Domain unchanged</td></tr>
+        <tr><td>Framework coupling</td><td>Business classes often inherit from ORM base classes or controllers</td><td>Domain entities are plain C# — no framework inheritance</td></tr>
+        <tr><td>Team scaling</td><td>Merge conflicts across single-layer files</td><td>Feature-slice folders; teams rarely touch the same file</td></tr>
+      </tbody>
+    </table>
+
+    <h3>The Dependency Inversion Principle in Practice</h3>
+<pre><span class="label">C# — Without DIP (tightly coupled)</span><code><span class="c">// BAD: Application directly depends on EF Core</span>
+<span class="k">public class</span> <span class="t">CreateCaseHandler</span>
+<span class="n">{</span>
+    <span class="k">private readonly</span> <span class="t">AppDbContext</span> <span class="n">_db;  </span><span class="c">// ← Infrastructure leaking into Application!</span>
+
+    <span class="k">public async</span> <span class="t">Task</span> <span class="m">Handle</span><span class="n">(</span><span class="t">CreateCaseCommand</span> <span class="n">cmd)</span>
+        <span class="n">=&gt; _db</span><span class="p">.</span><span class="n">Cases</span><span class="p">.</span><span class="m">Add</span><span class="n">(</span><span class="k">new</span> <span class="t">Case</span><span class="n">(cmd));</span>
+<span class="n">}</span></code></pre>
+<pre><span class="label">C# — With DIP (correctly inverted)</span><code><span class="c">// Application defines the abstraction it needs</span>
+<span class="k">public interface</span> <span class="t">ICaseRepository</span>           <span class="c">// lives in Application</span>
+<span class="n">{</span>
+    <span class="t">Task</span> <span class="m">AddAsync</span><span class="n">(</span><span class="t">Case</span> <span class="n">c,</span> <span class="t">CancellationToken</span> <span class="n">ct);</span>
+<span class="n">}</span>
+
+<span class="c">// Application handler depends ONLY on the interface</span>
+<span class="k">public class</span> <span class="t">CreateCaseHandler</span>
+<span class="n">{</span>
+    <span class="k">private readonly</span> <span class="t">ICaseRepository</span> <span class="n">_repo;</span>  <span class="c">// ← abstraction only</span>
+
+    <span class="k">public async</span> <span class="t">Task</span> <span class="m">Handle</span><span class="n">(</span><span class="t">CreateCaseCommand</span> <span class="n">cmd,</span> <span class="t">CancellationToken</span> <span class="n">ct)</span>
+        <span class="n">=&gt; </span><span class="k">await</span> <span class="n">_repo</span><span class="p">.</span><span class="m">AddAsync</span><span class="n">(</span><span class="k">new</span> <span class="t">Case</span><span class="n">(cmd), ct);</span>
+<span class="n">}</span>
+
+<span class="c">// Infrastructure provides the concrete implementation</span>
+<span class="k">public class</span> <span class="t">EfCaseRepository</span> <span class="n">: </span><span class="t">ICaseRepository</span>   <span class="c">// lives in Infrastructure</span>
+<span class="n">{</span>
+    <span class="k">private readonly</span> <span class="t">AppDbContext</span> <span class="n">_db;</span>
+    <span class="k">public async</span> <span class="t">Task</span> <span class="m">AddAsync</span><span class="n">(</span><span class="t">Case</span> <span class="n">c,</span> <span class="t">CancellationToken</span> <span class="n">ct)</span>
+    <span class="n">{</span>
+        <span class="k">await</span> <span class="n">_db</span><span class="p">.</span><span class="n">Cases</span><span class="p">.</span><span class="m">AddAsync</span><span class="n">(c, ct);</span>
+        <span class="k">await</span> <span class="n">_db</span><span class="p">.</span><span class="m">SaveChangesAsync</span><span class="n">(ct);</span>
+    <span class="n">}</span>
+<span class="n">}</span></code></pre>
+
+    <div class="analogy">
+      <p><strong>USB port analogy:</strong> Your laptop doesn't know or care whether the device you plug in is made by Logitech or Microsoft — it only knows the USB interface standard. The Dependency Inversion Principle is the USB standard: Application code (the laptop) defines the port shape (<code>ICaseRepository</code>); any infrastructure (any vendor's device) that conforms to that shape can be plugged in without changing the laptop. Switching from EF Core to Dapper is just plugging in a different device — the laptop's logic is untouched.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: What problem does Clean Architecture actually solve that regular MVC doesn't?</div>
+        <div class="a">A: In MVC, business logic tends to drift into controllers or service classes that directly call EF Core — making it impossible to unit-test without a database. Clean Architecture enforces a <strong>testable boundary</strong>: the Application layer's handlers depend only on interfaces, so a unit test can inject a mock repo and verify business logic in milliseconds, with no database, no HTTP stack, no mocks of ASP.NET.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: What is the Dependency Inversion Principle (the D in SOLID)?</div>
+        <div class="a">A: High-level modules (business use cases) should not depend on low-level modules (databases, file systems). Both should depend on abstractions. And abstractions should not depend on details — details should depend on abstractions. Practically: <strong>define interfaces in the layer that needs them, implement them in the layer below</strong>.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Is Clean Architecture overkill for a small project?</div>
+        <div class="a">A: Honestly, yes — for a prototype or a 5-endpoint CRUD service it adds ceremony. The payoff comes when: (a) the domain is complex enough to need rich entity behaviour; (b) you need high test coverage without a live database; (c) you have multiple teams working on different features; or (d) the technology choices may change (e.g., moving from SQL Server to Cosmos DB). For HCMS these all apply — HIPAA compliance demands rigorous testing, and Azure technology stack evolution is expected.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════ SECTION 5 -->
+  <section id="s5">
+    <h2><span class="section-num">05</span> Mediator Pattern &amp; MediatR</h2>
+
+    <p>The Mediator pattern decouples senders from receivers. In a Web API, controllers shouldn't know which service handles a request — they just publish a message and let the mediator route it to the correct handler. This keeps controllers thin and makes handlers independently testable.</p>
+
+    <h3>Request Flow: Controller → Handler → Domain → Response</h3>
+    <div class="pipeline">
+      <div class="pipe-step hl">HTTP Request</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Controller</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step hl">mediator.Send(cmd)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step gl">Validation Behaviour</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step gl">Logging Behaviour</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step hl">Handler</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Domain Entity</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step hl">Result / DTO</div>
+    </div>
+
+    <h3>Command vs Query (CQRS)</h3>
+    <table>
+      <thead><tr><th></th><th>Command</th><th>Query</th></tr></thead>
+      <tbody>
+        <tr><td>Intent</td><td>Change state (create, update, delete)</td><td>Read state — no side effects</td></tr>
+        <tr><td>Returns</td><td>Typically an ID or <code>Unit</code></td><td>A DTO or list of DTOs</td></tr>
+        <tr><td>Validation</td><td>FluentValidation via pipeline behaviour</td><td>Usually lighter validation</td></tr>
+        <tr><td>Example</td><td><code>CreateCaseCommand</code>, <code>AssignTaskCommand</code></td><td><code>GetCaseByIdQuery</code>, <code>ListPatientsQuery</code></td></tr>
+        <tr><td>Optimisation</td><td>Wrapped in a transaction</td><td>Can use read replicas, projections, caching</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Example: Full Command + Handler + Validator</h3>
+<pre><span class="label">C# — CreateCaseCommand.cs</span><code><span class="c">// The message / input DTO</span>
+<span class="k">public record</span> <span class="t">CreateCaseCommand</span>
+<span class="n">(</span>
+    <span class="t">Guid</span>   <span class="n">PatientId,</span>
+    <span class="t">string</span> <span class="n">ChiefComplaint,</span>
+    <span class="t">Guid</span>   <span class="n">AssignedCoordinatorId</span>
+<span class="n">) : </span><span class="t">IRequest</span><span class="n">&lt;</span><span class="t">Guid</span><span class="n">&gt;;      </span><span class="c">// returns the new Case's ID</span>
+
+<span class="c">// FluentValidation rules — registered as a pipeline behaviour</span>
+<span class="k">public class</span> <span class="t">CreateCaseCommandValidator</span> <span class="n">: </span><span class="t">AbstractValidator</span><span class="n">&lt;</span><span class="t">CreateCaseCommand</span><span class="n">&gt;</span>
+<span class="n">{</span>
+    <span class="k">public</span> <span class="t">CreateCaseCommandValidator</span><span class="n">()</span>
+    <span class="n">{</span>
+        <span class="m">RuleFor</span><span class="n">(x =&gt; x</span><span class="p">.</span><span class="n">PatientId)         </span><span class="p">.</span><span class="m">NotEmpty</span><span class="n">();</span>
+        <span class="m">RuleFor</span><span class="n">(x =&gt; x</span><span class="p">.</span><span class="n">ChiefComplaint)    </span><span class="p">.</span><span class="m">NotEmpty</span><span class="n">().</span><span class="m">MaximumLength</span><span class="n">(500);</span>
+        <span class="m">RuleFor</span><span class="n">(x =&gt; x</span><span class="p">.</span><span class="n">AssignedCoordinatorId)</span><span class="p">.</span><span class="m">NotEmpty</span><span class="n">();</span>
+    <span class="n">}</span>
+<span class="n">}</span>
+
+<span class="c">// The handler — the actual business logic</span>
+<span class="k">public class</span> <span class="t">CreateCaseCommandHandler</span>
+    <span class="n">: </span><span class="t">IRequestHandler</span><span class="n">&lt;</span><span class="t">CreateCaseCommand</span><span class="n">,</span> <span class="t">Guid</span><span class="n">&gt;</span>
+<span class="n">{</span>
+    <span class="k">private readonly</span> <span class="t">ICaseRepository</span>   <span class="n">_cases;</span>
+    <span class="k">private readonly</span> <span class="t">IPatientRepository</span> <span class="n">_patients;</span>
+    <span class="k">private readonly</span> <span class="t">IAuditService</span>      <span class="n">_audit;</span>
+
+    <span class="k">public</span> <span class="t">CreateCaseCommandHandler</span><span class="n">(</span>
+        <span class="t">ICaseRepository</span> <span class="n">cases,</span>
+        <span class="t">IPatientRepository</span> <span class="n">patients,</span>
+        <span class="t">IAuditService</span> <span class="n">audit)</span>
+    <span class="n">{</span>
+        <span class="n">_cases    = cases;</span>
+        <span class="n">_patients = patients;</span>
+        <span class="n">_audit    = audit;</span>
+    <span class="n">}</span>
+
+    <span class="k">public async</span> <span class="t">Task</span><span class="n">&lt;</span><span class="t">Guid</span><span class="n">&gt; </span><span class="m">Handle</span><span class="n">(</span><span class="t">CreateCaseCommand</span> <span class="n">cmd,</span> <span class="t">CancellationToken</span> <span class="n">ct)</span>
+    <span class="n">{</span>
+        <span class="k">var</span> <span class="n">patient = </span><span class="k">await</span> <span class="n">_patients</span><span class="p">.</span><span class="m">GetByIdAsync</span><span class="n">(cmd</span><span class="p">.</span><span class="n">PatientId, ct)</span>
+            <span class="n">?? </span><span class="k">throw new</span> <span class="t">NotFoundException</span><span class="n">(</span><span class="s">"Patient"</span><span class="n">, cmd</span><span class="p">.</span><span class="n">PatientId);</span>
+
+        <span class="k">var</span> <span class="n">newCase = </span><span class="k">new</span> <span class="t">Case</span><span class="n">(patient, cmd</span><span class="p">.</span><span class="n">ChiefComplaint,</span>
+                                   <span class="n">cmd</span><span class="p">.</span><span class="n">AssignedCoordinatorId);</span>
+
+        <span class="k">await</span> <span class="n">_cases</span><span class="p">.</span><span class="m">AddAsync</span><span class="n">(newCase, ct);</span>
+        <span class="k">await</span> <span class="n">_audit</span><span class="p">.</span><span class="m">LogAsync</span><span class="n">(</span><span class="s">"CaseCreated"</span><span class="n">, newCase</span><span class="p">.</span><span class="n">Id, ct);</span>
+        <span class="k">return</span> <span class="n">newCase</span><span class="p">.</span><span class="n">Id;</span>
+    <span class="n">}</span>
+<span class="n">}</span></code></pre>
+
+    <h3>Pipeline Behaviours — Cross-Cutting Concerns</h3>
+<pre><span class="label">C# — ValidationBehaviour.cs</span><code><span class="c">// Wraps every command/query — runs validators BEFORE the handler</span>
+<span class="k">public class</span> <span class="t">ValidationBehaviour</span><span class="n">&lt;</span><span class="t">TRequest</span><span class="n">,</span> <span class="t">TResponse</span><span class="n">&gt;</span>
+    <span class="n">: </span><span class="t">IPipelineBehavior</span><span class="n">&lt;</span><span class="t">TRequest</span><span class="n">,</span> <span class="t">TResponse</span><span class="n">&gt;</span>
+    <span class="k">where</span> <span class="t">TRequest</span> <span class="n">: </span><span class="t">IBaseRequest</span>
+<span class="n">{</span>
+    <span class="k">private readonly</span> <span class="t">IEnumerable</span><span class="n">&lt;</span><span class="t">IValidator</span><span class="n">&lt;</span><span class="t">TRequest</span><span class="n">&gt;&gt; _validators;</span>
+
+    <span class="k">public async</span> <span class="t">Task</span><span class="n">&lt;</span><span class="t">TResponse</span><span class="n">&gt; </span><span class="m">Handle</span><span class="n">(</span>
+        <span class="t">TRequest</span> <span class="n">request,</span>
+        <span class="t">RequestHandlerDelegate</span><span class="n">&lt;</span><span class="t">TResponse</span><span class="n">&gt; next,</span>
+        <span class="t">CancellationToken</span> <span class="n">ct)</span>
+    <span class="n">{</span>
+        <span class="k">if</span> <span class="n">(!</span><span class="n">_validators</span><span class="p">.</span><span class="m">Any</span><span class="n">()) </span><span class="k">return await</span> <span class="m">next</span><span class="n">();</span>
+
+        <span class="k">var</span> <span class="n">context  = </span><span class="k">new</span> <span class="t">ValidationContext</span><span class="n">&lt;</span><span class="t">TRequest</span><span class="n">&gt;(request);</span>
+        <span class="k">var</span> <span class="n">failures = _validators</span>
+            <span class="p">.</span><span class="m">Select</span><span class="n">(v =&gt; v</span><span class="p">.</span><span class="m">Validate</span><span class="n">(context))</span>
+            <span class="p">.</span><span class="m">SelectMany</span><span class="n">(r =&gt; r</span><span class="p">.</span><span class="n">Errors)</span>
+            <span class="p">.</span><span class="m">Where</span><span class="n">(f =&gt; f != </span><span class="k">null</span><span class="n">)</span>
+            <span class="p">.</span><span class="m">ToList</span><span class="n">();</span>
+
+        <span class="k">if</span> <span class="n">(failures</span><span class="p">.</span><span class="m">Any</span><span class="n">())</span>
+            <span class="k">throw new</span> <span class="t">ValidationException</span><span class="n">(failures);</span>
+
+        <span class="k">return await</span> <span class="m">next</span><span class="n">();   </span><span class="c">// call the actual handler</span>
+    <span class="n">}</span>
+<span class="n">}</span></code></pre>
+
+    <h3>Controller — Thin by Design</h3>
+<pre><span class="label">C# — CasesController.cs</span><code><span class="n">[</span><span class="t">ApiController</span><span class="n">]</span>
+<span class="n">[</span><span class="t">Route</span><span class="n">(</span><span class="s">"api/cases"</span><span class="n">)]</span>
+<span class="n">[</span><span class="t">Authorize</span><span class="n">(Policy = </span><span class="s">"CareCoordinator"</span><span class="n">)]</span>
+<span class="k">public class</span> <span class="t">CasesController</span> <span class="n">: </span><span class="t">ApiControllerBase</span>
+<span class="n">{</span>
+    <span class="c">// ISender is MediatR's lightweight interface — only .Send()</span>
+    <span class="k">public</span> <span class="t">CasesController</span><span class="n">(</span><span class="t">ISender</span> <span class="n">mediator) : </span><span class="k">base</span><span class="n">(mediator) { }</span>
+
+    <span class="n">[</span><span class="t">HttpPost</span><span class="n">]</span>
+    <span class="k">public async</span> <span class="t">Task</span><span class="n">&lt;</span><span class="t">IActionResult</span><span class="n">&gt; </span><span class="m">Create</span><span class="n">(</span><span class="t">CreateCaseCommand</span> <span class="n">cmd)</span>
+    <span class="n">{</span>
+        <span class="c">// Controller does NOTHING except dispatch the command</span>
+        <span class="k">var</span> <span class="n">id = </span><span class="k">await</span> <span class="t">Mediator</span><span class="p">.</span><span class="m">Send</span><span class="n">(cmd);</span>
+        <span class="k">return</span> <span class="m">CreatedAtAction</span><span class="n">(</span><span class="k">nameof</span><span class="n">(</span><span class="m">GetById</span><span class="n">), </span><span class="k">new</span> <span class="n">{ id }, </span><span class="k">new</span> <span class="n">{ id });</span>
+    <span class="n">}</span>
+
+    <span class="n">[</span><span class="t">HttpGet</span><span class="n">(</span><span class="s">"{id:guid}"</span><span class="n">)]</span>
+    <span class="k">public async</span> <span class="t">Task</span><span class="n">&lt;</span><span class="t">IActionResult</span><span class="n">&gt; </span><span class="m">GetById</span><span class="n">(</span><span class="t">Guid</span> <span class="n">id)</span>
+        <span class="n">=&gt; </span><span class="m">Ok</span><span class="n">(</span><span class="k">await</span> <span class="t">Mediator</span><span class="p">.</span><span class="m">Send</span><span class="n">(</span><span class="k">new</span> <span class="t">GetCaseByIdQuery</span><span class="n">(id)));</span>
+<span class="n">}</span></code></pre>
+
+    <div class="analogy">
+      <p><strong>Air traffic controller analogy:</strong> Pilots (controllers) don't communicate directly with each other — they all talk to the ATC tower (the Mediator). The tower knows which runway handler (handler) to route each flight (command/query) to. If you add a new airline, no existing pilot needs to know about it — they still just talk to the tower. This is why adding a new feature (a new Command + Handler) doesn't require touching the controller at all.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: What is CQRS and what problem does it solve?</div>
+        <div class="a">A: <strong>Command Query Responsibility Segregation</strong> separates write operations (commands) from read operations (queries) into distinct models. The problem it solves: read and write workloads have different needs — reads want denormalized, fast projections; writes want transactional consistency. With CQRS you can optimize each independently: commands use full domain entities with validation; queries can use raw SQL projections, read replicas, or cached views without polluting the write model.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: What are MediatR pipeline behaviours and what goes in them?</div>
+        <div class="a">A: A pipeline behaviour is middleware that wraps every handler — the MediatR equivalent of ASP.NET middleware but at the use-case level. Common behaviours: <strong>ValidationBehaviour</strong> (runs FluentValidation before the handler; throws if invalid), <strong>LoggingBehaviour</strong> (logs the command name, duration, and outcome), <strong>TransactionBehaviour</strong> (wraps commands in a DB transaction), <strong>ExceptionBehaviour</strong> (catches domain exceptions and converts them to typed errors). Each behaviour calls <code>next()</code> to proceed to the next layer.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Why use ISender instead of IMediator in controllers?</div>
+        <div class="a">A: <code>ISender</code> exposes only <code>Send()</code>, which is all a controller ever needs. <code>IMediator</code> also exposes <code>Publish()</code> (for notifications) and the full interface. Depending on the narrowest interface is a best practice (Interface Segregation Principle) — it also makes mocking in tests cleaner.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How do you unit test a MediatR handler?</div>
+        <div class="a">A: Directly — no web host needed. Construct the handler with mocked dependencies (using Moq or NSubstitute), call <code>Handle(command, CancellationToken.None)</code>, and assert on the return value and on mock method calls. The handler is a plain class — you don't need to spin up the mediator, the pipeline, or the HTTP stack.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════ SECTION 6 -->
+  <section id="s6">
+    <h2><span class="section-num">06</span> Host Configuration</h2>
+
+    <p>In .NET 6+, <code>Program.cs</code> is the single bootstrap file that wires together the DI container and the middleware pipeline. Understanding it means understanding how the application comes alive from nothing to serving requests.</p>
+
+    <h3>Anatomy of Program.cs</h3>
+<pre><span class="label">C# — Program.cs (annotated)</span><code><span class="c">// ─────────────────────────────────────────────────
+// PHASE 1: Create the host builder
+// ─────────────────────────────────────────────────</span>
+<span class="k">var</span> <span class="n">builder = </span><span class="t">WebApplication</span><span class="p">.</span><span class="m">CreateBuilder</span><span class="n">(args);</span>
+<span class="c">// CreateBuilder sets up:
+//   • IConfiguration (from appsettings.json + env vars + secrets)
+//   • IHostEnvironment (Development/Staging/Production)
+//   • Default ILogger
+//   • Kestrel web server</span>
+
+<span class="c">// ─────────────────────────────────────────────────
+// PHASE 2: Register services into the DI container
+// ─────────────────────────────────────────────────</span>
+
+<span class="c">// Domain layer: nothing to register (plain C#)</span>
+
+<span class="c">// Application layer: MediatR + FluentValidation + AutoMapper</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddApplication</span><span class="n">();  </span><span class="c">// extension method in Application project</span>
+
+<span class="c">// Infrastructure layer: EF Core, repositories, external services</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddInfrastructure</span><span class="n">(builder</span><span class="p">.</span><span class="n">Configuration);</span>
+
+<span class="c">// API layer: controllers, Swagger, CORS, auth, rate limiting</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddControllers</span><span class="n">();</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddEndpointsApiExplorer</span><span class="n">();</span>
+<span class="n">builder</span><span class="p">.</span><span class="n">Services</span><span class="p">.</span><span class="m">AddSwaggerGen</span><span class="n">(</span><span class="c">/* JWT bearer config */</span><span class="n">);</span>
+<span class="c">// ... auth, CORS, rate limiting (see Section 2)</span>
+
+<span class="c">// ─────────────────────────────────────────────────
+// PHASE 3: Build the WebApplication
+// ─────────────────────────────────────────────────</span>
+<span class="k">var</span> <span class="n">app = builder</span><span class="p">.</span><span class="m">Build</span><span class="n">();</span>
+<span class="c">// At this point the DI container is finalised — no more service registration</span>
+
+<span class="c">// ─────────────────────────────────────────────────
+// PHASE 4: Configure the middleware pipeline
+// ─────────────────────────────────────────────────</span>
+<span class="k">if</span> <span class="n">(app</span><span class="p">.</span><span class="n">Environment</span><span class="p">.</span><span class="m">IsDevelopment</span><span class="n">())</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseSwagger</span><span class="n">().</span><span class="m">UseSwaggerUI</span><span class="n">();</span>
+
+<span class="n">app</span><span class="p">.</span><span class="m">UseHttpsRedirection</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseCors</span><span class="n">(</span><span class="s">"DefaultPolicy"</span><span class="n">);</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseRateLimiter</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">CorrelationIdMiddleware</span><span class="n">&gt;();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseSerilogRequestLogging</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseRouting</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseAuthentication</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseAuthorization</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">GlobalExceptionMiddleware</span><span class="n">&gt;();</span>
+
+<span class="c">// ─────────────────────────────────────────────────
+// PHASE 5: Map endpoints and start listening
+// ─────────────────────────────────────────────────</span>
+<span class="n">app</span><span class="p">.</span><span class="m">MapControllers</span><span class="n">();</span>
+<span class="n">app</span><span class="p">.</span><span class="m">MapHealthChecks</span><span class="n">(</span><span class="s">"/health"</span><span class="n">);</span>
+
+<span class="k">await</span> <span class="n">app</span><span class="p">.</span><span class="m">RunAsync</span><span class="n">();</span>   <span class="c">// blocks until process shutdown</span></code></pre>
+
+    <h3>Configuration Layering — How Settings Are Read</h3>
+<pre><span class="label">Priority Order (highest wins)</span><code><span class="n">① Command-line arguments                        </span><span class="c">dotnet run --Urls=https://0.0.0.0:8080</span>
+<span class="n">② Environment variables                          </span><span class="c">ConnectionStrings__DefaultConnection=Server=...</span>
+<span class="n">③ User secrets (local dev only)                 </span><span class="c">dotnet user-secrets set "Jwt:Secret" "..."</span>
+<span class="n">④ appsettings.{Environment}.json               </span><span class="c">appsettings.Development.json</span>
+<span class="n">⑤ appsettings.json (base config, checked in)   </span><span class="c">appsettings.json</span></code></pre>
+
+    <h3>Dependency Injection Lifetimes</h3>
+    <table>
+      <thead><tr><th>Lifetime</th><th>Created When</th><th>Destroyed When</th><th>Use For</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-red">Singleton</span></td>
+          <td>First request (or DI startup)</td>
+          <td>App shuts down</td>
+          <td>Config readers, in-memory caches, HTTP clients, Serilog logger</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">Scoped</span></td>
+          <td>Each HTTP request</td>
+          <td>Request completes</td>
+          <td>DbContext, repositories, MediatR handlers — the default for most services</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">Transient</span></td>
+          <td>Every time it's injected</td>
+          <td>Consumer is disposed</td>
+          <td>Lightweight, stateless services — validators, mappers</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card red-left">
+      <h4>Captive Dependency Bug — The Most Common DI Mistake</h4>
+      <p>If you inject a <strong>Scoped</strong> service into a <strong>Singleton</strong>, the scoped service is captured at singleton creation time and reused across all requests — meaning it carries state (like DbContext) from a previous user's request into the next one. This causes data leaks and concurrency bugs. ASP.NET will throw <code>InvalidOperationException</code> at startup if scope validation is enabled (it is, in Development).</p>
+    </div>
+
+    <h3>Extension Methods — Keeping Program.cs Clean</h3>
+<pre><span class="label">C# — Application/DependencyInjection.cs</span><code><span class="k">public static class</span> <span class="t">ApplicationServiceExtensions</span>
+<span class="n">{</span>
+    <span class="c">// Registers all Application-layer services</span>
+    <span class="k">public static</span> <span class="t">IServiceCollection</span> <span class="m">AddApplication</span><span class="n">(</span>
+        <span class="k">this</span> <span class="t">IServiceCollection</span> <span class="n">services)</span>
+    <span class="n">{</span>
+        <span class="c">// MediatR scans the assembly for all IRequestHandler implementations</span>
+        <span class="n">services</span><span class="p">.</span><span class="m">AddMediatR</span><span class="n">(cfg =&gt;</span>
+            <span class="n">cfg</span><span class="p">.</span><span class="m">RegisterServicesFromAssembly</span><span class="n">(</span>
+                <span class="t">Assembly</span><span class="p">.</span><span class="m">GetExecutingAssembly</span><span class="n">()));</span>
+
+        <span class="c">// FluentValidation: registers all validators in this assembly</span>
+        <span class="n">services</span><span class="p">.</span><span class="m">AddValidatorsFromAssembly</span><span class="n">(</span><span class="t">Assembly</span><span class="p">.</span><span class="m">GetExecutingAssembly</span><span class="n">());</span>
+
+        <span class="c">// Register pipeline behaviours in order of execution</span>
+        <span class="n">services</span><span class="p">.</span><span class="m">AddTransient</span><span class="n">(</span><span class="k">typeof</span><span class="n">(</span><span class="t">IPipelineBehavior</span><span class="n">&lt;,&gt;),</span>
+                              <span class="k">typeof</span><span class="n">(</span><span class="t">LoggingBehaviour</span><span class="n">&lt;,&gt;));</span>
+        <span class="n">services</span><span class="p">.</span><span class="m">AddTransient</span><span class="n">(</span><span class="k">typeof</span><span class="n">(</span><span class="t">IPipelineBehavior</span><span class="n">&lt;,&gt;),</span>
+                              <span class="k">typeof</span><span class="n">(</span><span class="t">ValidationBehaviour</span><span class="n">&lt;,&gt;));</span>
+
+        <span class="c">// AutoMapper: scans for Profile classes</span>
+        <span class="n">services</span><span class="p">.</span><span class="m">AddAutoMapper</span><span class="n">(</span><span class="t">Assembly</span><span class="p">.</span><span class="m">GetExecutingAssembly</span><span class="n">());</span>
+
+        <span class="k">return</span> <span class="n">services;</span>
+    <span class="n">}</span>
+<span class="n">}</span></code></pre>
+
+    <h3>Environment-Specific Behaviour</h3>
+<pre><span class="label">C# — Conditional pipeline configuration</span><code><span class="k">if</span> <span class="n">(app</span><span class="p">.</span><span class="n">Environment</span><span class="p">.</span><span class="m">IsDevelopment</span><span class="n">())</span>
+<span class="n">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseSwagger</span><span class="n">();</span>          <span class="c">// API docs only in dev/staging</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseSwaggerUI</span><span class="n">();</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseDeveloperExceptionPage</span><span class="n">();</span>
+<span class="n">}</span>
+<span class="k">else</span>
+<span class="n">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseHsts</span><span class="n">();</span>             <span class="c">// HSTS only in production</span>
+    <span class="n">app</span><span class="p">.</span><span class="m">UseMiddleware</span><span class="n">&lt;</span><span class="t">GlobalExceptionMiddleware</span><span class="n">&gt;();</span>
+<span class="n">}</span>
+
+<span class="c">// Current environment controlled by ASPNETCORE_ENVIRONMENT env var</span>
+<span class="c">// Development | Staging | Production</span></code></pre>
+
+    <div class="analogy">
+      <p><strong>Restaurant opening sequence analogy:</strong> <code>WebApplication.CreateBuilder(args)</code> is like unlocking the building and turning on the lights — basic infrastructure is ready. Service registration (Phase 2) is mise en place — stocking every station with what it needs before service starts. <code>builder.Build()</code> is the head chef calling "kitchen ready" — no more restocking after this point. The middleware pipeline (Phase 4) is the order in which stations process each ticket: the host stand (routing), the pass (auth), then the kitchen stations (handlers). <code>app.RunAsync()</code> is opening the doors to customers.</p>
+    </div>
+
+    <div class="qa-section">
+      <h4>Interview Q&amp;A</h4>
+      <div class="qa">
+        <div class="q">Q: What does WebApplication.CreateBuilder() actually do under the hood?</div>
+        <div class="a">A: It creates a <code>WebApplicationBuilder</code> that pre-wires: (1) <strong>IConfiguration</strong> with the default layered sources (appsettings.json → env → command-line); (2) <strong>Kestrel</strong> as the HTTP server; (3) the <strong>IHostEnvironment</strong> from the <code>ASPNETCORE_ENVIRONMENT</code> env var; (4) default logging providers (Console, Debug, EventSource); and (5) an empty DI <code>IServiceCollection</code> ready to be populated. It does NOT start the server — that happens at <code>app.RunAsync()</code>.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: What is the difference between Scoped and Transient service lifetimes?</div>
+        <div class="a">A: <strong>Scoped</strong> creates one instance per HTTP request — all services within that request share the same instance (useful for DbContext, which tracks entities per-unit-of-work). <strong>Transient</strong> creates a new instance every time the service is resolved — safe for lightweight, stateless helpers. The key question: "does this service hold state I want to share within a request, or state I definitely don't want to share?"</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: Why are secrets not stored in appsettings.json?</div>
+        <div class="a">A: <code>appsettings.json</code> is committed to source control. A secret in source control is compromised the moment the repository is cloned by anyone — or leaked via a public GitHub repo. Secrets go in <strong>user-secrets</strong> (local dev — stored in the OS user profile, never in the repo), <strong>environment variables</strong> (CI/CD pipelines), or <strong>Azure Key Vault</strong> (production — accessed via Managed Identity, no stored credentials at all).</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How do you run EF Core migrations at startup in production safely?</div>
+        <div class="a">A: Resolve <code>AppDbContext</code> from the DI container before <code>app.Run()</code> and call <code>context.Database.MigrateAsync()</code>. However, for production this is often undesirable — it blocks startup, requires elevated DB permissions on the service account, and is hard to roll back. The safer pattern is to run migrations as a separate job in the CI/CD pipeline (using <code>dotnet ef database update</code>) before deploying the new binary, and keep the service account read/write but not schema-owner.</div>
+      </div>
+      <div class="qa">
+        <div class="q">Q: How does the configuration system support multiple environments without code changes?</div>
+        <div class="a">A: By setting <code>ASPNETCORE_ENVIRONMENT</code> to <code>Development</code>, <code>Staging</code>, or <code>Production</code>, .NET automatically loads <code>appsettings.{Environment}.json</code> on top of the base <code>appsettings.json</code>. Values in the environment-specific file override the base. This means you ship one binary and control its behaviour entirely through config — the 12-Factor App principle. Secrets layer on top via environment variables or Key Vault, also without touching the binary.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════════════════════════════════════ JS: active nav -->
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks  = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
