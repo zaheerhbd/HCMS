@@ -20,13 +20,6 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// ── Azure Key Vault (production / staging only) ───────────────────────────────
-var kvUri = builder.Configuration["KeyVault:Uri"];
-if (!string.IsNullOrEmpty(kvUri))
-{
-    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new Azure.Identity.DefaultAzureCredential());
-}
-
 // ── Application + Infrastructure layers ──────────────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
