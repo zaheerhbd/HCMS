@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using HCM.Application.Common.Behaviours;
-using MediatR;
+﻿using HCM.Application.Auth.DataHandlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HCM.Application;
@@ -9,9 +7,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
-        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        // Register all DataHandlers (one per feature/aggregate)
+        services.AddScoped<IAuthDataHandler, AuthDataHandler>();
+        // TODO: Add other feature DataHandlers (IPatientDataHandler, ICaseDataHandler, etc.)
+
         return services;
     }
 }

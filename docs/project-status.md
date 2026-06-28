@@ -1,7 +1,7 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-25
-**Current Phase:** Phase 1 — Foundation & Infrastructure (Azure resources provisioned — verifying end-to-end login)
+**Last Updated:** 2026-06-27 (Architecture refactor: MediatR replaced with DataHandler pattern)
+**Current Phase:** Phase 1 — Foundation & Infrastructure (Azure resources live — verifying end-to-end login)
 **Overall Progress:** 29 / 185 tasks complete
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
@@ -87,16 +87,17 @@
 
 ## Blockers
 
-**Pending: verify API is up after Key Vault fix**
+**Pending: confirm login works end-to-end**
 
-- Commit `f566766` removed Key Vault code from `Program.cs`; CI/CD is deploying it now.
-- Once deployed: check App Service → **Overview** → Start (if stopped), then hit `/health` and `/swagger`.
-- Confirm App Service Application Settings contain (double-underscore notation):
-  - `Jwt__Secret` — 32+ char secret
-  - `ConnectionStrings__DefaultConnection` — Azure SQL connection string
-  - `Jwt__Issuer` — `HCMS`
-  - `Jwt__Audience` — `HCMS-Users`
-  - `ASPNETCORE_ENVIRONMENT` — `Production`
+Three fixes were deployed this session — verify all are live:
+1. Key Vault code removed (`f566766`) — API should start without `AKV10032` crash.
+2. `angular.json` `fileReplacements` added (`0f5b07a`) — SPA now bundles the Azure API URL instead of `localhost:5144`.
+3. `Jwt__Secret` in App Service must be **≥ 32 characters** — the original value was 16 chars (128 bits), causing `IDX10720` on every login attempt. Update via App Service → Configuration → `Jwt__Secret`.
+
+Steps to verify:
+- Hit `/health` — should return `{"status":"Healthy"}`.
+- Hit `/swagger` → try POST `/api/auth/login` with `admin` / `Admin@123!` → should return 200 + tokens.
+- Open `https://jolly-bay-072046c10.7.azurestaticapps.net/login` → login → should reach the dashboard.
 
 **Pending: GitHub branch protection on `main`**
 
@@ -105,6 +106,10 @@ GitHub repo → Settings → Branches → Add rule → Branch name pattern: `mai
 **Resolved: Key Vault tenant mismatch**
 
 Key Vault (`hcm-prod-kv`) was created in West Europe under a different Azure AD tenant than the App Service, causing `AKV10032 Invalid issuer` on every startup. Decision: remove Key Vault integration; supply secrets directly via App Service Application Settings.
+
+**Resolved: Angular prod build using wrong environment file**
+
+`angular.json` was missing `fileReplacements` in the production configuration, so `environment.prod.ts` was never used. Fixed in commit `0f5b07a`.
 
 ---
 
@@ -117,7 +122,7 @@ Key Vault (`hcm-prod-kv`) was created in West Europe under a different Azure AD 
 | 2026-06-22 | Firely SDK for FHIR (not hand-rolled) | Official .NET FHIR SDK; handles serialization + validation |
 | 2026-06-22 | EF Core only (no raw SQL) | Prevents SQL injection; easier migrations |
 | 2026-06-22 | Angular Material as UI library | Enterprise look + WCAG 2.1 AA built-in |
-| 2026-06-22 | MediatR for CQRS | Clean separation of concerns; pipeline behaviors for validation and logging |
+| 2026-06-27 | DataHandler pattern (no MediatR) | Simpler than MediatR for this project scope; handlers combine validation + business logic; injected directly into controllers as scoped dependencies |
 | 2026-06-23 | .env deferred (not native to .NET/Angular) | .NET uses appsettings.Development.json; Angular uses environment.ts; .env.example kept for reference and CI/CD |
 | 2026-06-24 | Single prod environment only (no staging) | Portfolio project — staging adds cost and complexity with no benefit; deploy directly from `main` to prod (`hcm-prod-rg`). Azure resources use `hcm-prod-*` naming. |
 | 2026-06-25 | Skip Azure Key Vault; use App Service Application Settings for secrets | Key Vault was provisioned in a different Azure AD tenant (West Europe, `adf10e2b-...`) from the App Service (`397f0f29-...`), causing `AKV10032` on every startup. Fixing the tenant would require re-provisioning Key Vault in the correct region/tenant; not worth it for a portfolio project. Secrets go directly into App Service config using double-underscore notation. |

@@ -81,3 +81,6 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 logs/
+
+# ── PERSONAL INTERVIEW PREP (local tracking only) ──────────────────
+docs/interview-prep-*.md

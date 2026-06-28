@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediatR Handler & Validator Wiring</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        h1 { color: #2c3e50; margin-bottom: 10px; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; margin-bottom: 15px; }
+        h3 { color: #7f8c8d; margin-top: 20px; margin-bottom: 10px; }
+        p { margin-bottom: 15px; }
+        .section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        .code-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+        .flow-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+        .step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+            border-radius: 2px;
+        }
+        .step-num {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        .diagram {
+            background: white;
+            border: 2px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #34495e;
+            color: white;
+        }
+        tr:hover { background: #f5f5f5; }
+        .box {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .arrow {
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 16px;
+            color: #e74c3c;
+        }
+        .analogy {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #16a085;
+            margin: 15px 0;
+            border-radius: 2px;
+        }
+        .success {
+            background: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #27ae60;
+            margin: 15px 0;
+            border-radius: 2px;
+        }
+        ul { margin-left: 20px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 How MediatR Discovers Handler & Validator</h1>
+        <p><strong>The magic of automatic wiring through reflection and dependency injection</strong></p>
+
+        <h2>The Three Files That Work Together</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>What It Does</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>LoginCommand.cs</code></td>
+                    <td>Request object (carries data, implements IRequest&lt;AuthResponseDto&gt;)</td>
+                    <td>The "message" sent through MediatR</td>
+                </tr>
+                <tr>
+                    <td><code>LoginCommandHandler.cs</code></td>
+                    <td>Implements IRequestHandler&lt;LoginCommand, AuthResponseDto&gt;</td>
+                    <td>Processes the request, returns response</td>
+                </tr>
+                <tr>
+                    <td><code>LoginCommandValidator.cs</code></td>
+                    <td>Implements AbstractValidator&lt;LoginCommand&gt;</td>
+                    <td>Validates the request before handler runs</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🔌 How They Wire Together (Program.cs)</h2>
+        <div class="section">
+            <h3>Step 1: Enable MediatR Auto-Discovery</h3>
+            <div class="code-box">
+// In Program.cs (line 24):
+builder.Services.AddApplication();
+
+// Inside AddApplication() in DependencyInjection.cs (line 12):
+services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly)
+);
+            </div>
+            <p><strong>What happens:</strong> MediatR scans the HCM.Application assembly and finds ALL classes that implement <code>IRequestHandler&lt;TRequest, TResponse&gt;</code></p>
+            <p><strong>Finds:</strong> LoginCommandHandler (implements IRequestHandler&lt;LoginCommand, AuthResponseDto&gt;)</p>
+
+            <h3>Step 2: Enable Validator Auto-Discovery</h3>
+            <div class="code-box">
+// In DependencyInjection.cs (line 13):
+services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+            </div>
+            <p><strong>What happens:</strong> FluentValidation scans the assembly and finds ALL classes that inherit from <code>AbstractValidator&lt;T&gt;</code></p>
+            <p><strong>Finds:</strong> LoginCommandValidator (inherits AbstractValidator&lt;LoginCommand&gt;)</p>
+
+            <h3>Step 3: Enable Validation Pipeline Behavior</h3>
+            <div class="code-box">
+// In DependencyInjection.cs (line 14):
+services.AddTransient(typeof(IPipelineBehavior&lt;,&gt;), typeof(ValidationBehaviour&lt;,&gt;));
+            </div>
+            <p><strong>What happens:</strong> Registers ValidationBehaviour as middleware that runs BEFORE every handler</p>
+        </div>
+
+        <h2>🔄 The Request Flow (How They Link Together)</h2>
+        <div class="flow-container">
+            <div class="step">
+                <span class="step-num">1</span>
+                <strong>Controller sends LoginCommand</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    <code>await _mediator.Send(new LoginCommand(username, password))</code>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">2</span>
+                <strong>MediatR receives the command</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    MediatR examines the type: <code>LoginCommand</code><br>
+                    It looks for: <code>IRequestHandler&lt;LoginCommand, AuthResponseDto&gt;</code>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">3</span>
+                <strong>MediatR builds the pipeline</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    Creates: <code>ValidationBehaviour → LoginCommandHandler</code><br>
+                    (Pipeline behaviors run BEFORE the handler)
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">4</span>
+                <strong>ValidationBehaviour receives the command</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    Looks for: <code>IValidator&lt;LoginCommand&gt;</code><br>
+                    DI container says: "I have LoginCommandValidator!"<br>
+                    Creates instance: <code>new LoginCommandValidator()</code><br>
+                    Stores in: <code>IEnumerable&lt;IValidator&lt;LoginCommand&gt;&gt;</code>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">5</span>
+                <strong>ValidationBehaviour validates the command</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    Calls: <code>LoginCommandValidator.Validate(loginCommand)</code><br>
+                    Rules checked:<br>
+                    <ul style="margin-left: 20px;">
+                        <li>Username.NotEmpty() ✓</li>
+                        <li>Username.MaxLength(100) ✓</li>
+                        <li>Password.NotEmpty() ✓</li>
+                        <li>Password.MaxLength(200) ✓</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">6</span>
+                <strong>If validation passes...</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    Calls: <code>next()</code> → passes control to LoginCommandHandler
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-num">7</span>
+                <strong>LoginCommandHandler executes</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    DI injects: IApplicationDbContext, ITokenService, ILogger<br>
+                    Runs: <code>Handle(loginCommand, cancellationToken)</code><br>
+                    Returns: <code>AuthResponseDto</code>
+                </div>
+            </div>
+
+            <div class="step" style="background: #e8f5e9;">
+                <span class="step-num" style="background: #27ae60;">8</span>
+                <strong>Response returned back through pipeline</strong>
+                <div style="margin-top: 10px; margin-left: 45px;">
+                    AuthResponseDto → ValidationBehaviour → MediatR → Controller → Angular
+                </div>
+            </div>
+        </div>
+
+        <h2>📊 Architecture Diagram</h2>
+        <div class="diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                     PROGRAM.CS STARTUP                          │
+│                                                                 │
+│  builder.Services.AddMediatR(...)                              │
+│    ↓ Scans assembly for IRequestHandler&lt;T,R&gt;                │
+│    ↓ FINDS: LoginCommandHandler                                │
+│                                                                 │
+│  services.AddValidatorsFromAssembly(...)                       │
+│    ↓ Scans assembly for AbstractValidator&lt;T&gt;                │
+│    ↓ FINDS: LoginCommandValidator                              │
+│                                                                 │
+│  services.AddTransient(IPipelineBehavior, ValidationBehaviour) │
+│    ↓ Registers: ValidationBehaviour&lt;T,R&gt;                     │
+│    ↓ This runs BEFORE every handler                            │
+└─────────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────────┐
+│              RUNTIME: Send LoginCommand                         │
+└─────────────────────────────────────────────────────────────────┘
+                            ↓
+        ┌───────────────────┴────────────────────┐
+        │                                        │
+        ▼                                        ▼
+┌──────────────────────┐              ┌────────────────────┐
+│  MediatR Router      │              │  DI Container      │
+│                      │              │                    │
+│  "Which handler      │              │  Has registered:   │
+│   handles LoginCmd?" │              │  - LoginCommandHandler
+│                      │              │  - LoginCommandValidator
+│  ANSWER:             │              │  - IApplicationDbContext
+│  LoginCommandHandler │              │  - ITokenService
+│                      │              │  - ILogger
+└──────────┬───────────┘              └────────────────────┘
+           │
+           ▼
+    ┌──────────────────┐
+    │  Build Pipeline  │
+    │                  │
+    │  ValidationBeha  │ ← Gets IValidator&lt;LoginCommand&gt; from DI
+    │  → Handler       │   (which is LoginCommandValidator)
+    └────────┬─────────┘
+             │
+             ▼
+   ┌─────────────────────────────┐
+   │ ValidationBehaviour.Handle  │
+   │                             │
+   │ validator.Validate(cmd)     │
+   │   ↓                         │
+   │ if (failures.Count > 0)     │
+   │   throw ValidationException │
+   │ else                        │
+   │   next() → Handler          │
+   └────────┬────────────────────┘
+            │
+            ▼
+   ┌─────────────────────────────┐
+   │ LoginCommandHandler.Handle  │
+   │                             │
+   │ Query DB                    │
+   │ Verify password             │
+   │ Generate tokens             │
+   │ Return AuthResponseDto      │
+   └────────┬────────────────────┘
+            │
+            ▼
+      AuthResponseDto
+        (back to Controller)

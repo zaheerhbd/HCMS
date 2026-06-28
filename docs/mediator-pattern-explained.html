@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediatR Pattern Explained</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        h1 { color: #2c3e50; margin-bottom: 10px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; margin-bottom: 15px; }
+        h3 { color: #7f8c8d; margin-top: 20px; margin-bottom: 10px; }
+        p { margin-bottom: 15px; }
+        .section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .analogy-box {
+            background: #e8f4f8;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #16a085;
+            border-radius: 4px;
+        }
+        .code-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+        .diagram {
+            background: white;
+            border: 2px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            text-align: center;
+        }
+        .flow-diagram {
+            background: white;
+            border: 2px solid #2ecc71;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .box {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            margin: 10px;
+            border-radius: 4px;
+            min-width: 120px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .arrow {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 20px;
+            color: #3498db;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 5px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #34495e;
+            color: white;
+        }
+        tr:hover { background: #f5f5f5; }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-item {
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .without { background: #ffebee; border-left: 4px solid #e74c3c; }
+        .with { background: #e8f5e9; border-left: 4px solid #27ae60; }
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        ul { margin-left: 20px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+        .benefits {
+            background: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #27ae60;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 MediatR Pattern Explained</h1>
+        <p><strong>Making Complex Code Simple Through Mediation</strong></p>
+
+        <div class="section">
+            <h2>What Happens in Your Code?</h2>
+            <h3>Without MediatR (What You Might Write):</h3>
+            <div class="code-box">
+public class AuthController : ControllerBase
+{
+    private readonly IApplicationDbContext _db;
+    private readonly ITokenService _tokenService;
+    private readonly ILogger&lt;AuthController&gt; _logger;
+
+    public AuthController(IApplicationDbContext db, ITokenService tokenService, ILogger log)
+    {
+        _db = db;
+        _tokenService = tokenService;
+        _logger = logger;
+    }
+
+    [HttpPost("login")]
+    public async Task&lt;IActionResult&gt; Login(LoginRequest request)
+    {
+        // 100 lines of logic: query user, verify password, lock account,
+        // generate token, save to DB, log...
+        // ALL IN THE CONTROLLER!
+    }
+}
+            </div>
+
+            <h3>With MediatR (What You Have Now):</h3>
+            <div class="code-box">
+public class AuthController : ControllerBase
+{
+    private readonly IMediator _mediator;  // ← ONE dependency!
+
+    public AuthController(IMediator mediator) =&gt; _mediator = mediator;
+
+    [HttpPost("login")]
+    public async Task&lt;IActionResult&gt; Login(LoginRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new LoginCommand(request.Username, request.Password), ct);
+        return Ok(result);  // ← That's it! Logic is elsewhere.
+    }
+}
+            </div>
+        </div>
+
+        <div class="analogy-box">
+            <h2>🌍 Real-Life Analogy: Restaurant Order System</h2>
+            <p><strong>Without MediatR:</strong></p>
+            <p>You (the customer) walk into the kitchen and tell each chef directly:</p>
+            <blockquote style="margin-left: 20px; color: #555; border-left: 2px solid #e74c3c; padding-left: 10px;">
+                "Hey chef, I want a burger. Let me give you the beef (cooking dependency), the grill (equipment),
+                the seasoning supplies (validator). And I'll watch while you cook it and give you instructions..."
+            </blockquote>
+            <p style="margin-top: 15px;"><strong>With MediatR:</strong></p>
+            <p>You hand a <span class="highlight">written order slip</span> to the <span class="highlight">waiter (Mediator)</span>:</p>
+            <blockquote style="margin-left: 20px; color: #555; border-left: 2px solid #27ae60; padding-left: 10px;">
+                "Here's my order: one burger. Waiter, you figure out which chef, what ingredients they need,
+                and when the burger is ready, bring it to me."
+            </blockquote>
+            <p style="margin-top: 15px;"><strong>Benefits:</strong></p>
+            <ul>
+                <li>✅ You don't need to know <em>how</em> to cook (the controller doesn't know implementation details)</li>
+                <li>✅ Chef can change the recipe without telling customers (loose coupling)</li>
+                <li>✅ Waiter ensures quality (validation, logging, error handling happens automatically)</li>
+                <li>✅ Multiple people can order simultaneously without conflict (clean separation)</li>
+            </ul>
+        </div>
+
+        <h2>📊 Architecture Diagram</h2>
+        <div class="diagram">
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                     HTTP REQUEST: POST /api/auth/login          │
+└─────────────────────┬───────────────────────────────────────────┘
+                      │
+                      ▼
+        ┌─────────────────────────────────┐
+        │    AuthController               │
+        │  (Just receives request)         │
+        │                                 │
+        │  IMediator _mediator;           │
+        │  Send(LoginCommand) ──┐         │
+        └─────────────────────────────────┘
+                                │
+                    DI CREATES IMediator
+                                │
+                      ┌─────────▼──────────┐
+                      │  MediatR Pipeline  │
+                      │  (The Waiter)      │
+                      │                    │
+                      │  1. Validate       │
+                      │  2. Log            │
+                      │  3. Find Handler   │
+                      │  4. Execute        │
+                      └─────────┬──────────┘
+                                │
+                                ▼
+                    ┌───────────────────────────────────┐
+                    │  LoginCommandHandler              │
+                    │                                   │
+                    │  Handle(LoginCommand request)     │
+                    │  {                                │
+                    │    - Query user from DB           │
+                    │    - Verify password with BCrypt  │
+                    │    - Check lockout status         │
+                    │    - Generate JWT token           │
+                    │    - Save refresh token           │
+                    │    - Log success                  │
+                    │    - Return AuthResponseDto       │
+                    │  }                                │
+                    └───────────────┬───────────────────┘
+                                    │
+                        ┌───────────┴────────────┐
+                        │                        │
+            ┌───────────▼────────────┐  ┌───────▼──────────────┐
+            │ IApplicationDbContext  │  │ ITokenService        │
+            │ (Database)             │  │ (JWT Generation)     │
+            │ (Injected into         │  │ (Injected into       │
+            │  Handler by DI)        │  │  Handler by DI)      │
+            └────────────────────────┘  └──────────────────────┘
+</pre>
+        </div>
+
+        <h2>🔄 What Gets Replaced by Dependency Injection?</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>In AuthController</th>
+                    <th>Replaced By</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IApplicationDbContext</code></td>
+                    <td><span class="highlight">IMediator</span></td>
+                    <td>Controller doesn't directly access DB anymore. Mediator routes to handler.</td>
+                </tr>
+                <tr>
+                    <td><code>ITokenService</code></td>
+                    <td><span class="highlight">IMediator</span></td>
+                    <td>Controller doesn't create tokens. Handler (via DI in Handler) does.</td>
+                </tr>
+                <tr>
+                    <td><code>ILogger</code></td>
+                    <td><span class="highlight">IMediator</span></td>
+                    <td>Handler logs internally. Controller doesn't need to.</td>
+                </tr>
+                <tr>
+                    <td><code>Login() { ...100 lines... }</code></td>
+                    <td><span class="highlight">LoginCommandHandler</span></td>
+                    <td>All logic moved to dedicated handler class. Controller just sends command.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🏗️ Where Is The Logic?</h2>
+        <div class="section">
+            <p><strong>Login logic breakdown:</strong></p>
+            <ul>
+                <li><code>LoginCommandHandler.cs</code> → Contains <code>Handle()</code> method with the actual logic</li>
+                <li><code>LoginCommand.cs</code> → Request object (carries Username, Password)</li>
+                <li><code>AuthResponseDto</code> → Response object (carries AccessToken, RefreshToken, etc.)</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>What the Handler Does (line by line):</strong></p>
+            <ol style="margin-left: 20px;">
+                <li>📥 Receives <code>LoginCommand</code> (request) → extracts Username, Password</li>
+                <li>🔍 Queries DB for user by username (using injected <code>IApplicationDbContext</code>)</li>
+                <li>🔐 Verifies password with BCrypt</li>
+                <li>🚫 Checks if account is locked (failed attempts ≥ 5)</li>
+                <li>📝 Increments failed attempt counter if password wrong</li>
+                <li>🎟️ Generates access token (using injected <code>ITokenService</code>)</li>
+                <li>🔄 Generates refresh token</li>
+                <li>💾 Saves refresh token to DB</li>
+                <li>📢 Logs successful login</li>
+                <li>📤 Returns tokens + user info as <code>AuthResponseDto</code></li>
+            </ol>
+        </div>
+
+        <h2>⚙️ How Dependency Injection Works in Handler</h2>
+        <div class="code-box">
+// In Program.cs, someone registered these:
+builder.Services.AddScoped&lt;IApplicationDbContext, ApplicationDbContext&gt;();
+builder.Services.AddScoped&lt;ITokenService, TokenService&gt;();
+builder.Services.AddMediatR(...);  // Registers all handlers
+
+// When you send LoginCommand via mediator:
+// 1. MediatR finds LoginCommandHandler
+// 2. Looks at LoginCommandHandler constructor:
+//    public LoginCommandHandler(IApplicationDbContext db, ITokenService tokenService, ILogger logger)
+//
+// 3. DI Container says: "I have these implementations!"
+//    - IApplicationDbContext → new ApplicationDbContext()
+//    - ITokenService → new TokenService()
+//    - ILogger → new Logger()
+//
+// 4. Creates instance: new LoginCommandHandler(db, tokenService, logger)
+// 5. Calls Handle(loginCommand)
+        </div>
+
+        <h2>🎯 Benefits of This Pattern</h2>
+        <div class="benefits">
+            <h3>1. Single Responsibility</h3>
+            <p>Controller's job: "Receive HTTP request, send command, return response"</p>
+            <p>Handler's job: "Execute business logic"</p>
+
+            <h3>2. Testability</h3>
+            <p>Easy to test LoginCommandHandler independently by mocking IApplicationDbContext and ITokenService</p>
+
+            <h3>3. Reusability</h3>
+            <p>Same LoginCommandHandler can be called from Controllers, CLI, or background jobs</p>
+
+            <h3>4. Automatic Cross-Cutting Concerns</h3>
+            <p>Validation, logging, error handling happen automatically in the pipeline</p>
+
+            <h3>5. Loose Coupling</h3>
+            <p>Controller doesn't know HOW login works, just WHAT command to send</p>
+        </div>
+
+        <h2>📋 Comparison: Without vs With MediatR</h2>
+        <div class="comparison">
+            <div class="comparison-item without">
+                <div class="label">❌ Without MediatR</div>
+                <ul style="list-style: none; padding: 0;">
+                    <li>🎯 Controller: 1 injection</li>
+                    <li>❌ Controller: 50-100 lines of logic</li>
+                    <li>❌ Controller tightly coupled to DB, TokenService</li>
+                    <li>❌ Hard to test (mocks required for controller test)</li>
+                    <li>❌ No automatic validation pipeline</li>
+                    <li>❌ Logic only accessible from controller</li>
+                </ul>
+            </div>
+            <div class="comparison-item with">
+                <div class="label">✅ With MediatR</div>
+                <ul style="list-style: none; padding: 0;">
+                    <li>🎯 Controller: 1 injection (IMediator)</li>
+                    <li>✅ Controller: 3 lines of code</li>
+                    <li>✅ Controller is a simple router</li>
+                    <li>✅ Easy to test handler in isolation</li>
+                    <li>✅ Validation runs automatically</li>
+                    <li>✅ Logic reusable from anywhere</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🔗 The Flow in HCMS Login</h2>
+        <div class="flow-diagram">
+            <strong>User clicks Login button → Angular sends POST /api/auth/login</strong>
+            <div style="margin: 20px 0;">
+                <div class="box">HTTP Request</div>
+                <div class="arrow">→</div>
+                <div class="box">AuthController.Login()</div>
+            </div>
+
+            <strong>AuthController doesn't do work, it delegates</strong>
+            <div style="margin: 20px 0;">
+                <div class="box">IMediator.Send(LoginCommand)</div>
+                <div class="arrow">→</div>
+                <div class="box">MediatR Pipeline</div>
+            </div>
+
+            <strong>Pipeline validates, logs, then finds handler</strong>
+            <div style="margin: 20px 0;">
+                <div class="box">Validation ✓</div>
+                <div class="arrow">→</div>
+                <div class="box">LoginCommandHandler</div>
+            </div>
+
+            <strong>Handler executes business logic using injected dependencies</strong>
+            <div style="margin: 20px 0;">
+                <div class="box">Query DB</div>
+                <div class="arrow">→</div>
+                <div class="box">Verify Password</div>
+                <div class="arrow">→</div>
+                <div class="box">Generate Tokens</div>
+            </div>
+
+            <strong>Result returned back through pipeline</strong>
+            <div style="margin: 20px 0;">
+                <div class="box">AuthResponseDto</div>
+                <div class="arrow">→</div>
+                <div class="box">Controller</div>
+                <div class="arrow">→</div>
+                <div class="box">Angular</div>
+            </div>
+        </div>
+
+        <h2>💡 Key Takeaway</h2>
+        <div class="section">
+            <p><strong>MediatR is a "Request/Response" library that acts like a middleman.</strong></p>
+            <p>Instead of the Controller directly calling 3-4 services and orchestrating complex logic:</p>
+            <ul>
+                <li>Controller says: "I have a LoginCommand, here it is"</li>
+                <li>MediatR says: "I'll find someone who knows how to handle that"</li>
+                <li>Handler says: "I'll use my dependencies (DB, TokenService, Logger) to process this"</li>
+                <li>MediatR says: "Great, here's the result" and returns it to the controller</li>
+            </ul>
+            <p style="margin-top: 15px;">This keeps code organized, testable, and reusable. 🎉</p>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #ecf0f1; border-radius: 4px; text-align: center;">
+            <p><small>Created for HCMS Interview Prep</small></p>
+        </div>
+    </div>
+</body>
+</html>

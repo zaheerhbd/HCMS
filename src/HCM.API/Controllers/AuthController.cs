@@ -1,7 +1,4 @@
-﻿using HCM.Application.Auth.Commands.Login;
-using HCM.Application.Auth.Commands.Logout;
-using HCM.Application.Auth.Commands.RefreshToken;
-using MediatR;
+﻿using HCM.Application.Auth.DataHandlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,15 +8,15 @@ namespace HCM.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IAuthDataHandler _authHandler;
 
-    public AuthController(IMediator mediator) => _mediator = mediator;
+    public AuthController(IAuthDataHandler authHandler) => _authHandler = authHandler;
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new LoginCommand(request.Username, request.Password), ct);
+        var result = await _authHandler.LoginAsync(request.Username, request.Password, ct);
         return Ok(result);
     }
 
@@ -27,15 +24,15 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new RefreshTokenCommand(request.Token), ct);
-        return Ok(result);
+        // TODO: Implement RefreshTokenService
+        return Unauthorized();
     }
 
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout([FromBody] RefreshRequest request, CancellationToken ct)
     {
-        await _mediator.Send(new LogoutCommand(request.Token), ct);
+        // TODO: Implement LogoutService
         return NoContent();
     }
 }

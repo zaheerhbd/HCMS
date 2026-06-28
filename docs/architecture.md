@@ -1,6 +1,6 @@
 # HCMS — Architecture
 
-**Last Updated:** 2026-06-23
+**Last Updated:** 2026-06-27 (Architecture refactored: MediatR → DataHandler pattern)
 **Stack:** Angular 17 · .NET 8 · EF Core · SQL Server · Azure
 
 > Auto-update this file when the architecture changes (new layers, new Azure services, new patterns).
@@ -13,7 +13,7 @@
 |---|---|
 | Frontend | Angular 17+, Angular Material (MDC), NgRx, Chart.js (ng2-charts), ngx-json-viewer |
 | Backend | .NET 8 Web API, Clean Architecture (Domain / Application / Infrastructure / API) |
-| CQRS | MediatR + FluentValidation pipeline behaviors |
+| Business Logic | DataHandler pattern (no MediatR); FluentValidation for inline request validation |
 | ORM | Entity Framework Core → SQL Server / Azure SQL |
 | Auth | JWT (HS256) + Refresh Token rotation — no Azure AD |
 | Documents | Azure Blob Storage (private container), 1-hour SAS URLs |

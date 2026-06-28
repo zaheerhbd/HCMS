@@ -85,6 +85,7 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 ```
 ## Code Style Guidelines
 
+### General C#
 - Write code that prioritizes readability over cleverness
 - Use clear, descriptive variable and function names (no single-letter vars except loop counters)
 - Add a comment above every function explaining what it does, its inputs, and what it returns
@@ -92,6 +93,21 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 - Break complex operations into small, named helper functions
 - Prefer explicit over implicit — avoid magic numbers, use named constants
 - Group related code together and separate groups with a blank line and a section comment
+
+### DataHandlers (Business Logic & Validation)
+- **DataHandlers combine validation + business logic** in a single class — no separate Command/Handler pattern
+  - Create an interface (`IAuthDataHandler`) and implementation (`AuthDataHandler`) for each feature's handler
+  - DataHandler lives in `Application/[Feature]/DataHandlers/` folder with public async methods for each operation
+  - Example interface: `public interface IAuthDataHandler { Task<AuthResponseDto> LoginAsync(string username, string password); }`
+  - Example implementation: `public class AuthDataHandler : IAuthDataHandler { public async Task<AuthResponseDto> LoginAsync(...) {...} }`
+  - Validate within the handler method; throw `ValidationException` for validation errors
+  - Use private helper methods to keep logic readable (e.g., `private async Task RecordFailedAttempt(...)`)
+- **Controllers stay thin:** Inject the handler interface; only deserialize request → call handler → return response
+  - No business logic in controllers, only orchestration
+  - Example: `public AuthController(IAuthDataHandler authHandler) => _authHandler = authHandler;`
+- **Register interfaces in DependencyInjection.cs:** `services.AddScoped<IAuthDataHandler, AuthDataHandler>();`
+  - Enables easy mocking for unit tests without requiring a test-specific implementation
+  - One registration per interface; reuse same handler for multiple related operations (login, refresh, logout)
 ---
 
 ## Hard Rules (Always Follow)
@@ -112,8 +128,8 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 
 ### Architecture
 - **Clean Architecture layer rules:** Domain has no dependencies. Application depends only on Domain. Infrastructure implements Application interfaces. API depends on Application (not Infrastructure directly, except DI root).
-- **MediatR for all use cases.** No business logic in controllers — they dispatch commands/queries only.
-- **FluentValidation for all request DTOs.** Registered as MediatR pipeline behaviors.
+- **DataHandlers for all use cases.** Controllers call DataHandlers; DataHandlers contain business logic + validation.
+- **No MediatR.** DataHandlers are injected directly into controllers and called as scoped dependencies.
 - **One migration owner per branch.** Squash migrations before merging to avoid conflicts.
 
 ### Angular
