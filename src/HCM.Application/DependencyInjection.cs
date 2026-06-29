@@ -1,4 +1,8 @@
 ﻿using HCM.Application.Auth.DataHandlers;
+using HCM.Application.CareTeam.DataHandlers;
+using HCM.Application.CaseNotes.DataHandlers;
+using HCM.Application.Cases.DataHandlers;
+using HCM.Application.Patients.DataHandlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HCM.Application;
@@ -9,7 +13,10 @@ public static class DependencyInjection
     {
         // Register all DataHandlers (one per feature/aggregate)
         services.AddScoped<IAuthDataHandler, AuthDataHandler>();
-        // TODO: Add other feature DataHandlers (IPatientDataHandler, ICaseDataHandler, etc.)
+        services.AddScoped<IPatientDataHandler, PatientDataHandler>();
+        services.AddScoped<ICaseDataHandler, CaseDataHandler>();
+        services.AddScoped<ICareTeamDataHandler, CareTeamDataHandler>();
+        services.AddScoped<ICaseNoteDataHandler, CaseNoteDataHandler>();
 
         return services;
     }

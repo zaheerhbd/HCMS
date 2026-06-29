@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-27 (Architecture refactor: MediatR replaced with DataHandler pattern)
-**Current Phase:** Phase 1 — Foundation & Infrastructure (Azure resources live — verifying end-to-end login)
-**Overall Progress:** 29 / 185 tasks complete
+**Last Updated:** 2026-06-29 (Phase 2 implementation started: entities, configs, migration, DTOs complete)
+**Current Phase:** Phase 2 — Patient & Case Core (DataHandlers in progress)
+**Overall Progress:** 33 / 185 tasks complete
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -15,7 +15,7 @@
 | # | Phase | Status | Tasks | Done | Remaining |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
-| 2 | Patient & Case Core | `Not Started` | ~38 | 0 | 38 |
+| 2 | Patient & Case Core | `In Progress` | ~38 | 4 | 34 |
 | 3 | Documents, Tasks & Notes | `Not Started` | ~22 | 0 | 22 |
 | 4 | Appointments & Scheduling | `Not Started` | ~16 | 0 | 16 |
 | 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
@@ -25,7 +25,40 @@
 
 ---
 
-## Current Phase Detail — Phase 1: Foundation & Infrastructure
+## Current Phase Detail — Phase 2: Patient & Case Core
+
+**Goal:** Complete patient registration and the full case lifecycle. The primary user flow (create patient → open case → change status → add care team member) works end-to-end.
+
+**Status:** In Progress — Domain model complete; DataHandlers + Controllers next
+
+### Backend Checklist (Phase 2) — In Progress
+
+- [x] Add EF Core entities: `Patients`, `PatientInsurance`, `CaseTypes`, `Cases`, `CaseTags`, `CaseCaseTags`, `CaseStatusHistory`, `CareTeamMembers`, `CaseNotes`
+- [x] Create and apply EF Core migration (`AddPatientCaseCaseManagement`)
+- [x] Create DTOs for all features (Patients, Cases, CareTeam, CaseNotes)
+- [ ] Implement `PatientDataHandler`: CRUD, MRN generation, paginated search
+- [ ] Implement `CaseDataHandler`: CRUD, case number generation, status state machine
+- [ ] Implement `CareTeamDataHandler`: add/remove members, list team
+- [ ] Implement `CaseNoteDataHandler`: add notes, list with pagination, soft delete
+- [ ] Register all DataHandlers in `DependencyInjection.cs`
+- [ ] Implement `PatientsController`: full CRUD + paginated search
+- [ ] Implement `CasesController`: CRUD + status transitions with history
+- [ ] Implement `CareTeamController`: add/remove members
+- [ ] Implement `CaseNotesController`: add/list notes
+- [ ] Seed CaseTypes and optional demo data
+- [ ] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours (stretch)
+- [ ] Add `AuditInterceptor` for Patient, Case, CaseNote, User entities (stretch)
+
+### Frontend Checklist (Phase 2)
+
+- [ ] Implement `PatientsModule` (lazy-loaded): PatientListComponent, PatientDetailComponent, PatientFormComponent, PatientService
+- [ ] Implement `CasesModule` (lazy-loaded): CaseListComponent, CaseDetailComponent, CaseFormComponent, CaseService, CareTeamComponent, CaseNotesComponent
+- [ ] Create shared components: StatusBadgeComponent, HasRoleDirective, ConfirmDialogComponent
+- [ ] Wire breadcrumb navigation
+
+---
+
+## Previous Phase Detail — Phase 1: Foundation & Infrastructure
 
 **Goal:** A deployable, authenticated skeleton. Login works end-to-end in Azure. CI/CD pipeline is green.
 

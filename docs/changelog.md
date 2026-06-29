@@ -45,9 +45,12 @@ _Target: In Progress_
 ## Phase 2 — Patient & Case Core
 
 _Deliverable: Full case lifecycle — create patient → open case → transition status → add care team._
-_Target: Not Started_
+_Target: In Progress_
 
-_(no entries yet)_
+- [2026-06-29] Created 10 domain entities for patient/case lifecycle: `Patient`, `PatientInsurance`, `CaseType`, `Case`, `CaseStatus` (constants), `CaseStatusHistory`, `CaseTag`, `CaseCaseTag`, `CareTeamMember`, `CaseNote`. All entities follow soft-delete pattern (IsActive/IsDeleted flags) for HIPAA compliance and audit integrity.
+- [2026-06-29] Created 9 EF Core entity type configurations with fluent mappings, cascade delete rules, unique indexes (MRN, CaseNumber, CaseType.Name, CaseTag.Name), and required properties. Configurations auto-discovered by `ApplicationDbContext.OnModelCreating()` via `ApplyConfigurationsFromAssembly()`.
+- [2026-06-29] Applied EF Core migration `AddPatientCaseCaseManagement`: creates 9 new tables (Patients, PatientInsurances, CaseTypes, Cases, CaseStatusHistories, CaseTags, CaseCaseTags, CareTeamMembers, CaseNotes) with all FKs, unique constraints, and indexes. Migration applied successfully to LocalDB.
+- [2026-06-29] Created 16 DTOs for API contracts: `PatientDto`, `CreatePatientDto`, `UpdatePatientDto`, `PatientInsuranceDto`, `PatientSearchDto` (paginated response); `CaseDto`, `CreateCaseDto`, `UpdateCaseDto`, `CaseStatusChangeDto`, `CaseStatusHistoryDto`, `CaseListItemDto`; `CareTeamMemberDto`, `AddCareTeamMemberDto`; `CaseNoteDto`, `CreateCaseNoteDto`. DTOs include all required fields for frontend binding and support pagination, status transitions, and audit properties.
 
 ---
 

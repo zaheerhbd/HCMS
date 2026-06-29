@@ -1,7 +1,7 @@
 # Healthcare Case Management System — Phase Tracker
 
 **Project:** Enterprise Healthcare Case Management System (Portfolio)  
-**Last Updated:** 2026-06-25  
+**Last Updated:** 2026-06-29  
 **Status Key:** `[ ]` Not Started · `[~]` In Progress · `[x]` Complete · `[-]` Deferred
 
 ---
@@ -11,7 +11,7 @@
 | Phase | Name | Duration | Status | Deliverable |
 |---|---|---|---|---|
 | 1 | Foundation & Infrastructure | 2 weeks | `[x]` | Deployable skeleton with auth |
-| 2 | Patient & Case Core | 3 weeks | `[ ]` | Full case lifecycle working |
+| 2 | Patient & Case Core | 3 weeks | `[~]` | Full case lifecycle working |
 | 3 | Documents, Tasks & Notes | 2 weeks | `[ ]` | Blob upload + task management |
 | 4 | Appointments & Scheduling | 2 weeks | `[ ]` | Calendar and booking |
 | 5 | FHIR/HL7 Integration | 2 weeks | `[ ]` | FHIR R4 API, resource mapping, Bundle export/import |
@@ -86,10 +86,12 @@
 
 **Duration:** 3 weeks
 
+**Status:** In Progress (2/38 backend + DTOs complete; DataHandlers next)
+
 ### Backend Tasks
 
-- [ ] Add EF Core entities: `Patients`, `PatientInsurance`, `CaseTypes`, `Cases`, `CaseTags`, `CaseCaseTags`, `CaseStatusHistory`, `CareTeamMembers`, `CaseNotes`
-- [ ] Create and apply EF Core migration
+- [x] Add EF Core entities: `Patients`, `PatientInsurance`, `CaseTypes`, `Cases`, `CaseTags`, `CaseCaseTags`, `CaseStatusHistory`, `CareTeamMembers`, `CaseNotes`
+- [x] Create and apply EF Core migration
 - [ ] Implement `PatientsController`: full CRUD + paginated search (name, DOB, MRN, insurance ID)
 - [ ] Auto-generate MRN on patient create (e.g. `MRN-{year}-{sequence:D5}`)
 - [ ] Implement `CasesController`: create, read, update, paginated list with filters
