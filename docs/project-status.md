@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-29 (Phase 2 implementation started: entities, configs, migration, DTOs complete)
-**Current Phase:** Phase 2 — Patient & Case Core (DataHandlers in progress)
-**Overall Progress:** 33 / 185 tasks complete
+**Last Updated:** 2026-06-29 (Phase 2 backend complete: all entities, configs, migration, DTOs, DataHandlers, Controllers done)
+**Current Phase:** Phase 2 — Patient & Case Core (Backend complete; frontend components next)
+**Overall Progress:** 38 / 185 tasks complete
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -15,7 +15,7 @@
 | # | Phase | Status | Tasks | Done | Remaining |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
-| 2 | Patient & Case Core | `In Progress` | ~38 | 4 | 34 |
+| 2 | Patient & Case Core | `In Progress` | ~38 | 9 | 29 |
 | 3 | Documents, Tasks & Notes | `Not Started` | ~22 | 0 | 22 |
 | 4 | Appointments & Scheduling | `Not Started` | ~16 | 0 | 16 |
 | 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
@@ -36,18 +36,18 @@
 - [x] Add EF Core entities: `Patients`, `PatientInsurance`, `CaseTypes`, `Cases`, `CaseTags`, `CaseCaseTags`, `CaseStatusHistory`, `CareTeamMembers`, `CaseNotes`
 - [x] Create and apply EF Core migration (`AddPatientCaseCaseManagement`)
 - [x] Create DTOs for all features (Patients, Cases, CareTeam, CaseNotes)
-- [ ] Implement `PatientDataHandler`: CRUD, MRN generation, paginated search
-- [ ] Implement `CaseDataHandler`: CRUD, case number generation, status state machine
-- [ ] Implement `CareTeamDataHandler`: add/remove members, list team
-- [ ] Implement `CaseNoteDataHandler`: add notes, list with pagination, soft delete
-- [ ] Register all DataHandlers in `DependencyInjection.cs`
-- [ ] Implement `PatientsController`: full CRUD + paginated search
-- [ ] Implement `CasesController`: CRUD + status transitions with history
-- [ ] Implement `CareTeamController`: add/remove members
-- [ ] Implement `CaseNotesController`: add/list notes
+- [x] Implement `PatientDataHandler`: CRUD, MRN generation (`MRN-{YYYY}-{NNNNN}`), paginated search (name, DOB, MRN, insurance ID)
+- [x] Implement `CaseDataHandler`: CRUD, case number generation (`CASE-{YYYY}-{NNNNN}`), status state machine (5 statuses: Open, InProgress, OnHold, Closed, Reopened)
+- [x] Implement `CareTeamDataHandler`: add/remove members (soft removal preserves history), list team
+- [x] Implement `CaseNoteDataHandler`: add notes (≤5000 chars), list with pagination, soft delete
+- [x] Register all DataHandlers in `DependencyInjection.cs`
+- [x] Implement `PatientsController`: full CRUD + paginated search with RBAC (CareCoordinator+)
+- [x] Implement `CasesController`: CRUD + status transitions with history, RBAC (CareCoordinator+)
+- [x] Implement `CareTeamController`: add/remove members, list team, RBAC (CareCoordinator+)
+- [x] Implement `CaseNotesController`: add/list notes, RBAC (CareCoordinator/Clinician+)
 - [ ] Seed CaseTypes and optional demo data
-- [ ] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours (stretch)
-- [ ] Add `AuditInterceptor` for Patient, Case, CaseNote, User entities (stretch)
+- [ ] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours (Phase 3)
+- [ ] Add `AuditInterceptor` for Patient, Case, CaseNote, User entities (Phase 3)
 
 ### Frontend Checklist (Phase 2)
 

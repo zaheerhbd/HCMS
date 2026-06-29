@@ -66,7 +66,7 @@
 
 ## 2. Patient Management
 
-**Phase:** 2 | **Status:** In Progress
+**Phase:** 2 | **Status:** In Progress (Backend complete; Frontend next)
 
 ### Features
 - Register patients with demographics, contact info, and insurance.
