@@ -84,3 +84,6 @@ logs/
 
 # ── PERSONAL INTERVIEW PREP (local tracking only) ──────────────────
 docs/interview-prep-*.md
+
+# ── PHASE REPORT INDEX (auto-generated, local only) ─────────────────
+.phase-reports-index.md
