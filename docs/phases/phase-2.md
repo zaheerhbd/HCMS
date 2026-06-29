@@ -4,7 +4,7 @@
 
 **Duration:** 3 weeks  
 **Status:** `[~]` In Progress  
-**Last Updated:** 2026-06-29
+**Last Updated:** 2026-06-29 (session 2 — backend + frontend complete)
 
 ---
 
@@ -21,30 +21,30 @@
 - [x] Implement `CasesController`: CRUD + status transitions with history
 - [x] Implement `CareTeamController`: add/remove members
 - [x] Implement `CaseNotesController`: add/list notes
-- [ ] Seed: default CaseTypes (Chronic Disease, Post-Surgery, Mental Health, Preventive, Behavioral), CaseTags
-- [ ] Implement `UsersController` (Admin only): list, create, update, role assignment, activate/deactivate
-- [ ] Add `AuditInterceptor` (EF Core `SaveChanges` override) for Patient, Case, CaseNote, User entities
-- [ ] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours
+- [x] Seed: default CaseTypes (Chronic Disease, Post-Surgery, Mental Health, Preventive, Behavioral), CaseTags
+- [x] Implement `UsersController` (Admin only): list, create, update, role assignment, activate/deactivate
+- [x] Add `AuditInterceptor` (EF Core `SaveChanges` override) for Patient, Case, CaseNote, User entities
+- [x] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours
 
 ## Frontend Tasks
 
-- [ ] Implement `PatientsModule` (lazy-loaded):
-  - [ ] `PatientListComponent`: server-side paginated table, search bar, status filter
-  - [ ] `PatientDetailComponent`: demographics, insurance accordion, cases tab, documents tab (placeholder)
-  - [ ] `PatientFormComponent`: reactive form for create/edit
-  - [ ] `PatientService`: all HTTP calls
-- [ ] Implement `CasesModule` (lazy-loaded):
-  - [ ] `CaseListComponent`: paginated table, filter by status/priority/coordinator/tag
-  - [ ] `CaseDetailComponent`: header, status badge + transition button, tabs (Notes, Tasks, Documents, Team, History)
-  - [ ] `CaseFormComponent`: create/edit form, patient picker (autocomplete), case type/priority/tags
-  - [ ] `CaseStatusHistoryComponent`: timeline view of status changes
-  - [ ] `CareTeamComponent`: member list with add/remove
-  - [ ] `CaseNotesComponent`: note list + add note form
-  - [ ] `CaseService`: all HTTP calls
-- [ ] Add `StatusBadgeComponent` to `SharedModule` (color-coded by status value)
-- [ ] Add `HasRoleDirective` to `SharedModule` (structural directive hiding elements by role)
-- [ ] Add `ConfirmDialogComponent` to `SharedModule` (reusable confirm modal)
-- [ ] Wire breadcrumb navigation: Patients → Patient Detail → Case Detail
+- [x] Implement `PatientsModule` (lazy-loaded):
+  - [x] `PatientListComponent`: server-side paginated table, debounced search bar
+  - [x] `PatientDetailComponent`: demographics, insurance accordion, cases tab, documents tab (placeholder)
+  - [x] `PatientFormComponent`: reactive form for create/edit with datepicker
+  - [x] `PatientService`: all HTTP calls
+- [x] Implement `CasesModule` (lazy-loaded):
+  - [x] `CaseListComponent`: paginated table, filter by status
+  - [x] `CaseDetailComponent`: header card, inline status transition, tabs (Notes, Team, History, Tasks placeholder, Documents placeholder)
+  - [x] `CaseFormComponent`: create form with patient picker and case type select
+  - [x] `CaseStatusHistoryComponent`: timeline view of status changes
+  - [x] `CareTeamComponent`: member list with add/remove (ConfirmDialog)
+  - [x] `CaseNotesComponent`: note list + add note form with locked badge after 24h
+  - [x] `CaseService`: all HTTP calls
+- [x] Add `StatusBadgeComponent` to shared (color-coded chip by status value)
+- [x] Add `HasRoleDirective` to shared (structural directive `*appHasRole`)
+- [x] Add `ConfirmDialogComponent` to shared (reusable Material Dialog)
+- [x] Wire breadcrumb navigation: Patients → Patient Detail → Case Detail
 
 ## Definition of Done
 

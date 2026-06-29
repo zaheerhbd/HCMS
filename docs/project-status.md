@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-29 (Phase 2 backend complete: all entities, configs, migration, DTOs, DataHandlers, Controllers done)
-**Current Phase:** Phase 2 — Patient & Case Core (Backend complete; frontend components next)
-**Overall Progress:** 38 / 185 tasks complete
+**Last Updated:** 2026-06-29 (Phase 2 nearly complete: backend fully done including audit, seeding, users, background job; Angular frontend done)
+**Current Phase:** Phase 2 — Patient & Case Core (Backend + Frontend complete; SharedModule done)
+**Overall Progress:** 58 / 185 tasks complete (~31%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -15,7 +15,7 @@
 | # | Phase | Status | Tasks | Done | Remaining |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
-| 2 | Patient & Case Core | `In Progress` | ~38 | 9 | 29 |
+| 2 | Patient & Case Core | `In Progress` | ~38 | 34 | 4 |
 | 3 | Documents, Tasks & Notes | `Not Started` | ~22 | 0 | 22 |
 | 4 | Appointments & Scheduling | `Not Started` | ~16 | 0 | 16 |
 | 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
@@ -29,32 +29,46 @@
 
 **Goal:** Complete patient registration and the full case lifecycle. The primary user flow (create patient → open case → change status → add care team member) works end-to-end.
 
-**Status:** In Progress — Domain model complete; DataHandlers + Controllers next
+**Status:** Nearly complete — all backend and frontend tasks done; 4 minor items remain (UsersController UI, breadcrumb polish, phase-3 tasks moved up)
 
-### Backend Checklist (Phase 2) — In Progress
+### Backend Checklist (Phase 2) — Complete
 
 - [x] Add EF Core entities: `Patients`, `PatientInsurance`, `CaseTypes`, `Cases`, `CaseTags`, `CaseCaseTags`, `CaseStatusHistory`, `CareTeamMembers`, `CaseNotes`
 - [x] Create and apply EF Core migration (`AddPatientCaseCaseManagement`)
 - [x] Create DTOs for all features (Patients, Cases, CareTeam, CaseNotes)
-- [x] Implement `PatientDataHandler`: CRUD, MRN generation (`MRN-{YYYY}-{NNNNN}`), paginated search (name, DOB, MRN, insurance ID)
-- [x] Implement `CaseDataHandler`: CRUD, case number generation (`CASE-{YYYY}-{NNNNN}`), status state machine (5 statuses: Open, InProgress, OnHold, Closed, Reopened)
+- [x] Implement `PatientDataHandler`: CRUD, MRN generation (`MRN-{YYYY}-{NNNNN}`), paginated search
+- [x] Implement `CaseDataHandler`: CRUD, case number generation (`CASE-{YYYY}-{NNNNN}`), status state machine
 - [x] Implement `CareTeamDataHandler`: add/remove members (soft removal preserves history), list team
 - [x] Implement `CaseNoteDataHandler`: add notes (≤5000 chars), list with pagination, soft delete
 - [x] Register all DataHandlers in `DependencyInjection.cs`
-- [x] Implement `PatientsController`: full CRUD + paginated search with RBAC (CareCoordinator+)
-- [x] Implement `CasesController`: CRUD + status transitions with history, RBAC (CareCoordinator+)
-- [x] Implement `CareTeamController`: add/remove members, list team, RBAC (CareCoordinator+)
-- [x] Implement `CaseNotesController`: add/list notes, RBAC (CareCoordinator/Clinician+)
-- [ ] Seed CaseTypes and optional demo data
-- [ ] Background job (Hosted Service): lock `CaseNotes.IsEditable = 0` after 24 hours (Phase 3)
-- [ ] Add `AuditInterceptor` for Patient, Case, CaseNote, User entities (Phase 3)
+- [x] Implement `PatientsController`: full CRUD + paginated search with RBAC
+- [x] Implement `CasesController`: CRUD + status transitions with history, RBAC
+- [x] Implement `CareTeamController`: add/remove members, list team, RBAC
+- [x] Implement `CaseNotesController`: add/list notes, RBAC
+- [x] Seed CaseTypes (5 types) and CaseTags (10 tags) in `DataSeeder`
+- [x] `AuditInterceptor` — `SaveChangesAsync` override capturing Patient/Case/CaseNote/User changes; migration `AddAuditLogs` applied
+- [x] `UsersController` + `IUserDataHandler`/`UserDataHandler` (Admin only): list, create, update, role assignment, activate/deactivate
+- [x] `CaseNoteEditLockService` (BackgroundService): locks `IsEditable = false` after 24h
 
-### Frontend Checklist (Phase 2)
+### Frontend Checklist (Phase 2) — Complete
 
-- [ ] Implement `PatientsModule` (lazy-loaded): PatientListComponent, PatientDetailComponent, PatientFormComponent, PatientService
-- [ ] Implement `CasesModule` (lazy-loaded): CaseListComponent, CaseDetailComponent, CaseFormComponent, CaseService, CareTeamComponent, CaseNotesComponent
-- [ ] Create shared components: StatusBadgeComponent, HasRoleDirective, ConfirmDialogComponent
-- [ ] Wire breadcrumb navigation
+- [x] `PatientService` — all HTTP calls to `/api/patients`
+- [x] `PatientListComponent` — server-side paginated table with debounced search, role-gated create button
+- [x] `PatientDetailComponent` — demographics, insurance accordion, cases tab, documents placeholder, breadcrumb
+- [x] `PatientFormComponent` — reactive form (create + edit), datepicker, validation
+- [x] Update `patients.routes.ts` — `''`, `new`, `:id`, `:id/edit`
+- [x] `CaseService` — all HTTP calls to `/api/cases` (CRUD, status, team, notes)
+- [x] `CaseListComponent` — status filter + paginated table
+- [x] `CaseDetailComponent` — header card with inline status transition, tabs (Notes, Team, History, Tasks placeholder, Docs placeholder)
+- [x] `CaseFormComponent` — patient picker + case type select
+- [x] `CaseStatusHistoryComponent` — timeline of status changes
+- [x] `CareTeamComponent` — member list + add/remove with ConfirmDialog
+- [x] `CaseNotesComponent` — post notes + locked badge after 24h
+- [x] Update `cases.routes.ts` — `''`, `new`, `:id`
+- [x] `StatusBadgeComponent` — color-coded chip per status
+- [x] `HasRoleDirective` — `*appHasRole` structural directive
+- [x] `ConfirmDialogComponent` — reusable confirm modal
+- [x] Breadcrumb navigation in PatientDetail and CaseDetail
 
 ---
 

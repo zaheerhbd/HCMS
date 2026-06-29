@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-06-29
+**Last Updated:** 2026-06-29 (session 2)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -20,9 +20,9 @@
 | 7 | Appointments & Scheduling | 4 | Not Started | FR-28 – FR-32 |
 | 8 | Care Team | 2 | In Progress | FR-33 – FR-35 |
 | 9 | Dashboard & Reports | 6 | Not Started | FR-36 – FR-39 |
-| 10 | Audit & Compliance | 2 | Not Started | FR-40 – FR-42 |
+| 10 | Audit & Compliance | 2 | In Progress | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Not Started | FR-43 – FR-45 |
-| 12 | Administration (User Mgmt) | 2 | Not Started | (Admin endpoints) |
+| 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
 | 13 | FHIR / HL7 Integration | 5 | Not Started | FR-46 – FR-54 |
 
 ---

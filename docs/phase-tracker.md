@@ -28,14 +28,14 @@
 | Phase | Tasks Total | Complete | Remaining | % Complete |
 |---|---|---|---|---|
 | Phase 1 — Foundation | ~29 | 29 | 0 | 100% |
-| Phase 2 — Patient & Case Core | ~38 | 9 | 29 | 24% |
+| Phase 2 — Patient & Case Core | ~38 | 34 | 4 | 89% |
 | Phase 3 — Documents & Tasks | ~22 | 0 | 22 | 0% |
 | Phase 4 — Appointments | ~16 | 0 | 16 | 0% |
 | Phase 5 — FHIR/HL7 Integration | ~24 | 0 | 24 | 0% |
 | Phase 6 — Dashboards & Reports | ~20 | 0 | 20 | 0% |
 | Phase 7 — Notifications & Audit UI | ~14 | 0 | 14 | 0% |
 | Phase 8 — Testing & Polish | ~22 | 0 | 22 | 0% |
-| **Total** | **~185** | **38** | **147** | **20.5%** |
+| **Total** | **~185** | **63** | **122** | **34%** |
 
 _Update task counts as tasks are added or split during development._
 

@@ -18,6 +18,8 @@ public static class DataSeeder
             await db.Database.MigrateAsync();
             await SeedRolesAsync(db);
             await SeedAdminUserAsync(db);
+            await SeedCaseTypesAsync(db);
+            await SeedCaseTagsAsync(db);
         }
         catch (Exception ex)
         {
@@ -58,6 +60,51 @@ public static class DataSeeder
 
         var adminRole = await db.Roles.FirstAsync(r => r.Name == RoleNames.Admin);
         db.UserRoles.Add(new UserRole { UserId = admin.Id, RoleId = adminRole.Id });
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedCaseTypesAsync(ApplicationDbContext db)
+    {
+        var types = new[]
+        {
+            "Chronic Disease",
+            "Post-Surgery",
+            "Mental Health",
+            "Preventive",
+            "Behavioral"
+        };
+
+        foreach (var name in types)
+        {
+            if (!await db.CaseTypes.AnyAsync(ct => ct.Name == name))
+                db.CaseTypes.Add(new CaseType { Name = name, IsActive = true, CreatedAt = DateTime.UtcNow });
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedCaseTagsAsync(ApplicationDbContext db)
+    {
+        var tags = new[]
+        {
+            "Urgent",
+            "High Priority",
+            "Pediatric",
+            "Geriatric",
+            "Chronic Condition",
+            "Post-Surgery",
+            "Mental Health",
+            "Preventive Care",
+            "Follow-Up Required",
+            "Complex Case"
+        };
+
+        foreach (var name in tags)
+        {
+            if (!await db.CaseTags.AnyAsync(t => t.Name == name))
+                db.CaseTags.Add(new CaseTag { Name = name, IsActive = true, CreatedAt = DateTime.UtcNow });
+        }
+
         await db.SaveChangesAsync();
     }
 }

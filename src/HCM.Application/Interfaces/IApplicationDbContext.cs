@@ -19,6 +19,7 @@ public interface IApplicationDbContext
     DbSet<CaseCaseTag> CaseCaseTags { get; }
     DbSet<CareTeamMember> CareTeamMembers { get; }
     DbSet<CaseNote> CaseNotes { get; }
+    DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
