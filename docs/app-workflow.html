@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HCMS — How the Application Works</title>
+<style>
+  :root {
+    --blue:#1565c0; --blue-l:#e3f2fd; --blue-m:#1976d2;
+    --green:#2e7d32; --green-l:#e8f5e9;
+    --orange:#e65100; --orange-l:#fff3e0;
+    --purple:#6a1b9a; --purple-l:#f3e5f5;
+    --red:#c62828; --red-l:#ffebee;
+    --teal:#00695c; --teal-l:#e0f2f1;
+    --gray:#37474f; --gray-l:#f5f5f5; --gray-b:#e0e0e0;
+    --text:#212121; --muted:#616161;
+    --sw:256px; --hh:56px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.7;color:var(--text);background:#fafafa}
+
+  /* ── TOP BAR ── */
+  #bar{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 24px;gap:14px;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  #bar .tag{background:rgba(255,255,255,.18);border-radius:12px;padding:2px 12px;font-size:12px;font-weight:700;letter-spacing:.5px}
+  #bar h1{font-size:18px;font-weight:700}
+  #bar .sub{font-size:12px;opacity:.7;margin-left:auto}
+
+  /* ── SIDEBAR ── */
+  #toc{position:fixed;top:var(--hh);left:0;width:var(--sw);height:calc(100vh - var(--hh));overflow-y:auto;background:#fff;border-right:1px solid var(--gray-b);padding:18px 0 40px;z-index:900}
+  #toc .sec{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:16px 18px 6px}
+  #toc a{display:block;padding:6px 18px;font-size:13px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;transition:all .15s}
+  #toc a:hover,#toc a.on{color:var(--blue);background:var(--blue-l);border-color:var(--blue);font-weight:600}
+  #toc a.l2{padding-left:32px;font-size:12px}
+  #toc hr{border:none;border-top:1px solid var(--gray-b);margin:8px 18px}
+
+  /* ── MAIN ── */
+  #main{margin-left:var(--sw);margin-top:var(--hh);padding:44px 56px 100px;max-width:980px}
+
+  /* ── SECTIONS ── */
+  .s{margin-bottom:56px}
+  .s-title{font-size:24px;font-weight:800;color:var(--blue);border-bottom:3px solid var(--blue-l);padding-bottom:10px;margin-bottom:22px;scroll-margin-top:calc(var(--hh) + 14px)}
+  .s-sub{font-size:17px;font-weight:700;color:var(--gray);margin:30px 0 12px;scroll-margin-top:calc(var(--hh) + 14px)}
+  p{margin:8px 0}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin:5px 0}
+
+  /* ── CARDS ── */
+  .card{background:#fff;border:1px solid var(--gray-b);border-radius:10px;padding:20px 24px;margin:14px 0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .card.blue{border-left:4px solid var(--blue)}
+  .card.green{border-left:4px solid var(--green)}
+  .card.orange{border-left:4px solid var(--orange)}
+  .card.purple{border-left:4px solid var(--purple)}
+  .card.teal{border-left:4px solid var(--teal)}
+  .card.red{border-left:4px solid var(--red)}
+
+  /* ── GRID ── */
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:14px 0}
+
+  /* ── PLAIN BOX ── */
+  .plain{background:#fff;border:1px solid var(--gray-b);border-radius:10px;padding:24px;margin:20px 0;overflow-x:auto;text-align:center}
+
+  /* ── CALLOUT ── */
+  .callout{border-radius:8px;padding:14px 18px;margin:16px 0;font-size:14px;line-height:1.6}
+  .callout.tip{background:#e8f5e9;border-left:4px solid var(--green)}
+  .callout.info{background:#e3f2fd;border-left:4px solid var(--blue)}
+  .callout.warn{background:#fff3e0;border-left:4px solid var(--orange)}
+
+  /* ── STEPS ── */
+  .steps{counter-reset:step;list-style:none;padding:0;margin:16px 0}
+  .steps li{counter-increment:step;display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+  .steps li::before{content:counter(step);display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;background:var(--blue);color:#fff;border-radius:50%;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px}
+
+  /* ── ROLE PILLS ── */
+  .role{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;margin:2px}
+  .r-admin{background:#fce4ec;color:#c62828}
+  .r-sup{background:#f3e5f5;color:#6a1b9a}
+  .r-coord{background:#e3f2fd;color:#1565c0}
+  .r-clin{background:#e8f5e9;color:#2e7d32}
+  .r-ro{background:#f5f5f5;color:#546e7a}
+
+  /* ── TABLE ── */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+  th{background:var(--blue);color:#fff;text-align:left;padding:9px 12px;font-weight:600}
+  td{padding:8px 12px;border-bottom:1px solid var(--gray-b);vertical-align:top}
+  tr:hover td{background:var(--blue-l)}
+
+  /* ── DETAILS ── */
+  details{border:1px solid var(--gray-b);border-radius:8px;margin:12px 0;overflow:hidden}
+  summary{display:flex;align-items:center;gap:10px;padding:11px 18px;font-weight:600;font-size:14px;cursor:pointer;background:var(--gray-l);user-select:none;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:'▶';font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0}
+  details[open] summary::before{transform:rotate(90deg)}
+  details[open] summary{background:#fff;border-bottom:1px solid var(--gray-b)}
+  .db{padding:18px 20px}
+
+  /* ── STATUS CHIPS ── */
+  .chip{display:inline-block;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:700}
+  .c-open{background:var(--blue-l);color:var(--blue)}
+  .c-prog{background:var(--orange-l);color:var(--orange)}
+  .c-hold{background:#eceff1;color:#546e7a}
+  .c-close{background:var(--red-l);color:var(--red)}
+  .c-reopen{background:var(--purple-l);color:var(--purple)}
+
+  code{background:#f0f0f0;border-radius:4px;padding:1px 5px;font-size:13px;font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<header id="bar">
+  <span class="tag">HCMS</span>
+  <h1>How the Application Works</h1>
+  <span class="sub">Healthcare Case Management System · Workflow Guide</span>
+</header>
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav id="toc">
+  <div class="sec">Overview</div>
+  <a href="#what">What is HCMS?</a>
+  <a href="#roles">Who uses it?</a>
+  <hr/>
+  <div class="sec">Core Workflows</div>
+  <a href="#login">1 · Logging In</a>
+  <a href="#patients">2 · Patients</a>
+  <a href="#l-reg" class="l2">Registering a Patient</a>
+  <a href="#l-search" class="l2">Finding a Patient</a>
+  <a href="#cases">3 · Cases</a>
+  <a href="#l-open" class="l2">Opening a Case</a>
+  <a href="#l-status" class="l2">Status Lifecycle</a>
+  <a href="#l-team" class="l2">Care Team</a>
+  <a href="#l-notes" class="l2">Case Notes</a>
+  <a href="#users">4 · User Management</a>
+  <hr/>
+  <div class="sec">Under the Hood</div>
+  <a href="#dataflow">Data Flow</a>
+  <a href="#audit">Audit Trail</a>
+  <a href="#security">Security</a>
+  <a href="#nav">Screen Map</a>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main id="main">
+
+<!-- ════════════════════════════════════════════
+     WHAT IS HCMS
+═════════════════════════════════════════════ -->
+<section class="s" id="what">
+  <h2 class="s-title">What is HCMS?</h2>
+  <p>
+    HCMS is a <strong>Healthcare Case Management System</strong> — a web application that helps care teams track patients from their very first visit through discharge. Think of it as a shared digital folder where everyone involved in a patient's care can see what's happening, who's doing what, and what's been done.
+  </p>
+
+  <div class="plain">
+    <svg width="700" height="160" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif">
+      <!-- Arrow line -->
+      <defs>
+        <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#1565c0"/>
+        </marker>
+      </defs>
+      <line x1="80" y1="80" x2="620" y2="80" stroke="#1565c0" stroke-width="2" marker-end="url(#ah)"/>
+
+      <!-- Stages -->
+      <!-- Intake -->
+      <circle cx="80" cy="80" r="36" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+      <text x="80" y="75" text-anchor="middle" font-size="11" fill="#1565c0" font-weight="700">Patient</text>
+      <text x="80" y="90" text-anchor="middle" font-size="11" fill="#1565c0" font-weight="700">Intake</text>
+
+      <!-- Case Open -->
+      <circle cx="220" cy="80" r="36" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+      <text x="220" y="75" text-anchor="middle" font-size="11" fill="#e65100" font-weight="700">Case</text>
+      <text x="220" y="90" text-anchor="middle" font-size="11" fill="#e65100" font-weight="700">Opened</text>
+
+      <!-- Active Care -->
+      <circle cx="370" cy="80" r="36" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+      <text x="370" y="75" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="700">Active</text>
+      <text x="370" y="90" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="700">Care</text>
+
+      <!-- Review -->
+      <circle cx="520" cy="80" r="36" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+      <text x="520" y="75" text-anchor="middle" font-size="11" fill="#6a1b9a" font-weight="700">Review /</text>
+      <text x="520" y="90" text-anchor="middle" font-size="11" fill="#6a1b9a" font-weight="700">Escalation</text>
+
+      <!-- Discharge -->
+      <circle cx="650" cy="80" r="36" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+      <text x="650" y="75" text-anchor="middle" font-size="11" fill="#c62828" font-weight="700">Case</text>
+      <text x="650" y="90" text-anchor="middle" font-size="11" fill="#c62828" font-weight="700">Closed</text>
+
+      <!-- Labels below -->
+      <text x="80" y="135" text-anchor="middle" font-size="10" fill="#777">Register</text>
+      <text x="220" y="135" text-anchor="middle" font-size="10" fill="#777">Assign team</text>
+      <text x="370" y="135" text-anchor="middle" font-size="10" fill="#777">Notes · Tasks</text>
+      <text x="520" y="135" text-anchor="middle" font-size="10" fill="#777">Supervisor reviews</text>
+      <text x="650" y="135" text-anchor="middle" font-size="10" fill="#777">Discharge</text>
+    </svg>
+    <p style="font-size:12px;color:#777;margin-top:6px">The full patient journey — tracked in one place by the whole care team</p>
+  </div>
+
+  <div class="g2">
+    <div class="card blue">
+      <strong>For Care Coordinators</strong>
+      <p style="margin-top:8px;font-size:13px">Register patients, open and manage cases, build care teams, track progress with notes and tasks, upload supporting documents.</p>
+    </div>
+    <div class="card green">
+      <strong>For Clinicians</strong>
+      <p style="margin-top:8px;font-size:13px">View assigned cases, add clinical notes, review documents, update task status — all without seeing unrelated patient records.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     ROLES
+═════════════════════════════════════════════ -->
+<section class="s" id="roles">
+  <h2 class="s-title">Who Uses It? — Roles</h2>
+  <p>Every person in the system has a <strong>role</strong>. Your role determines what you can see and do. Think of it like a hospital badge — a student nurse badge opens different doors than a surgeon's badge.</p>
+
+  <!-- Role diagram -->
+  <div class="plain">
+    <svg width="660" height="320" viewBox="0 0 660 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <!-- Pyramid shape: Admin at top, ReadOnly at bottom -->
+      <!-- Admin -->
+      <polygon points="330,10 430,70 230,70" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+      <text x="330" y="45" text-anchor="middle" fill="#c62828" font-weight="700" font-size="13">Admin</text>
+
+      <!-- Supervisor -->
+      <polygon points="230,76 430,76 470,136 190,136" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+      <text x="330" y="112" text-anchor="middle" fill="#6a1b9a" font-weight="700" font-size="13">Supervisor</text>
+
+      <!-- Care Coordinator -->
+      <polygon points="190,142 470,142 510,202 150,202" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+      <text x="330" y="178" text-anchor="middle" fill="#1565c0" font-weight="700" font-size="13">Care Coordinator</text>
+
+      <!-- Clinician -->
+      <polygon points="150,208 510,208 550,268 110,268" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+      <text x="330" y="244" text-anchor="middle" fill="#2e7d32" font-weight="700" font-size="13">Clinician</text>
+
+      <!-- ReadOnly -->
+      <polygon points="110,274 550,274 570,310 90,310" fill="#f5f5f5" stroke="#546e7a" stroke-width="2"/>
+      <text x="330" y="296" text-anchor="middle" fill="#546e7a" font-weight="700" font-size="13">Read Only</text>
+
+      <!-- Labels on right -->
+      <text x="445" y="45" fill="#c62828" font-size="11">Full system control</text>
+      <text x="480" y="112" fill="#6a1b9a" font-size="11">Approve + escalate</text>
+      <text x="520" y="178" fill="#1565c0" font-size="11">Day-to-day case work</text>
+      <text x="556" y="244" fill="#2e7d32" font-size="11">Clinical input</text>
+      <text x="578" y="296" fill="#546e7a" font-size="11">View only</text>
+    </svg>
+    <p style="font-size:12px;color:#777;margin-top:6px">Higher = broader permissions. Each role includes everything below it, plus more.</p>
+  </div>
+
+  <table>
+    <thead><tr><th>Role</th><th>Can do</th><th>Cannot do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="role r-admin">Admin</span></td>
+        <td>Everything — user management, audit log, all cases, all patients, close/reopen cases</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><span class="role r-sup">Supervisor</span></td>
+        <td>Reassign cases, approve escalations, close cases, supervisor dashboard</td>
+        <td>Cannot manage system users or view the raw audit log</td>
+      </tr>
+      <tr>
+        <td><span class="role r-coord">Care Coordinator</span></td>
+        <td>Register patients, open cases, add team members, create notes, upload documents, schedule appointments</td>
+        <td>Cannot close cases, cannot manage users</td>
+      </tr>
+      <tr>
+        <td><span class="role r-clin">Clinician</span></td>
+        <td>View assigned cases, add clinical notes, view documents, update task status</td>
+        <td>Cannot register patients, cannot change case status</td>
+      </tr>
+      <tr>
+        <td><span class="role r-ro">Read Only</span></td>
+        <td>View patients, cases, and documents</td>
+        <td>Cannot create or modify anything</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════════════════════════════
+     LOGIN
+═════════════════════════════════════════════ -->
+<section class="s" id="login">
+  <h2 class="s-title">1 · Logging In</h2>
+  <p>When you open HCMS in your browser you see the login screen. Enter your username and password. The system checks your credentials and issues you a <strong>session token</strong> — a temporary digital key that identifies you for the duration of your session.</p>
+
+  <div class="plain">
+    <svg width="620" height="200" viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <defs>
+        <marker id="a1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#1565c0"/></marker>
+        <marker id="a2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#2e7d32"/></marker>
+        <marker id="a3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#c62828"/></marker>
+      </defs>
+
+      <!-- Browser box -->
+      <rect x="20" y="60" width="130" height="80" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="85" y="88" text-anchor="middle" fill="#1565c0" font-weight="700">Browser</text>
+      <text x="85" y="104" text-anchor="middle" fill="#1565c0" font-size="10">Login form</text>
+      <text x="85" y="118" text-anchor="middle" fill="#1565c0" font-size="10">username + password</text>
+
+      <!-- Arrow: browser → API -->
+      <line x1="150" y1="100" x2="230" y2="100" stroke="#1565c0" stroke-width="1.8" marker-end="url(#a1)"/>
+      <text x="190" y="92" text-anchor="middle" fill="#1565c0" font-size="10">POST /api/auth/login</text>
+
+      <!-- API box -->
+      <rect x="230" y="60" width="130" height="80" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+      <text x="295" y="88" text-anchor="middle" fill="#e65100" font-weight="700">API Server</text>
+      <text x="295" y="104" text-anchor="middle" fill="#e65100" font-size="10">Verify password</text>
+      <text x="295" y="118" text-anchor="middle" fill="#e65100" font-size="10">Check lockout</text>
+
+      <!-- Arrow: API → DB -->
+      <line x1="360" y1="100" x2="440" y2="100" stroke="#1565c0" stroke-width="1.8" marker-end="url(#a1)"/>
+      <text x="400" y="92" text-anchor="middle" fill="#1565c0" font-size="10">lookup user</text>
+
+      <!-- DB box -->
+      <rect x="440" y="60" width="100" height="80" rx="8" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+      <text x="490" y="88" text-anchor="middle" fill="#6a1b9a" font-weight="700">Database</text>
+      <text x="490" y="104" text-anchor="middle" fill="#6a1b9a" font-size="10">Hashed</text>
+      <text x="490" y="118" text-anchor="middle" fill="#6a1b9a" font-size="10">password</text>
+
+      <!-- Arrow: success back -->
+      <path d="M360,110 Q410,150 295,150 Q180,150 150,110" stroke="#2e7d32" fill="none" stroke-width="1.8" marker-end="url(#a2)"/>
+      <text x="255" y="168" text-anchor="middle" fill="#2e7d32" font-size="10">✓ JWT token returned → stored in browser</text>
+
+      <!-- Arrow: fail -->
+      <text x="85" y="165" text-anchor="middle" fill="#c62828" font-size="10">✗ Wrong password → error shown</text>
+    </svg>
+  </div>
+
+  <div class="callout tip">
+    <strong>Your session token acts like a hospital visitor badge.</strong> It tells every part of the system who you are and what you're allowed to do — without you needing to log in again for each page.
+  </div>
+
+  <p>After 5 failed login attempts in a row, the account is temporarily locked for security. An Admin can unlock it.</p>
+</section>
+
+<!-- ════════════════════════════════════════════
+     PATIENTS
+═════════════════════════════════════════════ -->
+<section class="s" id="patients">
+  <h2 class="s-title">2 · Patients</h2>
+  <p>A <strong>Patient</strong> is the person receiving care. All case work happens under a patient record. You must register a patient before you can open a case for them.</p>
+
+  <h3 class="s-sub" id="l-reg">Registering a Patient</h3>
+  <p>Only <span class="role r-admin">Admin</span> and <span class="role r-coord">Care Coordinator</span> can register patients.</p>
+
+  <ol class="steps">
+    <li>Go to <strong>Patients</strong> in the sidebar and click <strong>New Patient</strong>.</li>
+    <li>Fill in demographics: first name, last name, date of birth, gender, contact details, address.</li>
+    <li>Add insurance information — mark one as <strong>Primary</strong>.</li>
+    <li>Click <strong>Save</strong>. The system assigns a unique Medical Record Number (<code>MRN-2026-00001</code>) automatically.</li>
+  </ol>
+
+  <div class="plain">
+    <svg width="580" height="200" viewBox="0 0 580 200" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <defs>
+        <marker id="pa" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#1565c0"/></marker>
+      </defs>
+      <!-- Form -->
+      <rect x="20" y="40" width="140" height="120" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="90" y="64" text-anchor="middle" fill="#1565c0" font-weight="700">Patient Form</text>
+      <text x="90" y="82" text-anchor="middle" fill="#1565c0" font-size="10">Name, DOB, Gender</text>
+      <text x="90" y="96" text-anchor="middle" fill="#1565c0" font-size="10">Contact info</text>
+      <text x="90" y="110" text-anchor="middle" fill="#1565c0" font-size="10">Address</text>
+      <text x="90" y="124" text-anchor="middle" fill="#1565c0" font-size="10">Insurance details</text>
+      <rect x="50" y="136" width="80" height="18" rx="4" fill="#1565c0"/>
+      <text x="90" y="149" text-anchor="middle" fill="white" font-size="11" font-weight="700">Save</text>
+
+      <!-- Arrow -->
+      <line x1="160" y1="100" x2="220" y2="100" stroke="#1565c0" stroke-width="1.8" marker-end="url(#pa)"/>
+
+      <!-- API validates -->
+      <rect x="220" y="60" width="130" height="80" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+      <text x="285" y="84" text-anchor="middle" fill="#e65100" font-weight="700">Validation</text>
+      <text x="285" y="100" text-anchor="middle" fill="#e65100" font-size="10">Required fields check</text>
+      <text x="285" y="114" text-anchor="middle" fill="#e65100" font-size="10">DOB must be in past</text>
+      <text x="285" y="128" text-anchor="middle" fill="#e65100" font-size="10">No duplicate MRN</text>
+
+      <!-- Arrow -->
+      <line x1="350" y1="100" x2="410" y2="100" stroke="#1565c0" stroke-width="1.8" marker-end="url(#pa)"/>
+
+      <!-- DB -->
+      <rect x="410" y="60" width="140" height="80" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="480" y="84" text-anchor="middle" fill="#2e7d32" font-weight="700">Saved ✓</text>
+      <text x="480" y="100" text-anchor="middle" fill="#2e7d32" font-size="10">Patient record created</text>
+      <text x="480" y="114" text-anchor="middle" fill="#2e7d32" font-size="10">MRN-2026-NNNNN</text>
+      <text x="480" y="128" text-anchor="middle" fill="#2e7d32" font-size="10">assigned automatically</text>
+    </svg>
+  </div>
+
+  <h3 class="s-sub" id="l-search">Finding a Patient</h3>
+  <p>The Patient List page has a <strong>search bar</strong> at the top. As you type, results update automatically (with a short delay to avoid hammering the server). You can search by name, MRN, or date of birth.</p>
+
+  <div class="callout info">
+    Results are paginated — 20 per page. Use the arrows at the bottom to move between pages.
+  </div>
+
+  <p>Click any row to open the <strong>Patient Detail</strong> page, which shows demographics, insurance records, all cases for that patient, and (in Phase 3) their uploaded documents.</p>
+</section>
+
+<!-- ════════════════════════════════════════════
+     CASES
+═════════════════════════════════════════════ -->
+<section class="s" id="cases">
+  <h2 class="s-title">3 · Cases</h2>
+  <p>A <strong>Case</strong> is an episode of care — a specific reason a patient is being managed by the team. One patient can have multiple cases (e.g., one for their chronic disease management and a separate one for post-surgery follow-up).</p>
+  <p>Each case has a unique number like <code>CASE-2026-00001</code>.</p>
+
+  <h3 class="s-sub" id="l-open">Opening a Case</h3>
+  <ol class="steps">
+    <li>Navigate to the Patient Detail page and click <strong>New Case</strong>, or go to the Cases section and click <strong>New Case</strong>.</li>
+    <li>Select the patient (pre-filled if coming from Patient Detail).</li>
+    <li>Choose a <strong>Case Type</strong>: Chronic Disease, Post-Surgery, Mental Health, Preventive, or Behavioral.</li>
+    <li>Write a brief description and set the priority.</li>
+    <li>Click <strong>Create</strong>. The case opens with status <span class="chip c-open">Open</span>.</li>
+  </ol>
+
+  <h3 class="s-sub" id="l-status">Case Status Lifecycle</h3>
+  <p>Every case moves through a defined set of statuses. You cannot skip steps or go backwards arbitrarily — the system enforces valid transitions on both the screen and the server.</p>
+
+  <!-- Status state machine diagram -->
+  <div class="plain">
+    <svg width="660" height="300" viewBox="0 0 660 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <defs>
+        <marker id="sm" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#555"/></marker>
+        <marker id="sr" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#c62828"/></marker>
+        <marker id="sp" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#6a1b9a"/></marker>
+      </defs>
+
+      <!-- OPEN -->
+      <rect x="20" y="120" width="100" height="44" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+      <text x="70" y="146" text-anchor="middle" fill="#1565c0" font-weight="700" font-size="13">Open</text>
+
+      <!-- IN PROGRESS -->
+      <rect x="200" y="60" width="120" height="44" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+      <text x="260" y="86" text-anchor="middle" fill="#e65100" font-weight="700" font-size="13">In Progress</text>
+
+      <!-- ON HOLD -->
+      <rect x="200" y="190" width="100" height="44" rx="10" fill="#eceff1" stroke="#546e7a" stroke-width="2"/>
+      <text x="250" y="216" text-anchor="middle" fill="#546e7a" font-weight="700" font-size="13">On Hold</text>
+
+      <!-- CLOSED -->
+      <rect x="410" y="120" width="100" height="44" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+      <text x="460" y="146" text-anchor="middle" fill="#c62828" font-weight="700" font-size="13">Closed</text>
+
+      <!-- REOPENED -->
+      <rect x="540" y="60" width="100" height="44" rx="10" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+      <text x="590" y="86" text-anchor="middle" fill="#6a1b9a" font-weight="700" font-size="13">Reopened</text>
+
+      <!-- Open → InProgress -->
+      <path d="M120,130 Q160,90 198,78" stroke="#555" fill="none" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="150" y="98" fill="#555" font-size="10">start work</text>
+
+      <!-- Open → OnHold -->
+      <path d="M120,152 Q160,185 198,200" stroke="#555" fill="none" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="145" y="192" fill="#555" font-size="10">pause</text>
+
+      <!-- Open → Closed (admin) -->
+      <path d="M120,142 L408,142" stroke="#555" fill="none" stroke-width="1.8" stroke-dasharray="4,3" marker-end="url(#sm)"/>
+      <text x="260" y="133" fill="#555" font-size="10">admin close</text>
+
+      <!-- InProgress → OnHold -->
+      <line x1="250" y1="104" x2="250" y2="188" stroke="#555" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="255" y="152" fill="#555" font-size="10">pause</text>
+
+      <!-- InProgress → Closed -->
+      <path d="M320,82 Q380,90 408,128" stroke="#555" fill="none" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="375" y="100" fill="#555" font-size="10">close</text>
+
+      <!-- OnHold → InProgress -->
+      <path d="M275,190 Q290,148 295,108" stroke="#555" fill="none" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="300" y="155" fill="#555" font-size="10">resume</text>
+
+      <!-- OnHold → Closed -->
+      <path d="M300,212 Q360,220 408,152" stroke="#555" fill="none" stroke-width="1.8" marker-end="url(#sm)"/>
+      <text x="360" y="225" fill="#555" font-size="10">close</text>
+
+      <!-- Closed → Reopened -->
+      <path d="M510,130 Q530,105 538,88" stroke="#c62828" fill="none" stroke-width="1.8" marker-end="url(#sr)"/>
+      <text x="528" y="112" fill="#c62828" font-size="10">reopen</text>
+
+      <!-- Reopened → InProgress -->
+      <path d="M540,78 Q460,60 322,68" stroke="#6a1b9a" fill="none" stroke-width="1.8" marker-end="url(#sp)"/>
+      <text x="432" y="56" fill="#6a1b9a" font-size="10">→ In Progress</text>
+
+      <!-- Legend -->
+      <text x="20" y="280" fill="#999" font-size="10">— solid: any role with access &nbsp;&nbsp; --- dashed: Admin / Supervisor only &nbsp;&nbsp; red: reopen requires Supervisor/Admin</text>
+    </svg>
+  </div>
+
+  <!-- Status chips + descriptions -->
+  <div class="g3" style="margin-top:16px">
+    <div class="card" style="border-left:4px solid #1976d2">
+      <span class="chip c-open">Open</span>
+      <p style="font-size:13px;margin-top:8px">Case just created. Awaiting assignment or initial action. Starting point for every case.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #e65100">
+      <span class="chip c-prog">In Progress</span>
+      <p style="font-size:13px;margin-top:8px">Active work underway. Team has been assigned. Notes and tasks are being added regularly.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #546e7a">
+      <span class="chip c-hold">On Hold</span>
+      <p style="font-size:13px;margin-top:8px">Work paused — waiting for an external result (lab test, specialist referral, patient response).</p>
+    </div>
+    <div class="card" style="border-left:4px solid #c62828">
+      <span class="chip c-close">Closed</span>
+      <p style="font-size:13px;margin-top:8px">Care episode complete. Only Supervisor or Admin can close a case. Can be reopened if needed.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #6a1b9a">
+      <span class="chip c-reopen">Reopened</span>
+      <p style="font-size:13px;margin-top:8px">Case was closed but new information or a complication requires further management.</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <strong>Closing a case</strong> requires Supervisor or Admin role. The system will ask for confirmation before closing.
+  </div>
+
+  <!-- ── CARE TEAM ── -->
+  <h3 class="s-sub" id="l-team">Care Team</h3>
+  <p>Each case has a <strong>Care Team</strong> — the specific people responsible for this patient's episode of care. Adding someone to the care team gives them access to the case and alerts them to new notes.</p>
+
+  <div class="plain">
+    <svg width="560" height="180" viewBox="0 0 560 180" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <!-- Case box -->
+      <rect x="20" y="60" width="120" height="60" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="80" y="88" text-anchor="middle" fill="#1565c0" font-weight="700">Case</text>
+      <text x="80" y="104" text-anchor="middle" fill="#1565c0" font-size="10">CASE-2026-00001</text>
+
+      <!-- Connecting lines -->
+      <line x1="140" y1="90" x2="200" y2="55" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="140" y1="90" x2="200" y2="90" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="140" y1="90" x2="200" y2="125" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Team members -->
+      <rect x="200" y="35" width="140" height="36" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+      <text x="270" y="56" text-anchor="middle" fill="#2e7d32" font-size="11">👩‍⚕️ Jane Smith — Lead Coordinator</text>
+
+      <rect x="200" y="72" width="140" height="36" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+      <text x="270" y="93" text-anchor="middle" fill="#2e7d32" font-size="11">🩺 Dr. Lee — Clinician</text>
+
+      <rect x="200" y="109" width="140" height="36" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+      <text x="270" y="130" text-anchor="middle" fill="#2e7d32" font-size="11">📋 R. Kumar — Case Worker</text>
+
+      <!-- Remove button -->
+      <rect x="356" y="72" width="60" height="22" rx="4" fill="#ffebee" stroke="#c62828" stroke-width="1"/>
+      <text x="386" y="86" text-anchor="middle" fill="#c62828" font-size="10">Remove ×</text>
+
+      <!-- Add button -->
+      <rect x="356" y="145" width="80" height="24" rx="6" fill="#2e7d32"/>
+      <text x="396" y="161" text-anchor="middle" fill="white" font-size="11" font-weight="700">+ Add Member</text>
+
+      <text x="80" y="155" text-anchor="middle" fill="#999" font-size="10">Care Team tab</text>
+      <text x="80" y="168" text-anchor="middle" fill="#999" font-size="10">inside Case Detail</text>
+    </svg>
+  </div>
+
+  <p>To add a member: enter their User ID and their role on this specific case (e.g. "Lead Coordinator", "Consulting Clinician"). To remove: click the remove button and confirm in the dialog that appears.</p>
+
+  <!-- ── NOTES ── -->
+  <h3 class="s-sub" id="l-notes">Case Notes</h3>
+  <p>Case notes are the running log of everything that happens on a case — clinical observations, phone call summaries, decisions made, follow-up actions.</p>
+
+  <div class="plain">
+    <svg width="580" height="240" viewBox="0 0 580 240" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <!-- Note timeline -->
+
+      <!-- New note input -->
+      <rect x="20" y="10" width="540" height="60" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="36" y="34" fill="#1565c0" font-weight="700">Add a note...</text>
+      <text x="36" y="52" fill="#aaa" font-size="11">Type your note here (max 5 000 characters)  0 / 5000</text>
+      <rect x="460" y="48" width="80" height="18" rx="4" fill="#1565c0"/>
+      <text x="500" y="61" text-anchor="middle" fill="white" font-size="11">Add Note</text>
+
+      <!-- Note 1 - recent (editable) -->
+      <rect x="20" y="86" width="540" height="50" rx="6" fill="white" stroke="#e0e0e0" stroke-width="1.2"/>
+      <text x="36" y="106" fill="#212121" font-size="11">Patient called to confirm appointment. Reported mild fatigue. Advised to rest.</text>
+      <text x="36" y="124" fill="#999" font-size="10">Dr. Lee · Today 2:14 PM</text>
+      <rect x="480" y="95" width="60" height="18" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+      <text x="510" y="108" text-anchor="middle" fill="#2e7d32" font-size="10">✏ Edit</text>
+
+      <!-- Note 2 - older (locked) -->
+      <rect x="20" y="148" width="540" height="50" rx="6" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.2"/>
+      <text x="36" y="168" fill="#424242" font-size="11">Initial assessment complete. Case opened for chronic disease management program.</text>
+      <text x="36" y="186" fill="#999" font-size="10">Jane Smith · Yesterday 9:30 AM</text>
+      <!-- Lock badge -->
+      <rect x="466" y="156" width="84" height="18" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+      <text x="508" y="169" text-anchor="middle" fill="#e65100" font-size="10">🔒 Read Only</text>
+
+      <text x="290" y="225" text-anchor="middle" fill="#999" font-size="10">Notes older than 24 hours are automatically locked — no further edits allowed</text>
+    </svg>
+  </div>
+
+  <div class="callout warn">
+    <strong>The 24-hour edit window</strong> — You can edit a note for 24 hours after writing it. After that, it becomes permanently read-only. This is a HIPAA compliance rule: clinical records must be tamper-evident. A background job runs every hour to lock expired notes automatically.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     USER MANAGEMENT
+═════════════════════════════════════════════ -->
+<section class="s" id="users">
+  <h2 class="s-title">4 · User Management</h2>
+  <p>Only <span class="role r-admin">Admin</span> can create, edit, and manage user accounts. This section is found in the Admin area of the sidebar.</p>
+
+  <div class="g2">
+    <div class="card blue">
+      <strong>Creating a User</strong>
+      <ol style="margin-top:10px;font-size:13px;padding-left:18px">
+        <li>Go to Admin → Users → New User</li>
+        <li>Enter username, email, first/last name, and a temporary password</li>
+        <li>Assign one or more roles</li>
+        <li>Click Save — user can now log in</li>
+      </ol>
+    </div>
+    <div class="card orange">
+      <strong>Managing a User</strong>
+      <ul style="margin-top:10px;font-size:13px">
+        <li><strong>Change roles</strong> — replaces all existing roles atomically</li>
+        <li><strong>Deactivate</strong> — blocks login without deleting the account or their history</li>
+        <li><strong>Reactivate</strong> — re-enables access instantly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout info">
+    Deactivating a user is always preferred over deleting them. Their audit history, notes, and case records remain fully intact and traceable.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     DATA FLOW
+═════════════════════════════════════════════ -->
+<section class="s" id="dataflow">
+  <h2 class="s-title">Under the Hood — Data Flow</h2>
+  <p>Every action in the browser follows the same path. Here's how a "save case note" request travels through the system:</p>
+
+  <div class="plain">
+    <svg width="680" height="220" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <defs>
+        <marker id="df" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#1565c0"/></marker>
+        <marker id="db" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#2e7d32"/></marker>
+      </defs>
+
+      <!-- Boxes -->
+      <rect x="10" y="70" width="110" height="60" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="65" y="96" text-anchor="middle" fill="#1565c0" font-weight="700">Browser</text>
+      <text x="65" y="112" text-anchor="middle" fill="#1565c0" font-size="10">Angular UI</text>
+
+      <rect x="160" y="70" width="120" height="60" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+      <text x="220" y="90" text-anchor="middle" fill="#e65100" font-weight="700">Controller</text>
+      <text x="220" y="106" text-anchor="middle" fill="#e65100" font-size="10">Deserialize</text>
+      <text x="220" y="120" text-anchor="middle" fill="#e65100" font-size="10">Auth check</text>
+
+      <rect x="330" y="70" width="120" height="60" rx="8" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+      <text x="390" y="90" text-anchor="middle" fill="#6a1b9a" font-weight="700">DataHandler</text>
+      <text x="390" y="106" text-anchor="middle" fill="#6a1b9a" font-size="10">Validate</text>
+      <text x="390" y="120" text-anchor="middle" fill="#6a1b9a" font-size="10">Business logic</text>
+
+      <rect x="500" y="70" width="120" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="560" y="90" text-anchor="middle" fill="#2e7d32" font-weight="700">Database</text>
+      <text x="560" y="106" text-anchor="middle" fill="#2e7d32" font-size="10">Save note</text>
+      <text x="560" y="120" text-anchor="middle" fill="#2e7d32" font-size="10">Save audit log</text>
+
+      <!-- Forward arrows -->
+      <line x1="120" y1="95" x2="158" y2="95" stroke="#1565c0" stroke-width="1.8" marker-end="url(#df)"/>
+      <text x="139" y="88" text-anchor="middle" fill="#1565c0" font-size="9">POST /api/</text>
+      <text x="139" y="99" text-anchor="middle" fill="#1565c0" font-size="9">casenotes</text>
+
+      <line x1="280" y1="95" x2="328" y2="95" stroke="#1565c0" stroke-width="1.8" marker-end="url(#df)"/>
+      <text x="304" y="88" text-anchor="middle" fill="#1565c0" font-size="9">call handler</text>
+
+      <line x1="450" y1="95" x2="498" y2="95" stroke="#1565c0" stroke-width="1.8" marker-end="url(#df)"/>
+      <text x="474" y="88" text-anchor="middle" fill="#1565c0" font-size="9">EF Core</text>
+
+      <!-- Return arrow -->
+      <path d="M560,130 Q560,170 390,170 Q220,170 65,170 L65,132" stroke="#2e7d32" fill="none" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#db)"/>
+      <text x="310" y="185" text-anchor="middle" fill="#2e7d32" font-size="10">201 Created → new note returned to browser → displayed instantly</text>
+
+      <!-- Labels under -->
+      <text x="65" y="158" text-anchor="middle" fill="#999" font-size="10">Step 1</text>
+      <text x="220" y="158" text-anchor="middle" fill="#999" font-size="10">Step 2</text>
+      <text x="390" y="158" text-anchor="middle" fill="#999" font-size="10">Step 3</text>
+      <text x="560" y="158" text-anchor="middle" fill="#999" font-size="10">Step 4</text>
+    </svg>
+  </div>
+
+  <div class="callout tip">
+    <strong>Analogy:</strong> Think of the Controller as a hotel receptionist (takes your request, checks your booking), the DataHandler as the concierge (figures out what you actually need and makes sure it's possible), and the Database as the hotel's filing system (stores everything permanently).
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     AUDIT TRAIL
+═════════════════════════════════════════════ -->
+<section class="s" id="audit">
+  <h2 class="s-title">Audit Trail</h2>
+  <p>Every create, update, or delete action on a Patient, Case, Note, or User is <strong>automatically recorded</strong> in the Audit Log. You don't have to do anything — it happens invisibly in the background.</p>
+
+  <div class="g2">
+    <div class="card green">
+      <strong>What's captured</strong>
+      <ul style="margin-top:8px;font-size:13px">
+        <li>Who made the change (User ID)</li>
+        <li>When it happened (UTC timestamp)</li>
+        <li>What changed (old value → new value, stored as JSON)</li>
+        <li>Which record was affected (entity type + ID)</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <strong>What's protected</strong>
+      <ul style="margin-top:8px;font-size:13px">
+        <li>Audit records can <strong>never</strong> be deleted or edited</li>
+        <li>No patient names, DOBs, or SSNs in the log — IDs only (HIPAA)</li>
+        <li>Survives even if the user who made the change is later deleted</li>
+        <li>Visible only to Admin role</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <strong>Analogy:</strong> The audit log is like a CCTV system in a hospital medication room. It records every entry automatically — staff don't fill in a paper log, and the footage can't be erased by anyone on site.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SECURITY
+═════════════════════════════════════════════ -->
+<section class="s" id="security">
+  <h2 class="s-title">Security at a Glance</h2>
+
+  <table>
+    <thead><tr><th>Protection</th><th>How it works</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Passwords</strong></td><td>Never stored in plain text. Hashed with BCrypt (a one-way scramble). Even if someone stole the database, they could not read any password.</td></tr>
+      <tr><td><strong>Session tokens (JWT)</strong></td><td>Expire automatically. Must be at least 32 characters long. Stored only in the browser's localStorage.</td></tr>
+      <tr><td><strong>Role enforcement</strong></td><td>Every API endpoint checks your role before doing anything. The UI hides buttons, but the server double-checks every request regardless.</td></tr>
+      <tr><td><strong>No hard deletes</strong></td><td>Patients and documents are never truly deleted — they get an "inactive" flag. This preserves history and prevents accidental data loss.</td></tr>
+      <tr><td><strong>Account lockout</strong></td><td>After 5 failed logins the account is locked. Prevents brute-force password guessing.</td></tr>
+      <tr><td><strong>No PHI in logs</strong></td><td>Server logs contain only entity IDs, never names, dates of birth, insurance numbers, or any other personal health information.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════════════════════════════
+     SCREEN MAP
+═════════════════════════════════════════════ -->
+<section class="s" id="nav">
+  <h2 class="s-title">Screen Map — How to Navigate</h2>
+  <p>The app has a persistent sidebar on the left. Every section is one click away.</p>
+
+  <div class="plain">
+    <svg width="660" height="420" viewBox="0 0 660 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,sans-serif" font-size="12">
+      <defs>
+        <marker id="nav" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 z" fill="#aaa"/></marker>
+      </defs>
+
+      <!-- Sidebar -->
+      <rect x="10" y="10" width="130" height="380" rx="8" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1.5"/>
+      <text x="75" y="32" text-anchor="middle" fill="#1565c0" font-weight="700" font-size="13">HCMS</text>
+      <text x="30" y="60" fill="#555" font-size="11">🏠 Dashboard</text>
+      <text x="30" y="82" fill="#1565c0" font-size="11" font-weight="700">👥 Patients</text>
+      <text x="30" y="104" fill="#555" font-size="11">📋 Cases</text>
+      <text x="30" y="126" fill="#555" font-size="11">📎 Documents</text>
+      <text x="30" y="148" fill="#555" font-size="11">📅 Appointments</text>
+      <text x="30" y="170" fill="#555" font-size="11">📊 Reports</text>
+      <text x="30" y="192" fill="#555" font-size="11">🔔 Notifications</text>
+      <rect x="16" y="200" width="118" height="1" fill="#ddd"/>
+      <text x="30" y="222" fill="#c62828" font-size="11">⚙ Admin</text>
+      <text x="30" y="244" fill="#555" font-size="9">  (Admin only)</text>
+
+      <!-- Patient List page -->
+      <rect x="170" y="10" width="180" height="100" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="260" y="34" text-anchor="middle" fill="#1565c0" font-weight="700">Patient List</text>
+      <text x="185" y="54" fill="#555" font-size="10">🔍 Search bar</text>
+      <text x="185" y="70" fill="#555" font-size="10">📋 Paginated table</text>
+      <text x="185" y="86" fill="#555" font-size="10">+ New Patient button</text>
+      <text x="185" y="100" fill="#555" font-size="10">→ Click row = Patient Detail</text>
+
+      <!-- Arrow from sidebar Patients -->
+      <line x1="140" y1="82" x2="168" y2="60" stroke="#aaa" stroke-width="1.2" marker-end="url(#nav)"/>
+
+      <!-- Patient Detail page -->
+      <rect x="170" y="130" width="200" height="130" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="270" y="152" text-anchor="middle" fill="#1565c0" font-weight="700">Patient Detail</text>
+      <text x="185" y="172" fill="#555" font-size="10">Demographics grid</text>
+      <text x="185" y="188" fill="#555" font-size="10">Insurance accordion</text>
+      <text x="185" y="204" fill="#555" font-size="10">Cases tab → open cases list</text>
+      <text x="185" y="220" fill="#555" font-size="10">Documents tab (Phase 3)</text>
+      <text x="185" y="236" fill="#555" font-size="10">Edit Patient button</text>
+      <text x="185" y="252" fill="#555" font-size="10">+ New Case button</text>
+
+      <!-- Arrow: Patient List → Detail -->
+      <line x1="260" y1="110" x2="260" y2="128" stroke="#aaa" stroke-width="1.2" marker-end="url(#nav)"/>
+
+      <!-- Patient Form -->
+      <rect x="170" y="280" width="160" height="80" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="250" y="302" text-anchor="middle" fill="#1565c0" font-weight="700">Patient Form</text>
+      <text x="185" y="322" fill="#555" font-size="10">Create or Edit patient</text>
+      <text x="185" y="338" fill="#555" font-size="10">Reactive form + datepicker</text>
+      <text x="185" y="354" fill="#555" font-size="10">Shared by /new and /:id/edit</text>
+
+      <!-- Arrow: Patient Detail → Form -->
+      <line x1="250" y1="260" x2="235" y2="278" stroke="#aaa" stroke-width="1.2" marker-end="url(#nav)"/>
+
+      <!-- Case Detail page -->
+      <rect x="400" y="10" width="240" height="290" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+      <text x="520" y="34" text-anchor="middle" fill="#e65100" font-weight="700">Case Detail</text>
+      <text x="416" y="56" fill="#555" font-size="10">Case header: #, status, patient, dates</text>
+      <text x="416" y="74" fill="#555" font-size="10">Inline status transition control</text>
+      <text x="416" y="94" fill="#555" font-weight="700" font-size="10">Tabs:</text>
+      <text x="416" y="112" fill="#555" font-size="10">  📝 Notes — add + view notes</text>
+      <text x="416" y="128" fill="#555" font-size="10">  👥 Care Team — add / remove members</text>
+      <text x="416" y="144" fill="#555" font-size="10">  📜 Status History — timeline</text>
+      <text x="416" y="160" fill="#555" font-size="10">  ✅ Tasks — (Phase 3)</text>
+      <text x="416" y="176" fill="#555" font-size="10">  📎 Documents — (Phase 3)</text>
+      <text x="416" y="200" fill="#e65100" font-weight="700" font-size="10">Role-gated buttons:</text>
+      <text x="416" y="218" fill="#555" font-size="10">  Close Case (Supervisor/Admin)</text>
+      <text x="416" y="234" fill="#555" font-size="10">  Reopen Case (Supervisor/Admin)</text>
+      <text x="416" y="254" fill="#555" font-size="10">Breadcrumb: Cases → Patient → CASE-#</text>
+      <text x="416" y="272" fill="#555" font-size="10">← Back navigates to patient or case list</text>
+      <text x="416" y="290" fill="#555" font-size="10">Confirm dialog for destructive actions</text>
+
+      <!-- Arrow: Patient Detail → Case Detail -->
+      <line x1="370" y1="204" x2="398" y2="140" stroke="#aaa" stroke-width="1.2" marker-end="url(#nav)"/>
+      <text x="380" y="178" fill="#aaa" font-size="9">Cases tab</text>
+
+      <!-- Case List / Form boxes -->
+      <rect x="400" y="320" width="110" height="60" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="455" y="344" text-anchor="middle" fill="#e65100" font-weight="700">Case List</text>
+      <text x="416" y="362" fill="#555" font-size="10">Status filter</text>
+      <text x="416" y="376" fill="#555" font-size="10">Paginated table</text>
+
+      <rect x="530" y="320" width="110" height="60" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="585" y="344" text-anchor="middle" fill="#e65100" font-weight="700">Case Form</text>
+      <text x="546" y="362" fill="#555" font-size="10">Create new case</text>
+      <text x="546" y="376" fill="#555" font-size="10">Patient pre-filled</text>
+
+      <!-- Sidebar → Case List -->
+      <line x1="140" y1="104" x2="398" y2="345" stroke="#aaa" stroke-width="1.2" marker-end="url(#nav)"/>
+
+      <text x="20" y="410" fill="#999" font-size="10">--- dashed border = form/modal page &nbsp;&nbsp; (Phase 3) = not yet built</text>
+    </svg>
+  </div>
+
+  <details>
+    <summary>Breadcrumb Navigation</summary>
+    <div class="db">
+      <p>Every detail page shows a breadcrumb trail at the top so you always know where you are:</p>
+      <ul>
+        <li><strong>Patient Detail:</strong> Patients › John Smith</li>
+        <li><strong>Case Detail (from patient):</strong> Cases › John Smith › CASE-2026-00001</li>
+        <li><strong>Case Detail (from case list):</strong> Cases › CASE-2026-00001</li>
+      </ul>
+      <p>Clicking any segment in the breadcrumb navigates back to that level.</p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+  // Smooth scroll
+  document.querySelectorAll('#toc a').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      if (!id.startsWith('#')) return;
+      e.preventDefault();
+      const el = document.querySelector(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Active TOC highlighting
+  const links = document.querySelectorAll('#toc a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        links.forEach(l => l.classList.remove('on'));
+        const a = document.querySelector(`#toc a[href="#${en.target.id}"]`);
+        if (a) a.classList.add('on');
+      }
+    });
+  }, { rootMargin: '-60px 0px -70% 0px' });
+  document.querySelectorAll('[id]').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
