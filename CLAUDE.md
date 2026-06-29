@@ -161,9 +161,28 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 
 ---
 
+## Phase HTML Reports (Required at Phase Completion)
+
+At the end of every development phase, generate a self-contained HTML report saved as `docs/phase-<N>-<short-title>.html`.
+
+**Report requirements:**
+- **Self-contained** — inline CSS and JS, no external dependencies (CDN links are forbidden)
+- **Navigable** — sticky sidebar TOC with jump links, active-section highlighting via IntersectionObserver
+- **Collapsible sections** — use `<details>`/`<summary>` for implementation detail blocks
+- **Diagrams** — inline SVG for architecture, sequence, state machine, and component tree diagrams. Only add diagrams where they genuinely aid understanding; skip trivial points
+- **Real-life analogies** — for every non-obvious concept or design decision, include a short real-world analogy that makes it intuitive for a non-expert reader
+- **Content** — what was built, why, key decisions and trade-offs, files/modules added or changed, how the pieces fit together, what's next
+
+**Auto-tracking hook (already wired):**  
+`.claude/settings.json` has a `PostToolUse(Write)` hook that fires `.claude/scripts/update-phase-index.ps1` whenever a `phase-N-*.html` file is written. This appends a row to `.phase-reports-index.md` (gitignored, local only) with: timestamp, phase number, filename, one-line summary, and a relative link.
+
+**Do not** add entries to `.phase-reports-index.md` manually — the hook handles it.
+
+---
+
 ## Current Phase
 
-**Phase 1 — Foundation & Infrastructure** (Not Started)
+**Phase 2 — Patient & Case Core** (In Progress — backend + frontend complete, E2E testing pending)
 
 See [docs/project-status.md](docs/project-status.md) for the current detailed status.
 
