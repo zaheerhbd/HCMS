@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-29 (Phase 2 nearly complete: backend fully done including audit, seeding, users, background job; Angular frontend done)
+**Last Updated:** 2026-06-29 (Phase 2 nearly complete: backend fully done including audit, seeding, users, background job, MRN/CaseNumber routing + sequential GUIDs; Angular frontend done)
 **Current Phase:** Phase 2 — Patient & Case Core (Backend + Frontend complete; SharedModule done)
-**Overall Progress:** 58 / 185 tasks complete (~31%)
+**Overall Progress:** 59 / 185 tasks complete (~32%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -15,7 +15,7 @@
 | # | Phase | Status | Tasks | Done | Remaining |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
-| 2 | Patient & Case Core | `In Progress` | ~38 | 34 | 4 |
+| 2 | Patient & Case Core | `In Progress` | ~38 | 35 | 3 |
 | 3 | Documents, Tasks & Notes | `Not Started` | ~22 | 0 | 22 |
 | 4 | Appointments & Scheduling | `Not Started` | ~16 | 0 | 16 |
 | 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
@@ -49,6 +49,7 @@
 - [x] `AuditInterceptor` — `SaveChangesAsync` override capturing Patient/Case/CaseNote/User changes; migration `AddAuditLogs` applied
 - [x] `UsersController` + `IUserDataHandler`/`UserDataHandler` (Admin only): list, create, update, role assignment, activate/deactivate
 - [x] `CaseNoteEditLockService` (BackgroundService): locks `IsEditable = false` after 24h
+- [x] All API routes use MRN/CaseNumber business keys instead of GUIDs (IDOR hardening); `NEWSEQUENTIALID()` default applied to all 5 entity Id columns via migration `UseSequentialGuids`
 
 ### Frontend Checklist (Phase 2) — Complete
 
@@ -56,7 +57,7 @@
 - [x] `PatientListComponent` — server-side paginated table with debounced search, role-gated create button
 - [x] `PatientDetailComponent` — demographics, insurance accordion, cases tab, documents placeholder, breadcrumb
 - [x] `PatientFormComponent` — reactive form (create + edit), datepicker, validation
-- [x] Update `patients.routes.ts` — `''`, `new`, `:id`, `:id/edit`
+- [x] Update `patients.routes.ts` — `''`, `new`, `:mrn`, `:mrn/edit`
 - [x] `CaseService` — all HTTP calls to `/api/cases` (CRUD, status, team, notes)
 - [x] `CaseListComponent` — status filter + paginated table
 - [x] `CaseDetailComponent` — header card with inline status transition, tabs (Notes, Team, History, Tasks placeholder, Docs placeholder)
@@ -64,7 +65,7 @@
 - [x] `CaseStatusHistoryComponent` — timeline of status changes
 - [x] `CareTeamComponent` — member list + add/remove with ConfirmDialog
 - [x] `CaseNotesComponent` — post notes + locked badge after 24h
-- [x] Update `cases.routes.ts` — `''`, `new`, `:id`
+- [x] Update `cases.routes.ts` — `''`, `new`, `:caseNumber`
 - [x] `StatusBadgeComponent` — color-coded chip per status
 - [x] `HasRoleDirective` — `*appHasRole` structural directive
 - [x] `ConfirmDialogComponent` — reusable confirm modal

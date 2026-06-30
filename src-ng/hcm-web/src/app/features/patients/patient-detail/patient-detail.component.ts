@@ -57,7 +57,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <mat-icon>edit</mat-icon> Edit
           </button>
           <button mat-flat-button color="primary" routerLink="/cases/new"
-            [queryParams]="{ patientId: patient.id }" *ngIf="canCreateCase">
+            [queryParams]="{ patientMrn: patient.mrn }" *ngIf="canCreateCase">
             <mat-icon>folder_open</mat-icon> New Case
           </button>
         </div>
@@ -112,7 +112,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <ng-container matColumnDef="caseNumber">
                 <th mat-header-cell *matHeaderCellDef>Case #</th>
                 <td mat-cell *matCellDef="let c">
-                  <a [routerLink]="['/cases', c.id]">{{ c.caseNumber }}</a>
+                  <a [routerLink]="['/cases', c.caseNumber]">{{ c.caseNumber }}</a>
                 </td>
               </ng-container>
               <ng-container matColumnDef="caseTypeName">
@@ -131,7 +131,7 @@ import { AuthService } from '../../../core/services/auth.service';
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="caseCols"></tr>
               <tr mat-row *matRowDef="let row; columns: caseCols;"
-                class="clickable-row" [routerLink]="['/cases', row.id]"></tr>
+                class="clickable-row" [routerLink]="['/cases', row.caseNumber]"></tr>
             </table>
           </div>
         </mat-tab>
@@ -201,12 +201,12 @@ export class PatientDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.patientSvc.getById(id).subscribe({
+    const mrn = this.route.snapshot.paramMap.get('mrn')!;
+    this.patientSvc.getByMrn(mrn).subscribe({
       next: p => {
         this.patient = p;
         this.loading = false;
-        this.loadCases(p.id);
+        this.loadCases(p.mrn);
       },
       error: () => {
         this.snack.open('Patient not found.', 'Close', { duration: 4000 });
@@ -215,8 +215,8 @@ export class PatientDetailComponent implements OnInit {
     });
   }
 
-  private loadCases(patientId: string): void {
-    this.caseSvc.getByPatient(patientId).subscribe({
+  private loadCases(mrn: string): void {
+    this.caseSvc.getByPatientMrn(mrn).subscribe({
       next: c => { this.cases = c; this.casesLoading = false; },
       error: () => { this.casesLoading = false; }
     });

@@ -65,7 +65,7 @@ import { AuthService } from '../../../core/services/auth.service';
   `]
 })
 export class CaseNotesComponent implements OnInit {
-  @Input() caseId = '';
+  @Input() caseNumber = '';
   notes: CaseNoteDto[] = [];
   noteControl = new FormControl('', [Validators.required, Validators.maxLength(5000)]);
   saving = false;
@@ -85,7 +85,7 @@ export class CaseNotesComponent implements OnInit {
   }
 
   loadNotes(): void {
-    this.svc.getNotes(this.caseId).subscribe({
+    this.svc.getNotes(this.caseNumber).subscribe({
       next: n => this.notes = n,
       error: () => {}
     });
@@ -94,7 +94,7 @@ export class CaseNotesComponent implements OnInit {
   addNote(): void {
     if (this.noteControl.invalid || this.saving) return;
     this.saving = true;
-    this.svc.addNote(this.caseId, { content: this.noteControl.value! }).subscribe({
+    this.svc.addNote(this.caseNumber, { content: this.noteControl.value! }).subscribe({
       next: n => {
         this.notes = [n, ...this.notes];
         this.noteControl.reset();

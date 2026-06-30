@@ -9,6 +9,9 @@ public class CareTeamMemberConfiguration : IEntityTypeConfiguration<CareTeamMemb
     public void Configure(EntityTypeBuilder<CareTeamMember> builder)
     {
         builder.HasKey(ctm => ctm.Id);
+        builder.Property(ctm => ctm.Id)
+            .HasDefaultValueSql("NEWSEQUENTIALID()")
+            .ValueGeneratedOnAdd();
 
         builder.Property(ctm => ctm.TeamRole)
             .IsRequired()

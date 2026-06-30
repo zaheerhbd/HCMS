@@ -18,12 +18,19 @@ public class CasesController : ControllerBase
         _handler = handler;
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetCaseById(Guid id, CancellationToken ct)
+    [HttpGet]
+    public async Task<IActionResult> GetAllCases([FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var (items, totalCount) = await _handler.GetAllCasesAsync(status, page, pageSize, ct);
+        return Ok(new { items, totalCount, page, pageSize });
+    }
+
+    [HttpGet("{caseNumber}")]
+    public async Task<IActionResult> GetCaseByCaseNumber(string caseNumber, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.GetCaseByIdAsync(id, ct);
+            var result = await _handler.GetCaseByCaseNumberAsync(caseNumber, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -32,13 +39,17 @@ public class CasesController : ControllerBase
         }
     }
 
-    [HttpGet("patient/{patientId}")]
-    public async Task<IActionResult> GetCasesByPatient(Guid patientId, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken ct = default)
+    [HttpGet("patient/mrn/{mrn}")]
+    public async Task<IActionResult> GetCasesByPatient(string mrn, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, CancellationToken ct = default)
     {
         try
         {
-            var (items, totalCount) = await _handler.GetCasesByPatientAsync(patientId, status, page, pageSize, ct);
+            var (items, totalCount) = await _handler.GetCasesByPatientMrnAsync(mrn, status, page, pageSize, ct);
             return Ok(new { items, totalCount, page, pageSize });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
         {
@@ -48,7 +59,7 @@ public class CasesController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,CareCoordinator")]
-    public async Task<IActionResult> CreateCase([FromQuery] Guid patientId, [FromBody] CreateCaseDto dto, CancellationToken ct)
+    public async Task<IActionResult> CreateCase([FromQuery] string patientMrn, [FromBody] CreateCaseDto dto, CancellationToken ct)
     {
         try
         {
@@ -56,8 +67,8 @@ public class CasesController : ControllerBase
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized();
 
-            var result = await _handler.CreateCaseAsync(patientId, dto, userIdGuid, userIdGuid, ct);
-            return CreatedAtAction(nameof(GetCaseById), new { id = result.Id }, result);
+            var result = await _handler.CreateCaseAsync(patientMrn, dto, userIdGuid, userIdGuid, ct);
+            return CreatedAtAction(nameof(GetCaseByCaseNumber), new { caseNumber = result.CaseNumber }, result);
         }
         catch (KeyNotFoundException ex)
         {
@@ -73,13 +84,13 @@ public class CasesController : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{caseNumber}")]
     [Authorize(Roles = "Admin,CareCoordinator")]
-    public async Task<IActionResult> UpdateCase(Guid id, [FromBody] UpdateCaseDto dto, CancellationToken ct)
+    public async Task<IActionResult> UpdateCase(string caseNumber, [FromBody] UpdateCaseDto dto, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.UpdateCaseAsync(id, dto, ct);
+            var result = await _handler.UpdateCaseAsync(caseNumber, dto, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -92,9 +103,9 @@ public class CasesController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/status")]
+    [HttpPost("{caseNumber}/status")]
     [Authorize(Roles = "Admin,CareCoordinator,Supervisor")]
-    public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] CaseStatusChangeDto dto, CancellationToken ct)
+    public async Task<IActionResult> ChangeStatus(string caseNumber, [FromBody] CaseStatusChangeDto dto, CancellationToken ct)
     {
         try
         {
@@ -102,7 +113,7 @@ public class CasesController : ControllerBase
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized();
 
-            var result = await _handler.ChangeCaseStatusAsync(id, dto, userIdGuid, ct);
+            var result = await _handler.ChangeCaseStatusAsync(caseNumber, dto, userIdGuid, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -119,9 +130,9 @@ public class CasesController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/close")]
+    [HttpPost("{caseNumber}/close")]
     [Authorize(Roles = "Admin,Supervisor")]
-    public async Task<IActionResult> CloseCase(Guid id, CancellationToken ct)
+    public async Task<IActionResult> CloseCase(string caseNumber, CancellationToken ct)
     {
         try
         {
@@ -129,7 +140,7 @@ public class CasesController : ControllerBase
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized();
 
-            await _handler.CloseCaseAsync(id, userIdGuid, ct);
+            await _handler.CloseCaseAsync(caseNumber, userIdGuid, ct);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

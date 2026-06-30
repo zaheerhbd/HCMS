@@ -72,10 +72,10 @@ import { AuthService } from '../../../core/services/auth.service';
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let p">
-          <button mat-icon-button [routerLink]="p.id" matTooltip="View patient">
+          <button mat-icon-button [routerLink]="p.mrn" matTooltip="View patient">
             <mat-icon>visibility</mat-icon>
           </button>
-          <button mat-icon-button [routerLink]="[p.id, 'edit']" matTooltip="Edit patient"
+          <button mat-icon-button [routerLink]="[p.mrn, 'edit']" matTooltip="Edit patient"
             *ngIf="canCreate">
             <mat-icon>edit</mat-icon>
           </button>
@@ -84,7 +84,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns;" class="clickable-row"
-        (click)="navigate(row.id)"></tr>
+        (click)="navigate(row.mrn)"></tr>
     </table>
 
     <div *ngIf="!loading && rows.length === 0" class="empty-state">
@@ -167,7 +167,7 @@ export class PatientListComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  navigate(id: string): void {
-    this.router.navigate(['/patients', id]);
+  navigate(mrn: string): void {
+    this.router.navigate(['/patients', mrn]);
   }
 }

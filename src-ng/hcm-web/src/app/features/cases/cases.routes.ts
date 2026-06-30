@@ -12,7 +12,7 @@ export const CASES_ROUTES: Routes = [
       import('./case-form/case-form.component').then(m => m.CaseFormComponent)
   },
   {
-    path: ':id',
+    path: ':caseNumber',
     loadComponent: () =>
       import('./case-detail/case-detail.component').then(m => m.CaseDetailComponent)
   }

@@ -12,12 +12,12 @@ export const PATIENTS_ROUTES: Routes = [
       import('./patient-form/patient-form.component').then(m => m.PatientFormComponent)
   },
   {
-    path: ':id',
+    path: ':mrn',
     loadComponent: () =>
       import('./patient-detail/patient-detail.component').then(m => m.PatientDetailComponent)
   },
   {
-    path: ':id/edit',
+    path: ':mrn/edit',
     loadComponent: () =>
       import('./patient-form/patient-form.component').then(m => m.PatientFormComponent)
   }

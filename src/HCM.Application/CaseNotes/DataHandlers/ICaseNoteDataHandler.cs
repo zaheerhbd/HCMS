@@ -4,6 +4,6 @@ namespace HCM.Application.CaseNotes.DataHandlers;
 
 public interface ICaseNoteDataHandler
 {
-    Task<CaseNoteDto> AddNoteAsync(Guid caseId, CreateCaseNoteDto dto, Guid createdBy, CancellationToken ct = default);
-    Task<List<CaseNoteDto>> GetNotesAsync(Guid caseId, CancellationToken ct = default);
+    Task<CaseNoteDto> AddNoteAsync(string caseNumber, CreateCaseNoteDto dto, Guid createdBy, CancellationToken ct = default);
+    Task<List<CaseNoteDto>> GetNotesAsync(string caseNumber, CancellationToken ct = default);
 }

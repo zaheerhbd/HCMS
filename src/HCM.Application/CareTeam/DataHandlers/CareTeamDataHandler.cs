@@ -15,11 +15,11 @@ public class CareTeamDataHandler : ICareTeamDataHandler
         _dbContext = dbContext;
     }
 
-    public async Task AddMemberAsync(Guid caseId, AddCareTeamMemberDto dto, Guid addedBy, CancellationToken ct = default)
+    public async Task AddMemberAsync(string caseNumber, AddCareTeamMemberDto dto, Guid addedBy, CancellationToken ct = default)
     {
         var caseEntity = await _dbContext.Cases
-            .FirstOrDefaultAsync(c => c.Id == caseId && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {caseId} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         var user = await _dbContext.Users
             .AsNoTracking()
@@ -27,15 +27,14 @@ public class CareTeamDataHandler : ICareTeamDataHandler
             ?? throw new KeyNotFoundException($"User with ID {dto.UserId} not found.");
 
         var existingMember = await _dbContext.CareTeamMembers
-            .FirstOrDefaultAsync(ctm => ctm.CaseId == caseId && ctm.UserId == dto.UserId && ctm.IsActive, cancellationToken: ct);
+            .FirstOrDefaultAsync(ctm => ctm.CaseId == caseEntity.Id && ctm.UserId == dto.UserId && ctm.IsActive, cancellationToken: ct);
 
         if (existingMember != null)
             throw new ValidationException("User is already a member of this care team.");
 
         var member = new CareTeamMember
         {
-            Id = Guid.NewGuid(),
-            CaseId = caseId,
+            CaseId = caseEntity.Id,
             UserId = dto.UserId,
             TeamRole = dto.TeamRole,
             JoinedAt = DateTime.UtcNow,
@@ -46,10 +45,15 @@ public class CareTeamDataHandler : ICareTeamDataHandler
         await _dbContext.SaveChangesAsync(ct);
     }
 
-    public async Task RemoveMemberAsync(Guid caseId, Guid userId, Guid removedBy, CancellationToken ct = default)
+    public async Task RemoveMemberAsync(string caseNumber, Guid userId, Guid removedBy, CancellationToken ct = default)
     {
+        var caseEntity = await _dbContext.Cases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
+
         var member = await _dbContext.CareTeamMembers
-            .FirstOrDefaultAsync(ctm => ctm.CaseId == caseId && ctm.UserId == userId && ctm.IsActive, cancellationToken: ct)
+            .FirstOrDefaultAsync(ctm => ctm.CaseId == caseEntity.Id && ctm.UserId == userId && ctm.IsActive, cancellationToken: ct)
             ?? throw new KeyNotFoundException($"Care team member not found.");
 
         member.IsActive = false;
@@ -59,11 +63,16 @@ public class CareTeamDataHandler : ICareTeamDataHandler
         await _dbContext.SaveChangesAsync(ct);
     }
 
-    public async Task<List<CareTeamMemberDto>> GetCaseTeamAsync(Guid caseId, CancellationToken ct = default)
+    public async Task<List<CareTeamMemberDto>> GetCaseTeamAsync(string caseNumber, CancellationToken ct = default)
     {
+        var caseEntity = await _dbContext.Cases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
+
         var members = await _dbContext.CareTeamMembers
             .AsNoTracking()
-            .Where(ctm => ctm.CaseId == caseId && ctm.IsActive)
+            .Where(ctm => ctm.CaseId == caseEntity.Id && ctm.IsActive)
             .Include(ctm => ctm.User)
             .ToListAsync(ct);
 

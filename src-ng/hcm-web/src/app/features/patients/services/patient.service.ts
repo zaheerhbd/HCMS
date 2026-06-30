@@ -23,19 +23,19 @@ export class PatientService {
     return this.http.get<PatientSearchResult>(`${this.base}/search`, { params });
   }
 
-  getById(id: string): Observable<PatientDto> {
-    return this.http.get<PatientDto>(`${this.base}/${id}`);
+  getByMrn(mrn: string): Observable<PatientDto> {
+    return this.http.get<PatientDto>(`${this.base}/${mrn}`);
   }
 
   create(request: CreatePatientRequest): Observable<PatientDto> {
     return this.http.post<PatientDto>(this.base, request);
   }
 
-  update(id: string, request: UpdatePatientRequest): Observable<PatientDto> {
-    return this.http.put<PatientDto>(`${this.base}/${id}`, request);
+  update(mrn: string, request: UpdatePatientRequest): Observable<PatientDto> {
+    return this.http.put<PatientDto>(`${this.base}/${mrn}`, request);
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+  delete(mrn: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${mrn}`);
   }
 }

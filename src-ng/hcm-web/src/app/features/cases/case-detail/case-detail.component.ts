@@ -112,13 +112,13 @@ const TRANSITIONS: Record<string, string[]> = {
       <mat-tab-group style="margin-top:16px">
         <mat-tab label="Notes">
           <div class="tab-content">
-            <app-case-notes [caseId]="c.id"></app-case-notes>
+            <app-case-notes [caseNumber]="c.caseNumber"></app-case-notes>
           </div>
         </mat-tab>
 
         <mat-tab label="Care Team">
           <div class="tab-content">
-            <app-care-team [caseId]="c.id"></app-care-team>
+            <app-care-team [caseNumber]="c.caseNumber"></app-care-team>
           </div>
         </mat-tab>
 
@@ -181,8 +181,8 @@ export class CaseDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.svc.getById(id).subscribe({
+    const caseNumber = this.route.snapshot.paramMap.get('caseNumber')!;
+    this.svc.getById(caseNumber).subscribe({
       next: c => { this.c = c; this.loading = false; },
       error: () => {
         this.snack.open('Case not found.', 'Close', { duration: 4000 });
@@ -194,7 +194,7 @@ export class CaseDetailComponent implements OnInit {
   changeStatus(): void {
     if (!this.statusSelect.value || !this.c || this.transitioning) return;
     this.transitioning = true;
-    this.svc.changeStatus(this.c.id, { newStatus: this.statusSelect.value }).subscribe({
+    this.svc.changeStatus(this.c.caseNumber, { newStatus: this.statusSelect.value }).subscribe({
       next: updated => {
         this.c = updated;
         this.statusSelect.reset();
@@ -214,7 +214,7 @@ export class CaseDetailComponent implements OnInit {
     });
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed || !this.c) return;
-      this.svc.close(this.c.id).subscribe({
+      this.svc.close(this.c.caseNumber).subscribe({
         next: updated => {
           this.c = updated;
           this.snack.open('Case closed.', 'Close', { duration: 3000 });

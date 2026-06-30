@@ -4,7 +4,7 @@ namespace HCM.Application.CareTeam.DataHandlers;
 
 public interface ICareTeamDataHandler
 {
-    Task AddMemberAsync(Guid caseId, AddCareTeamMemberDto dto, Guid addedBy, CancellationToken ct = default);
-    Task RemoveMemberAsync(Guid caseId, Guid userId, Guid removedBy, CancellationToken ct = default);
-    Task<List<CareTeamMemberDto>> GetCaseTeamAsync(Guid caseId, CancellationToken ct = default);
+    Task AddMemberAsync(string caseNumber, AddCareTeamMemberDto dto, Guid addedBy, CancellationToken ct = default);
+    Task RemoveMemberAsync(string caseNumber, Guid userId, Guid removedBy, CancellationToken ct = default);
+    Task<List<CareTeamMemberDto>> GetCaseTeamAsync(string caseNumber, CancellationToken ct = default);
 }

@@ -83,7 +83,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   `]
 })
 export class CareTeamComponent implements OnInit {
-  @Input() caseId = '';
+  @Input() caseNumber = '';
   members: CareTeamMemberDto[] = [];
   addForm: FormGroup;
   adding = false;
@@ -111,7 +111,7 @@ export class CareTeamComponent implements OnInit {
   }
 
   loadTeam(): void {
-    this.svc.getTeam(this.caseId).subscribe({
+    this.svc.getTeam(this.caseNumber).subscribe({
       next: t => this.members = t,
       error: () => {}
     });
@@ -120,7 +120,7 @@ export class CareTeamComponent implements OnInit {
   addMember(): void {
     if (this.addForm.invalid || this.adding) return;
     this.adding = true;
-    this.svc.addTeamMember(this.caseId, this.addForm.value).subscribe({
+    this.svc.addTeamMember(this.caseNumber, this.addForm.value).subscribe({
       next: m => {
         this.members = [...this.members, m];
         this.addForm.reset();
@@ -144,7 +144,7 @@ export class CareTeamComponent implements OnInit {
     });
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
-      this.svc.removeTeamMember(this.caseId, member.userId).subscribe({
+      this.svc.removeTeamMember(this.caseNumber, member.userId).subscribe({
         next: () => {
           this.members = this.members.map(m =>
             m.userId === member.userId ? { ...m, isActive: false } : m

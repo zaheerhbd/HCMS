@@ -45,9 +45,9 @@ const DEFAULT_CASE_TYPES: CaseTypeDto[] = [
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="case-form">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Patient ID</mat-label>
-        <input matInput formControlName="patientId" placeholder="Paste patient GUID" />
-        <mat-error *ngIf="form.get('patientId')?.hasError('required')">Required</mat-error>
+        <mat-label>Patient MRN</mat-label>
+        <input matInput formControlName="patientMrn" placeholder="e.g. MRN-2026-00001" />
+        <mat-error *ngIf="form.get('patientMrn')?.hasError('required')">Required</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -93,7 +93,7 @@ export class CaseFormComponent implements OnInit {
     private snack: MatSnackBar
   ) {
     this.form = this.fb.group({
-      patientId: ['', Validators.required],
+      patientMrn: ['', Validators.required],
       caseTypeId: ['', Validators.required],
       notes: ['']
     });
@@ -101,8 +101,8 @@ export class CaseFormComponent implements OnInit {
 
   ngOnInit(): void {
     // Pre-fill patientId if navigated from patient detail page
-    const patientId = this.route.snapshot.queryParamMap.get('patientId');
-    if (patientId) this.form.patchValue({ patientId });
+    const patientMrn = this.route.snapshot.queryParamMap.get('patientMrn');
+    if (patientMrn) this.form.patchValue({ patientMrn });
   }
 
   submit(): void {
@@ -111,7 +111,7 @@ export class CaseFormComponent implements OnInit {
     this.svc.create(this.form.value).subscribe({
       next: c => {
         this.snack.open('Case created.', 'Close', { duration: 3000 });
-        this.router.navigate(['/cases', c.id]);
+        this.router.navigate(['/cases', c.caseNumber]);
       },
       error: err => {
         const msg = err.error?.error ?? err.error?.errors?.[0] ?? 'Failed to create case.';

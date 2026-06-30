@@ -18,12 +18,12 @@ public class PatientsController : ControllerBase
         _handler = handler;
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetPatientById(Guid id, CancellationToken ct)
+    [HttpGet("{mrn}")]
+    public async Task<IActionResult> GetPatientByMrn(string mrn, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.GetPatientByIdAsync(id, ct);
+            var result = await _handler.GetPatientByMrnAsync(mrn, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -57,7 +57,7 @@ public class PatientsController : ControllerBase
                 return Unauthorized();
 
             var result = await _handler.CreatePatientAsync(dto, userIdGuid, ct);
-            return CreatedAtAction(nameof(GetPatientById), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetPatientByMrn), new { mrn = result.MRN }, result);
         }
         catch (FluentValidation.ValidationException ex)
         {
@@ -69,13 +69,13 @@ public class PatientsController : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{mrn}")]
     [Authorize(Roles = "Admin,CareCoordinator")]
-    public async Task<IActionResult> UpdatePatient(Guid id, [FromBody] UpdatePatientDto dto, CancellationToken ct)
+    public async Task<IActionResult> UpdatePatient(string mrn, [FromBody] UpdatePatientDto dto, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.UpdatePatientAsync(id, dto, ct);
+            var result = await _handler.UpdatePatientAsync(mrn, dto, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -92,13 +92,13 @@ public class PatientsController : ControllerBase
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{mrn}")]
     [Authorize(Roles = "Admin,Supervisor")]
-    public async Task<IActionResult> DeletePatient(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeletePatient(string mrn, CancellationToken ct)
     {
         try
         {
-            await _handler.DeletePatientAsync(id, ct);
+            await _handler.DeletePatientAsync(mrn, ct);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

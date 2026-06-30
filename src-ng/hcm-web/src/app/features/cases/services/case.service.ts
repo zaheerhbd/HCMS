@@ -27,49 +27,51 @@ export class CaseService {
     return this.http.get<CaseListResult>(this.base, { params });
   }
 
-  getByPatient(patientId: string): Observable<CaseListItemDto[]> {
-    return this.http.get<CaseListItemDto[]>(`${this.base}/patient/${patientId}`);
+  getByPatientMrn(mrn: string): Observable<CaseListItemDto[]> {
+    return this.http.get<CaseListItemDto[]>(`${this.base}/patient/mrn/${mrn}`);
   }
 
-  getById(id: string): Observable<CaseDto> {
-    return this.http.get<CaseDto>(`${this.base}/${id}`);
+  getById(caseNumber: string): Observable<CaseDto> {
+    return this.http.get<CaseDto>(`${this.base}/${caseNumber}`);
   }
 
   create(request: CreateCaseRequest): Observable<CaseDto> {
-    return this.http.post<CaseDto>(this.base, request);
+    const params = new HttpParams().set('patientMrn', request.patientMrn);
+    const body = { caseTypeId: request.caseTypeId, notes: request.notes };
+    return this.http.post<CaseDto>(this.base, body, { params });
   }
 
-  update(id: string, request: UpdateCaseRequest): Observable<CaseDto> {
-    return this.http.put<CaseDto>(`${this.base}/${id}`, request);
+  update(caseNumber: string, request: UpdateCaseRequest): Observable<CaseDto> {
+    return this.http.put<CaseDto>(`${this.base}/${caseNumber}`, request);
   }
 
-  changeStatus(id: string, request: CaseStatusChangeRequest): Observable<CaseDto> {
-    return this.http.post<CaseDto>(`${this.base}/${id}/status`, request);
+  changeStatus(caseNumber: string, request: CaseStatusChangeRequest): Observable<CaseDto> {
+    return this.http.post<CaseDto>(`${this.base}/${caseNumber}/status`, request);
   }
 
-  close(id: string, comment?: string): Observable<CaseDto> {
-    return this.http.post<CaseDto>(`${this.base}/${id}/close`, { comment });
+  close(caseNumber: string, comment?: string): Observable<CaseDto> {
+    return this.http.post<CaseDto>(`${this.base}/${caseNumber}/close`, { comment });
   }
 
   // Care team
-  getTeam(caseId: string): Observable<CareTeamMemberDto[]> {
-    return this.http.get<CareTeamMemberDto[]>(`${this.base}/${caseId}/team`);
+  getTeam(caseNumber: string): Observable<CareTeamMemberDto[]> {
+    return this.http.get<CareTeamMemberDto[]>(`${this.base}/${caseNumber}/team`);
   }
 
-  addTeamMember(caseId: string, request: AddCareTeamMemberRequest): Observable<CareTeamMemberDto> {
-    return this.http.post<CareTeamMemberDto>(`${this.base}/${caseId}/team`, request);
+  addTeamMember(caseNumber: string, request: AddCareTeamMemberRequest): Observable<CareTeamMemberDto> {
+    return this.http.post<CareTeamMemberDto>(`${this.base}/${caseNumber}/team`, request);
   }
 
-  removeTeamMember(caseId: string, userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${caseId}/team/${userId}`);
+  removeTeamMember(caseNumber: string, userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${caseNumber}/team/${userId}`);
   }
 
   // Notes
-  getNotes(caseId: string): Observable<CaseNoteDto[]> {
-    return this.http.get<CaseNoteDto[]>(`${this.base}/${caseId}/notes`);
+  getNotes(caseNumber: string): Observable<CaseNoteDto[]> {
+    return this.http.get<CaseNoteDto[]>(`${this.base}/${caseNumber}/notes`);
   }
 
-  addNote(caseId: string, request: CreateCaseNoteRequest): Observable<CaseNoteDto> {
-    return this.http.post<CaseNoteDto>(`${this.base}/${caseId}/notes`, request);
+  addNote(caseNumber: string, request: CreateCaseNoteRequest): Observable<CaseNoteDto> {
+    return this.http.post<CaseNoteDto>(`${this.base}/${caseNumber}/notes`, request);
   }
 }

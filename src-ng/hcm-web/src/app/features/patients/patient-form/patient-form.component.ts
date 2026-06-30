@@ -140,7 +140,7 @@ export class PatientFormComponent implements OnInit {
   form: FormGroup;
   isEdit = false;
   saving = false;
-  private patientId?: string;
+  private patientMrn?: string;
 
   constructor(
     private fb: FormBuilder,
@@ -166,11 +166,11 @@ export class PatientFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.patientId = this.route.snapshot.paramMap.get('id') ?? undefined;
-    this.isEdit = !!this.patientId && this.patientId !== 'new';
+    this.patientMrn = this.route.snapshot.paramMap.get('mrn') ?? undefined;
+    this.isEdit = !!this.patientMrn && this.patientMrn !== 'new';
 
-    if (this.isEdit && this.patientId) {
-      this.svc.getById(this.patientId).subscribe({
+    if (this.isEdit && this.patientMrn) {
+      this.svc.getByMrn(this.patientMrn).subscribe({
         next: p => this.form.patchValue({
           ...p,
           dateOfBirth: new Date(p.dateOfBirth)
@@ -195,8 +195,8 @@ export class PatientFormComponent implements OnInit {
         : raw.dateOfBirth
     };
 
-    const call = this.isEdit && this.patientId
-      ? this.svc.update(this.patientId, payload)
+    const call = this.isEdit && this.patientMrn
+      ? this.svc.update(this.patientMrn, payload)
       : this.svc.create(payload);
 
     call.subscribe({
@@ -205,7 +205,7 @@ export class PatientFormComponent implements OnInit {
           this.isEdit ? 'Patient updated.' : 'Patient created.',
           'Close', { duration: 3000 }
         );
-        this.router.navigate(['/patients', p.id]);
+        this.router.navigate(['/patients', p.mrn]);
       },
       error: err => {
         const msg = err.error?.error ?? err.error?.errors?.[0] ?? 'Save failed.';

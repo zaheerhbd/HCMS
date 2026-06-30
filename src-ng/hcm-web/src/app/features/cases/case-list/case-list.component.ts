@@ -80,7 +80,7 @@ const STATUSES = ['Open', 'InProgress', 'OnHold', 'Closed', 'Reopened'];
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
       <tr mat-row *matRowDef="let row; columns: columns;" class="clickable-row"
-        (click)="navigate(row.id)"></tr>
+        (click)="navigate(row.caseNumber)"></tr>
     </table>
 
     <div *ngIf="!loading && rows.length === 0" class="empty-state">No cases found.</div>
@@ -152,7 +152,7 @@ export class CaseListComponent implements OnInit {
     this.load();
   }
 
-  navigate(id: string): void {
-    this.router.navigate(['/cases', id]);
+  navigate(caseNumber: string): void {
+    this.router.navigate(['/cases', caseNumber]);
   }
 }

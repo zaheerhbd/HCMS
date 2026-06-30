@@ -9,6 +9,9 @@ public class CaseConfiguration : IEntityTypeConfiguration<Case>
     public void Configure(EntityTypeBuilder<Case> builder)
     {
         builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id)
+            .HasDefaultValueSql("NEWSEQUENTIALID()")
+            .ValueGeneratedOnAdd();
 
         builder.Property(c => c.CaseNumber)
             .IsRequired()

@@ -9,6 +9,9 @@ public class CaseStatusHistoryConfiguration : IEntityTypeConfiguration<CaseStatu
     public void Configure(EntityTypeBuilder<CaseStatusHistory> builder)
     {
         builder.HasKey(csh => csh.Id);
+        builder.Property(csh => csh.Id)
+            .HasDefaultValueSql("NEWSEQUENTIALID()")
+            .ValueGeneratedOnAdd();
 
         builder.Property(csh => csh.FromStatus)
             .HasMaxLength(50);

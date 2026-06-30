@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace HCM.API.Controllers;
 
 [ApiController]
-[Route("api/cases/{caseId}/team")]
+[Route("api/cases/{caseNumber}/team")]
 [Authorize]
 public class CareTeamController : ControllerBase
 {
@@ -19,11 +19,11 @@ public class CareTeamController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTeam(Guid caseId, CancellationToken ct)
+    public async Task<IActionResult> GetTeam(string caseNumber, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.GetCaseTeamAsync(caseId, ct);
+            var result = await _handler.GetCaseTeamAsync(caseNumber, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -34,7 +34,7 @@ public class CareTeamController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,CareCoordinator,Supervisor")]
-    public async Task<IActionResult> AddMember(Guid caseId, [FromBody] AddCareTeamMemberDto dto, CancellationToken ct)
+    public async Task<IActionResult> AddMember(string caseNumber, [FromBody] AddCareTeamMemberDto dto, CancellationToken ct)
     {
         try
         {
@@ -42,8 +42,8 @@ public class CareTeamController : ControllerBase
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized();
 
-            await _handler.AddMemberAsync(caseId, dto, userIdGuid, ct);
-            var team = await _handler.GetCaseTeamAsync(caseId, ct);
+            await _handler.AddMemberAsync(caseNumber, dto, userIdGuid, ct);
+            var team = await _handler.GetCaseTeamAsync(caseNumber, ct);
             return Ok(team);
         }
         catch (KeyNotFoundException ex)
@@ -62,7 +62,7 @@ public class CareTeamController : ControllerBase
 
     [HttpDelete("{userId}")]
     [Authorize(Roles = "Admin,CareCoordinator,Supervisor")]
-    public async Task<IActionResult> RemoveMember(Guid caseId, Guid userId, CancellationToken ct)
+    public async Task<IActionResult> RemoveMember(string caseNumber, Guid userId, CancellationToken ct)
     {
         try
         {
@@ -70,7 +70,7 @@ public class CareTeamController : ControllerBase
             if (string.IsNullOrEmpty(currentUserId) || !Guid.TryParse(currentUserId, out var currentUserIdGuid))
                 return Unauthorized();
 
-            await _handler.RemoveMemberAsync(caseId, userId, currentUserIdGuid, ct);
+            await _handler.RemoveMemberAsync(caseNumber, userId, currentUserIdGuid, ct);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace HCM.API.Controllers;
 
 [ApiController]
-[Route("api/cases/{caseId}/notes")]
+[Route("api/cases/{caseNumber}/notes")]
 [Authorize]
 public class CaseNotesController : ControllerBase
 {
@@ -19,11 +19,11 @@ public class CaseNotesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetNotes(Guid caseId, CancellationToken ct)
+    public async Task<IActionResult> GetNotes(string caseNumber, CancellationToken ct)
     {
         try
         {
-            var result = await _handler.GetNotesAsync(caseId, ct);
+            var result = await _handler.GetNotesAsync(caseNumber, ct);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -34,7 +34,7 @@ public class CaseNotesController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,CareCoordinator,Clinician")]
-    public async Task<IActionResult> AddNote(Guid caseId, [FromBody] CreateCaseNoteDto dto, CancellationToken ct)
+    public async Task<IActionResult> AddNote(string caseNumber, [FromBody] CreateCaseNoteDto dto, CancellationToken ct)
     {
         try
         {
@@ -42,8 +42,8 @@ public class CaseNotesController : ControllerBase
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userIdGuid))
                 return Unauthorized();
 
-            var result = await _handler.AddNoteAsync(caseId, dto, userIdGuid, ct);
-            return CreatedAtAction(nameof(GetNotes), new { caseId }, result);
+            var result = await _handler.AddNoteAsync(caseNumber, dto, userIdGuid, ct);
+            return CreatedAtAction(nameof(GetNotes), new { caseNumber }, result);
         }
         catch (KeyNotFoundException ex)
         {

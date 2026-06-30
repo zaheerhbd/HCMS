@@ -15,7 +15,7 @@ public class CaseNoteDataHandler : ICaseNoteDataHandler
         _dbContext = dbContext;
     }
 
-    public async Task<CaseNoteDto> AddNoteAsync(Guid caseId, CreateCaseNoteDto dto, Guid createdBy, CancellationToken ct = default)
+    public async Task<CaseNoteDto> AddNoteAsync(string caseNumber, CreateCaseNoteDto dto, Guid createdBy, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Content))
             throw new ValidationException("Note content is required.");
@@ -25,13 +25,12 @@ public class CaseNoteDataHandler : ICaseNoteDataHandler
 
         var caseEntity = await _dbContext.Cases
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == caseId && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {caseId} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         var note = new CaseNote
         {
-            Id = Guid.NewGuid(),
-            CaseId = caseId,
+            CaseId = caseEntity.Id,
             CreatedBy = createdBy,
             Content = dto.Content.Trim(),
             IsEditable = true,
@@ -46,11 +45,16 @@ public class CaseNoteDataHandler : ICaseNoteDataHandler
         return MapToDto(note);
     }
 
-    public async Task<List<CaseNoteDto>> GetNotesAsync(Guid caseId, CancellationToken ct = default)
+    public async Task<List<CaseNoteDto>> GetNotesAsync(string caseNumber, CancellationToken ct = default)
     {
+        var caseEntity = await _dbContext.Cases
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
+
         var notes = await _dbContext.CaseNotes
             .AsNoTracking()
-            .Where(cn => cn.CaseId == caseId && !cn.IsDeleted)
+            .Where(cn => cn.CaseId == caseEntity.Id && !cn.IsDeleted)
             .OrderByDescending(cn => cn.CreatedAt)
             .ToListAsync(ct);
 

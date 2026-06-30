@@ -3,6 +3,9 @@
 # Covers: Angular · .NET 8 · Azure · VS Code · JetBrains · Windows
 # ═══════════════════════════════════════════════════════════════════
 
+# MCP server config (contains secrets — never commit)
+.mcp.json
+
 # ── SECRETS & ENVIRONMENT (never commit these) ───────────────────
 .env
 .env.*

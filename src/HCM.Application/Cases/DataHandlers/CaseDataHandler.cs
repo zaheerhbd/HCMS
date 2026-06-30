@@ -17,27 +17,68 @@ public class CaseDataHandler : ICaseDataHandler
         _dbContext = dbContext;
     }
 
-    public async Task<CaseDto> GetCaseByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<(List<CaseListItemDto> Items, int TotalCount)> GetAllCasesAsync(
+        string? statusFilter, int page = 1, int pageSize = 20, CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+        var query = _dbContext.Cases
+            .Where(c => c.IsActive)
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+            query = query.Where(c => c.CurrentStatus == statusFilter);
+
+        var totalCount = await query.CountAsync(ct);
+        var cases = await query
+            .OrderByDescending(c => c.OpenedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(c => c.CaseType)
+            .ToListAsync(ct);
+
+        var items = cases.Select(c => new CaseListItemDto
+        {
+            Id = c.Id,
+            CaseNumber = c.CaseNumber,
+            CaseTypeId = c.CaseTypeId,
+            CaseTypeName = c.CaseType.Name,
+            CurrentStatus = c.CurrentStatus,
+            OpenedAt = c.OpenedAt,
+            ClosedAt = c.ClosedAt,
+            AssignedToUserName = null
+        }).ToList();
+
+        return (items, totalCount);
+    }
+
+    public async Task<CaseDto> GetCaseByCaseNumberAsync(string caseNumber, CancellationToken ct = default)
     {
         var caseEntity = await _dbContext.Cases
             .AsNoTracking()
             .Include(c => c.StatusHistory)
             .Include(c => c.CareTeam)
             .Include(c => c.Notes_Collection.Where(n => !n.IsDeleted))
-            .FirstOrDefaultAsync(c => c.Id == id && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {id} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         return MapToDto(caseEntity);
     }
 
-    public async Task<(List<CaseListItemDto> Items, int TotalCount)> GetCasesByPatientAsync(
-        Guid patientId, string? statusFilter, int page = 1, int pageSize = 10, CancellationToken ct = default)
+    public async Task<(List<CaseListItemDto> Items, int TotalCount)> GetCasesByPatientMrnAsync(
+        string patientMrn, string? statusFilter, int page = 1, int pageSize = 10, CancellationToken ct = default)
     {
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
+        var patient = await _dbContext.Patients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.MRN == patientMrn && p.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Patient with MRN {patientMrn} not found.");
+
         var query = _dbContext.Cases
-            .Where(c => c.PatientId == patientId && c.IsActive)
+            .Where(c => c.PatientId == patient.Id && c.IsActive)
             .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(statusFilter))
@@ -62,30 +103,29 @@ public class CaseDataHandler : ICaseDataHandler
             CurrentStatus = c.CurrentStatus,
             OpenedAt = c.OpenedAt,
             ClosedAt = c.ClosedAt,
-            AssignedToUserName = null // Would need User lookup if needed
+            AssignedToUserName = null
         }).ToList();
 
         return (items, totalCount);
     }
 
-    public async Task<CaseDto> CreateCaseAsync(Guid patientId, CreateCaseDto dto, Guid createdBy, Guid assignedTo, CancellationToken ct = default)
+    public async Task<CaseDto> CreateCaseAsync(string patientMrn, CreateCaseDto dto, Guid createdBy, Guid assignedTo, CancellationToken ct = default)
     {
         var patient = await _dbContext.Patients
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == patientId && p.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Patient with ID {patientId} not found.");
+            .FirstOrDefaultAsync(p => p.MRN == patientMrn && p.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Patient with MRN {patientMrn} not found.");
 
         var caseType = await _dbContext.CaseTypes
             .AsNoTracking()
-            .FirstOrDefaultAsync(ct => ct.Id == dto.CaseTypeId && ct.IsActive, cancellationToken: ct)
+            .FirstOrDefaultAsync(ct2 => ct2.Id == dto.CaseTypeId && ct2.IsActive, cancellationToken: ct)
             ?? throw new KeyNotFoundException($"Case type with ID {dto.CaseTypeId} not found.");
 
         var caseNumber = await GenerateCaseNumberAsync(ct);
         var newCase = new Case
         {
-            Id = Guid.NewGuid(),
             CaseNumber = caseNumber,
-            PatientId = patientId,
+            PatientId = patient.Id,
             CaseTypeId = dto.CaseTypeId,
             CurrentStatus = CaseStatus.Open,
             OpenedAt = DateTime.UtcNow,
@@ -98,9 +138,11 @@ public class CaseDataHandler : ICaseDataHandler
 
         _dbContext.Cases.Add(newCase);
 
+        // Save first to get the DB-generated Id for the status history FK
+        await _dbContext.SaveChangesAsync(ct);
+
         var statusHistory = new CaseStatusHistory
         {
-            Id = Guid.NewGuid(),
             CaseId = newCase.Id,
             FromStatus = null,
             ToStatus = CaseStatus.Open,
@@ -115,18 +157,19 @@ public class CaseDataHandler : ICaseDataHandler
         return MapToDto(newCase);
     }
 
-    public async Task<CaseDto> ChangeCaseStatusAsync(Guid caseId, CaseStatusChangeDto dto, Guid changedBy, CancellationToken ct = default)
+    public async Task<CaseDto> ChangeCaseStatusAsync(string caseNumber, CaseStatusChangeDto dto, Guid changedBy, CancellationToken ct = default)
     {
         var caseEntity = await _dbContext.Cases
             .Include(c => c.StatusHistory)
             .Include(c => c.CareTeam)
             .Include(c => c.Notes_Collection.Where(n => !n.IsDeleted))
-            .FirstOrDefaultAsync(c => c.Id == caseId && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {caseId} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         if (!IsValidStatusTransition(caseEntity.CurrentStatus, dto.NewStatus))
             throw new ValidationException($"Cannot transition from {caseEntity.CurrentStatus} to {dto.NewStatus}.");
 
+        var fromStatus = caseEntity.CurrentStatus;
         caseEntity.CurrentStatus = dto.NewStatus;
         if (dto.NewStatus == CaseStatus.Closed)
         {
@@ -136,9 +179,8 @@ public class CaseDataHandler : ICaseDataHandler
 
         var statusHistory = new CaseStatusHistory
         {
-            Id = Guid.NewGuid(),
-            CaseId = caseId,
-            FromStatus = caseEntity.CurrentStatus,
+            CaseId = caseEntity.Id,
+            FromStatus = fromStatus,
             ToStatus = dto.NewStatus,
             Comment = dto.Comment,
             ChangedBy = changedBy,
@@ -152,14 +194,14 @@ public class CaseDataHandler : ICaseDataHandler
         return MapToDto(caseEntity);
     }
 
-    public async Task<CaseDto> UpdateCaseAsync(Guid caseId, UpdateCaseDto dto, CancellationToken ct = default)
+    public async Task<CaseDto> UpdateCaseAsync(string caseNumber, UpdateCaseDto dto, CancellationToken ct = default)
     {
         var caseEntity = await _dbContext.Cases
             .Include(c => c.StatusHistory)
             .Include(c => c.CareTeam)
             .Include(c => c.Notes_Collection.Where(n => !n.IsDeleted))
-            .FirstOrDefaultAsync(c => c.Id == caseId && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {caseId} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         caseEntity.Notes = dto.Notes?.Trim();
         caseEntity.UpdatedAt = DateTime.UtcNow;
@@ -170,27 +212,27 @@ public class CaseDataHandler : ICaseDataHandler
         return MapToDto(caseEntity);
     }
 
-    public async Task CloseCaseAsync(Guid caseId, Guid closedBy, CancellationToken ct = default)
+    public async Task CloseCaseAsync(string caseNumber, Guid closedBy, CancellationToken ct = default)
     {
         var caseEntity = await _dbContext.Cases
             .Include(c => c.StatusHistory)
             .Include(c => c.CareTeam)
             .Include(c => c.Notes_Collection.Where(n => !n.IsDeleted))
-            .FirstOrDefaultAsync(c => c.Id == caseId && c.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Case with ID {caseId} not found.");
+            .FirstOrDefaultAsync(c => c.CaseNumber == caseNumber && c.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Case {caseNumber} not found.");
 
         if (caseEntity.CurrentStatus == CaseStatus.Closed)
             throw new ValidationException("Case is already closed.");
 
+        var fromStatus = caseEntity.CurrentStatus;
         caseEntity.CurrentStatus = CaseStatus.Closed;
         caseEntity.ClosedAt = DateTime.UtcNow;
         caseEntity.UpdatedAt = DateTime.UtcNow;
 
         var statusHistory = new CaseStatusHistory
         {
-            Id = Guid.NewGuid(),
-            CaseId = caseId,
-            FromStatus = caseEntity.CurrentStatus,
+            CaseId = caseEntity.Id,
+            FromStatus = fromStatus,
             ToStatus = CaseStatus.Closed,
             Comment = "Case closed",
             ChangedBy = closedBy,

@@ -68,7 +68,7 @@ export interface CaseListResult {
 }
 
 export interface CreateCaseRequest {
-  patientId: string;
+  patientMrn: string;
   caseTypeId: number;
   notes?: string;
 }

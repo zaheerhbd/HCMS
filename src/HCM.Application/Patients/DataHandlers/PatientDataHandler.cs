@@ -15,13 +15,13 @@ public class PatientDataHandler : IPatientDataHandler
         _dbContext = dbContext;
     }
 
-    public async Task<PatientDto> GetPatientByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<PatientDto> GetPatientByMrnAsync(string mrn, CancellationToken ct = default)
     {
         var patient = await _dbContext.Patients
             .AsNoTracking()
             .Include(p => p.Insurance)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Patient with ID {id} not found.");
+            .FirstOrDefaultAsync(p => p.MRN == mrn && p.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Patient with MRN {mrn} not found.");
 
         return MapToDto(patient);
     }
@@ -79,7 +79,6 @@ public class PatientDataHandler : IPatientDataHandler
         var mrn = await GenerateMrnAsync(ct);
         var patient = new Patient
         {
-            Id = Guid.NewGuid(),
             MRN = mrn,
             FirstName = dto.FirstName.Trim(),
             LastName = dto.LastName.Trim(),
@@ -104,14 +103,14 @@ public class PatientDataHandler : IPatientDataHandler
         return MapToDto(patient);
     }
 
-    public async Task<PatientDto> UpdatePatientAsync(Guid id, UpdatePatientDto dto, CancellationToken ct = default)
+    public async Task<PatientDto> UpdatePatientAsync(string mrn, UpdatePatientDto dto, CancellationToken ct = default)
     {
         ValidatePatientInput(dto);
 
         var patient = await _dbContext.Patients
             .Include(p => p.Insurance)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Patient with ID {id} not found.");
+            .FirstOrDefaultAsync(p => p.MRN == mrn && p.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Patient with MRN {mrn} not found.");
 
         patient.FirstName = dto.FirstName.Trim();
         patient.LastName = dto.LastName.Trim();
@@ -133,11 +132,11 @@ public class PatientDataHandler : IPatientDataHandler
         return MapToDto(patient);
     }
 
-    public async Task DeletePatientAsync(Guid id, CancellationToken ct = default)
+    public async Task DeletePatientAsync(string mrn, CancellationToken ct = default)
     {
         var patient = await _dbContext.Patients
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken: ct)
-            ?? throw new KeyNotFoundException($"Patient with ID {id} not found.");
+            .FirstOrDefaultAsync(p => p.MRN == mrn && p.IsActive, cancellationToken: ct)
+            ?? throw new KeyNotFoundException($"Patient with MRN {mrn} not found.");
 
         patient.IsActive = false;
         patient.UpdatedAt = DateTime.UtcNow;

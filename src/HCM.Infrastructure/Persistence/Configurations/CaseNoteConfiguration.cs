@@ -9,6 +9,9 @@ public class CaseNoteConfiguration : IEntityTypeConfiguration<CaseNote>
     public void Configure(EntityTypeBuilder<CaseNote> builder)
     {
         builder.HasKey(cn => cn.Id);
+        builder.Property(cn => cn.Id)
+            .HasDefaultValueSql("NEWSEQUENTIALID()")
+            .ValueGeneratedOnAdd();
 
         builder.Property(cn => cn.Content)
             .IsRequired()

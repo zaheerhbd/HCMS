@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-06-29 (session 2)
+**Last Updated:** 2026-06-29 (session 3)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -66,7 +66,7 @@
 
 ## 2. Patient Management
 
-**Phase:** 2 | **Status:** In Progress (Backend complete; Frontend next)
+**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete; routes use MRN: `/api/patients/{mrn}`)
 
 ### Features
 - Register patients with demographics, contact info, and insurance.
@@ -79,13 +79,13 @@
 | Method | Route | Role Required | Description |
 |---|---|---|---|
 | GET | `/api/patients` | All | Paginated search (name, DOB, MRN, insuranceId) |
-| GET | `/api/patients/{id}` | All | Full patient profile |
+| GET | `/api/patients/{mrn}` | All | Full patient profile |
 | POST | `/api/patients` | CareCoordinator+ | Register new patient |
-| PUT | `/api/patients/{id}` | CareCoordinator+ | Update demographics |
-| DELETE | `/api/patients/{id}` | Supervisor+ | Soft-delete (deactivate) |
-| GET | `/api/patients/{id}/cases` | All | All cases for patient |
-| GET | `/api/patients/{id}/appointments` | All | Appointment history |
-| GET | `/api/patients/{id}/documents` | All | Document list |
+| PUT | `/api/patients/{mrn}` | CareCoordinator+ | Update demographics |
+| DELETE | `/api/patients/{mrn}` | Supervisor+ | Soft-delete (deactivate) |
+| GET | `/api/patients/{mrn}/cases` | All | All cases for patient |
+| GET | `/api/patients/{mrn}/appointments` | All | Appointment history |
+| GET | `/api/patients/{mrn}/documents` | All | Document list |
 
 ### Angular Components
 - `PatientListComponent` — server-side paginated table, search bar, risk level filter.
@@ -100,7 +100,7 @@
 
 ## 3. Case Management
 
-**Phase:** 2 | **Status:** Not Started
+**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete; routes use CaseNumber: `/api/cases/{caseNumber}`)
 
 ### Features
 - Create cases linked to a patient with case type, priority, tags, and lead coordinator.
@@ -125,19 +125,19 @@ Closed       → (terminal — no transitions)
 | Method | Route | Role Required | Description |
 |---|---|---|---|
 | GET | `/api/cases` | All | Paginated list (status, priority, coordinator, tag filters) |
-| GET | `/api/cases/{id}` | All | Case detail with team and notes summary |
+| GET | `/api/cases/{caseNumber}` | All | Case detail with team and notes summary |
 | POST | `/api/cases` | CareCoordinator+ | Create case |
-| PUT | `/api/cases/{id}` | CareCoordinator+ | Update metadata |
-| PUT | `/api/cases/{id}/status` | CareCoordinator+ | Transition status (validated) |
-| GET | `/api/cases/{id}/history` | All | Status change history |
-| GET | `/api/cases/{id}/notes` | All | Paginated notes |
-| POST | `/api/cases/{id}/notes` | CareCoordinator, Clinician | Add note |
-| GET | `/api/cases/{id}/tasks` | All | Task list |
-| POST | `/api/cases/{id}/tasks` | CareCoordinator+ | Create task |
-| GET | `/api/cases/{id}/documents` | All | Document list |
-| GET | `/api/cases/{id}/team` | All | Care team members |
-| POST | `/api/cases/{id}/team` | Supervisor+ | Add team member |
-| DELETE | `/api/cases/{id}/team/{memberId}` | Supervisor+ | Remove team member |
+| PUT | `/api/cases/{caseNumber}` | CareCoordinator+ | Update metadata |
+| PUT | `/api/cases/{caseNumber}/status` | CareCoordinator+ | Transition status (validated) |
+| GET | `/api/cases/{caseNumber}/history` | All | Status change history |
+| GET | `/api/cases/{caseNumber}/notes` | All | Paginated notes |
+| POST | `/api/cases/{caseNumber}/notes` | CareCoordinator, Clinician | Add note |
+| GET | `/api/cases/{caseNumber}/tasks` | All | Task list |
+| POST | `/api/cases/{caseNumber}/tasks` | CareCoordinator+ | Create task |
+| GET | `/api/cases/{caseNumber}/documents` | All | Document list |
+| GET | `/api/cases/{caseNumber}/team` | All | Care team members |
+| POST | `/api/cases/{caseNumber}/team` | Supervisor+ | Add team member |
+| DELETE | `/api/cases/{caseNumber}/team/{memberId}` | Supervisor+ | Remove team member |
 
 ### Angular Components
 - `CaseListComponent` — filterable, paginated table.
@@ -154,7 +154,7 @@ Closed       → (terminal — no transitions)
 
 ## 4. Case Notes
 
-**Phase:** 2 | **Status:** Not Started
+**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete)
 
 ### Features
 - Timestamped, author-attributed notes on any case.
@@ -278,7 +278,7 @@ Cancelled → (terminal)
 
 ## 8. Care Team
 
-**Phase:** 2 | **Status:** Not Started
+**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete)
 
 ### Features
 - Each case has one lead coordinator plus optional clinicians and specialists.
@@ -378,7 +378,7 @@ Cancelled → (terminal)
 
 ## 12. Administration — User Management
 
-**Phase:** 2 | **Status:** Not Started
+**Phase:** 2 | **Status:** In Progress (Backend complete — `UsersController` + `UserDataHandler`; Admin UI not started)
 
 ### Features
 - Admin-only: view all users, create users, assign roles, activate/deactivate.
