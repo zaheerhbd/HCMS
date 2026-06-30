@@ -18,6 +18,7 @@ public static class DataSeeder
             await db.Database.MigrateAsync();
             await SeedRolesAsync(db);
             await SeedAdminUserAsync(db);
+            await SeedDemoUsersAsync(db);
             await SeedCaseTypesAsync(db);
             await SeedCaseTagsAsync(db);
         }
@@ -61,6 +62,42 @@ public static class DataSeeder
         var adminRole = await db.Roles.FirstAsync(r => r.Name == RoleNames.Admin);
         db.UserRoles.Add(new UserRole { UserId = admin.Id, RoleId = adminRole.Id });
         await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedDemoUsersAsync(ApplicationDbContext db)
+    {
+        var demoUsers = new[]
+        {
+            ("sarah.jones", "Sarah",   "Jones",   "sarah.jones@hcms.local",   RoleNames.CareCoordinator),
+            ("michael.lee", "Michael", "Lee",     "michael.lee@hcms.local",   RoleNames.CareCoordinator),
+            ("dr.patel",    "Priya",   "Patel",   "priya.patel@hcms.local",   RoleNames.Clinician),
+            ("dr.carter",   "James",   "Carter",  "james.carter@hcms.local",  RoleNames.Clinician),
+            ("lisa.chen",   "Lisa",    "Chen",    "lisa.chen@hcms.local",     RoleNames.Supervisor),
+        };
+
+        foreach (var (username, first, last, email, roleName) in demoUsers)
+        {
+            if (await db.Users.AnyAsync(u => u.Username == username))
+                continue;
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = username,
+                Email = email,
+                FirstName = first,
+                LastName = last,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo@123!"),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+
+            var role = await db.Roles.FirstAsync(r => r.Name == roleName);
+            db.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+            await db.SaveChangesAsync();
+        }
     }
 
     private static async Task SeedCaseTypesAsync(ApplicationDbContext db)

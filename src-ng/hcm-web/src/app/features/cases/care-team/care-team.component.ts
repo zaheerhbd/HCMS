@@ -6,11 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CaseService } from '../services/case.service';
 import { CareTeamMemberDto } from '../../../core/models/case.models';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserService, AssignableUser } from '../../../core/services/user.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -24,18 +26,29 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatSnackBarModule
   ],
   template: `
     <div *ngIf="canManage" class="add-form">
       <form [formGroup]="addForm" (ngSubmit)="addMember()">
         <mat-form-field appearance="outline">
-          <mat-label>User ID</mat-label>
-          <input matInput formControlName="userId" placeholder="Paste user GUID" />
+          <mat-label>Team Member</mat-label>
+          <mat-select formControlName="userId">
+            <mat-option *ngFor="let u of assignableUsers" [value]="u.id">
+              {{ u.fullName }} <span class="role-hint">({{ u.roles[0] }})</span>
+            </mat-option>
+          </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Role on Team</mat-label>
-          <input matInput formControlName="teamRole" placeholder="e.g. Primary Coordinator" />
+          <mat-select formControlName="teamRole">
+            <mat-option value="Lead Coordinator">Lead Coordinator</mat-option>
+            <mat-option value="Care Coordinator">Care Coordinator</mat-option>
+            <mat-option value="Clinician">Clinician</mat-option>
+            <mat-option value="Specialist">Specialist</mat-option>
+            <mat-option value="Support">Support</mat-option>
+          </mat-select>
         </mat-form-field>
         <button mat-flat-button color="primary" type="submit" [disabled]="addForm.invalid || adding">
           Add Member
@@ -44,13 +57,14 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
     </div>
 
     <table mat-table [dataSource]="members" *ngIf="members.length > 0">
-      <ng-container matColumnDef="userName">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let m">{{ m.userName }}</td>
-      </ng-container>
-      <ng-container matColumnDef="userEmail">
-        <th mat-header-cell *matHeaderCellDef>Email</th>
-        <td mat-cell *matCellDef="let m">{{ m.userEmail }}</td>
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef>User</th>
+        <td mat-cell *matCellDef="let m">
+          <div class="user-cell">
+            <span class="user-name">{{ m.userName }}</span>
+            <span class="user-email">{{ m.userEmail }}</span>
+          </div>
+        </td>
       </ng-container>
       <ng-container matColumnDef="teamRole">
         <th mat-header-cell *matHeaderCellDef>Role</th>
@@ -77,6 +91,10 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   styles: [`
     .add-form form { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; }
     .add-form mat-form-field { flex: 1; min-width: 180px; }
+    .role-hint { font-size: 12px; color: #757575; }
+    .user-cell { display: flex; flex-direction: column; }
+    .user-name { font-weight: 500; }
+    .user-email { font-size: 12px; color: #757575; }
     .inactive { opacity: 0.5; }
     .empty { color: #757575; text-align: center; padding: 20px; }
     table { width: 100%; }
@@ -85,9 +103,10 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 export class CareTeamComponent implements OnInit {
   @Input() caseNumber = '';
   members: CareTeamMemberDto[] = [];
+  assignableUsers: AssignableUser[] = [];
   addForm: FormGroup;
   adding = false;
-  columns = ['userName', 'userEmail', 'teamRole', 'joinedAt', 'actions'];
+  columns = ['user', 'teamRole', 'joinedAt', 'actions'];
 
   get canManage(): boolean {
     return this.auth.hasRole('Admin') || this.auth.hasRole('CareCoordinator') || this.auth.hasRole('Supervisor');
@@ -96,6 +115,7 @@ export class CareTeamComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private svc: CaseService,
+    private userSvc: UserService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private auth: AuthService
@@ -108,6 +128,7 @@ export class CareTeamComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTeam();
+    this.userSvc.getAssignable().subscribe({ next: u => this.assignableUsers = u, error: () => {} });
   }
 
   loadTeam(): void {

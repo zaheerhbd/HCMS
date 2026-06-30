@@ -17,6 +17,19 @@ public class UsersController : ControllerBase
         _handler = handler;
     }
 
+    // Lightweight list for dropdowns — accessible to all authenticated users
+    [HttpGet("assignable")]
+    [Authorize]
+    public async Task<IActionResult> GetAssignableUsers(CancellationToken ct)
+    {
+        var result = await _handler.GetUsersAsync(1, 200, null, ct);
+        var items = result.Items
+            .Where(u => u.IsActive)
+            .Select(u => new { u.Id, u.FullName, u.Email, u.Roles })
+            .ToList();
+        return Ok(items);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search,
