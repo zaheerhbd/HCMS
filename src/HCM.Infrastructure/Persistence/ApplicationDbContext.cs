@@ -36,6 +36,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<CaseNote> CaseNotes => Set<CaseNote>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    public DbSet<CaseTask> CaseTasks => Set<CaseTask>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<Provider> Providers => Set<Provider>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

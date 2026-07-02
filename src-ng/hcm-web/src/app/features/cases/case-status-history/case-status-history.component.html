@@ -1,0 +1,26 @@
+<!-- Status change timeline, shown newest-to-oldest as returned by the API -->
+<div class="timeline">
+  <div class="timeline-item" *ngFor="let entry of history">
+    <div class="timeline-dot"></div>
+    <div class="timeline-content">
+
+      <!-- Shows the "from → to" transition. fromStatus is null on the initial Open event -->
+      <div class="timeline-header">
+        <span *ngIf="entry.fromStatus" class="transition">
+          <app-status-badge [status]="entry.fromStatus"></app-status-badge>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </span>
+        <app-status-badge [status]="entry.toStatus"></app-status-badge>
+      </div>
+
+      <div class="timeline-meta">
+        {{ entry.changedByUserName }} · {{ entry.changedAt | date:'medium' }}
+      </div>
+
+      <div *ngIf="entry.comment" class="timeline-comment">{{ entry.comment }}</div>
+
+    </div>
+  </div>
+
+  <div *ngIf="history.length === 0" class="empty">No status history.</div>
+</div>

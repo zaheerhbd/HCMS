@@ -18,10 +18,11 @@ import { StatusBadgeComponent } from '../../../shared/status-badge/status-badge.
 import { CaseStatusHistoryComponent } from '../case-status-history/case-status-history.component';
 import { CareTeamComponent } from '../care-team/care-team.component';
 import { CaseNotesComponent } from '../case-notes/case-notes.component';
+import { CaseTasksComponent } from '../tasks/tasks.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
 
-// Valid transitions per the server-side state machine
+// Valid next statuses per server-side state machine — mirrored here for UI hints only
 const TRANSITIONS: Record<string, string[]> = {
   Open:       ['InProgress', 'OnHold', 'Closed'],
   InProgress: ['OnHold', 'Closed'],
@@ -49,108 +50,11 @@ const TRANSITIONS: Record<string, string[]> = {
     StatusBadgeComponent,
     CaseStatusHistoryComponent,
     CareTeamComponent,
-    CaseNotesComponent
+    CaseNotesComponent,
+    CaseTasksComponent
   ],
-  template: `
-    <div *ngIf="loading" class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
-
-    <ng-container *ngIf="c && !loading">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb">
-        <a routerLink="/cases">Cases</a> /
-        <a *ngIf="c.patientId" [routerLink]="['/patients', c.patientId]">Patient</a> /
-        <span>{{ c.caseNumber }}</span>
-      </nav>
-
-      <!-- Case Header Card -->
-      <mat-card class="header-card">
-        <mat-card-content>
-          <div class="header-row">
-            <div>
-              <h1 style="margin:0">{{ c.caseNumber }}</h1>
-              <div style="margin-top:4px">
-                <app-status-badge [status]="c.currentStatus"></app-status-badge>
-                <span class="type-label">{{ c.caseTypeName }}</span>
-              </div>
-            </div>
-            <div class="header-actions">
-              <!-- Status transition (CareCoordinator, Supervisor, Admin) -->
-              <ng-container *ngIf="canChangeStatus && availableTransitions.length">
-                <mat-form-field appearance="outline" style="width:160px">
-                  <mat-label>Change status</mat-label>
-                  <mat-select [formControl]="statusSelect">
-                    <mat-option *ngFor="let s of availableTransitions" [value]="s">{{ s }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <button mat-stroked-button (click)="changeStatus()" [disabled]="!statusSelect.value || transitioning">
-                  Apply
-                </button>
-              </ng-container>
-
-              <!-- Close case (Supervisor, Admin only) -->
-              <button mat-flat-button color="warn" *ngIf="canClose && c.currentStatus !== 'Closed'"
-                (click)="closeCase()">
-                <mat-icon>close</mat-icon> Close Case
-              </button>
-            </div>
-          </div>
-
-          <div class="meta-grid" style="margin-top:16px">
-            <div><label>Opened</label><span>{{ c.openedAt | date:'mediumDate' }}</span></div>
-            <div *ngIf="c.closedAt"><label>Closed</label><span>{{ c.closedAt | date:'mediumDate' }}</span></div>
-            <div><label>Assigned To</label><span>{{ c.assignedToUserName ?? 'Unassigned' }}</span></div>
-          </div>
-
-          <div *ngIf="c.notes" style="margin-top:12px">
-            <label style="font-size:12px;color:#757575">Case Notes</label>
-            <p style="margin:4px 0">{{ c.notes }}</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Tabs -->
-      <mat-tab-group style="margin-top:16px">
-        <mat-tab label="Notes">
-          <div class="tab-content">
-            <app-case-notes [caseNumber]="c.caseNumber"></app-case-notes>
-          </div>
-        </mat-tab>
-
-        <mat-tab label="Care Team">
-          <div class="tab-content">
-            <app-care-team [caseNumber]="c.caseNumber"></app-care-team>
-          </div>
-        </mat-tab>
-
-        <mat-tab label="History">
-          <div class="tab-content">
-            <app-case-status-history [history]="c.statusHistory"></app-case-status-history>
-          </div>
-        </mat-tab>
-
-        <mat-tab label="Tasks">
-          <div class="tab-content empty">Task management coming in Phase 3.</div>
-        </mat-tab>
-
-        <mat-tab label="Documents">
-          <div class="tab-content empty">Document management coming in Phase 3.</div>
-        </mat-tab>
-      </mat-tab-group>
-    </ng-container>
-  `,
-  styles: [`
-    .breadcrumb { margin-bottom: 12px; font-size: 14px; color: #757575; }
-    .breadcrumb a { color: #1976d2; text-decoration: none; }
-    .header-card { margin-bottom: 8px; }
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
-    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .type-label { margin-left: 10px; font-size: 14px; color: #757575; }
-    .meta-grid { display: flex; gap: 32px; flex-wrap: wrap; }
-    .meta-grid label { display: block; font-size: 12px; color: #757575; }
-    .tab-content { padding: 20px 0; }
-    .empty { color: #757575; text-align: center; padding: 40px; }
-    .spinner-wrap { display: flex; justify-content: center; padding: 40px; }
-  `]
+  templateUrl: './case-detail.component.html',
+  styleUrls: ['./case-detail.component.scss']
 })
 export class CaseDetailComponent implements OnInit {
   c: CaseDto | null = null;

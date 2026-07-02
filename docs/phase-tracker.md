@@ -1,7 +1,7 @@
 # Healthcare Case Management System — Phase Tracker
 
 **Project:** Enterprise Healthcare Case Management System (Portfolio)  
-**Last Updated:** 2026-06-29  
+**Last Updated:** 2026-07-01 (Phase 3 frontend gaps closed — MyTasksComponent + DocumentsComponent + patient docs tab)  
 **Status Key:** `[ ]` Not Started · `[~]` In Progress · `[x]` Complete · `[-]` Deferred
 
 ---
@@ -11,9 +11,9 @@
 | Phase | Name | Duration | Status | Deliverable | Details |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | 2 weeks | `[x]` | Deployable skeleton with auth | [View Phase 1](phases/phase-1.md) |
-| 2 | Patient & Case Core | 3 weeks | `[~]` | Full case lifecycle working | [View Phase 2](phases/phase-2.md) |
-| 3 | Documents, Tasks & Notes | 2 weeks | `[ ]` | Blob upload + task management | [View Phase 3](phases/phase-3.md) |
-| 4 | Appointments & Scheduling | 2 weeks | `[ ]` | Calendar and booking | [View Phase 4](phases/phase-4.md) |
+| 2 | Patient & Case Core | 3 weeks | `[x]` | Full case lifecycle working | [View Phase 2](phases/phase-2.md) |
+| 3 | Documents, Tasks & Notes | 2 weeks | `[x]` | Blob upload + task management | [View Phase 3](phases/phase-3.md) |
+| 4 | Appointments & Scheduling | 2 weeks | `[~]` | Calendar and booking | [View Phase 4](phases/phase-4.md) |
 | 5 | FHIR/HL7 Integration | 2 weeks | `[ ]` | FHIR R4 API, resource mapping, Bundle export/import | [View Phase 5](phases/phase-5.md) |
 | 6 | Dashboard & Reports | 2 weeks | `[ ]` | All dashboards + CSV export | [View Phase 6](phases/phase-6.md) |
 | 7 | Notifications & Audit UI | 1 week | `[ ]` | Notification bell + audit log viewer | [View Phase 7](phases/phase-7.md) |
@@ -28,14 +28,14 @@
 | Phase | Tasks Total | Complete | Remaining | % Complete |
 |---|---|---|---|---|
 | Phase 1 — Foundation | ~29 | 29 | 0 | 100% |
-| Phase 2 — Patient & Case Core | ~38 | 34 | 4 | 89% |
-| Phase 3 — Documents & Tasks | ~22 | 0 | 22 | 0% |
-| Phase 4 — Appointments | ~16 | 0 | 16 | 0% |
+| Phase 2 — Patient & Case Core | ~38 | 38 | 0 | 100% |
+| Phase 3 — Documents & Tasks | ~22 | 22 | 0 | 100% |
+| Phase 4 — Appointments | ~16 | 12 | 4 | 75% |
 | Phase 5 — FHIR/HL7 Integration | ~24 | 0 | 24 | 0% |
 | Phase 6 — Dashboards & Reports | ~20 | 0 | 20 | 0% |
 | Phase 7 — Notifications & Audit UI | ~14 | 0 | 14 | 0% |
 | Phase 8 — Testing & Polish | ~22 | 0 | 22 | 0% |
-| **Total** | **~185** | **63** | **122** | **34%** |
+| **Total** | **~185** | **101** | **84** | **55%** |
 
 _Update task counts as tasks are added or split during development._
 

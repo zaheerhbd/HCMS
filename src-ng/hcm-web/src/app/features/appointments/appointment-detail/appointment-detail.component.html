@@ -1,0 +1,57 @@
+<nav class="breadcrumb">
+  <a routerLink="/appointments">Appointments</a> / Detail
+</nav>
+
+<mat-card *ngIf="appt" class="detail-card">
+  <mat-card-header>
+    <mat-card-title>{{ appt.appointmentType }}</mat-card-title>
+    <mat-card-subtitle>{{ appt.status }}</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="detail-grid">
+      <div>
+        <label>Patient</label>
+        <span>{{ appt.patientName }} ({{ appt.patientMrn }})</span>
+      </div>
+      <div>
+        <label>Provider</label>
+        <span>{{ appt.providerName }}</span>
+      </div>
+      <div>
+        <label>Start</label>
+        <span>{{ appt.scheduledStart | date:'medium' }}</span>
+      </div>
+      <div>
+        <label>End</label>
+        <span>{{ appt.scheduledEnd | date:'medium' }}</span>
+      </div>
+      <div *ngIf="appt.location">
+        <label>Location</label>
+        <span>{{ appt.location }}</span>
+      </div>
+      <!-- Link back to the associated case if this appointment is tied to one -->
+      <div *ngIf="appt.caseNumber">
+        <label>Case</label>
+        <a [routerLink]="['/cases', appt.caseNumber]">{{ appt.caseNumber }}</a>
+      </div>
+      <div *ngIf="appt.notes" class="full">
+        <label>Notes</label>
+        <span>{{ appt.notes }}</span>
+      </div>
+    </div>
+
+    <!-- Status change control — CareCoordinator, Supervisor, Admin only -->
+    <div class="status-change" *ngIf="canChangeStatus">
+      <mat-form-field appearance="outline" class="status-field">
+        <mat-label>Change Status</mat-label>
+        <mat-select [formControl]="statusCtrl">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button (click)="changeStatus()" [disabled]="!statusCtrl.value || saving">
+        Apply
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

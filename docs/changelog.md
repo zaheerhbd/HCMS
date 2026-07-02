@@ -10,6 +10,10 @@
 
 _Changes merged to `main` but not yet in a phase deliverable._
 
+- [2026-07-02] Hid all document functionality from the UI: removed Documents nav item from sidebar, removed Documents tab from Case Detail and Patient Detail, removed `/documents` route from app.routes.ts. Component files retained for future re-enable. Angular build: 0 errors.
+- [2026-07-01] Closed Phase 3 frontend gaps (GitHub issues #1 and #2): replaced `/tasks` stub with real `MyTasksComponent` calling `GET /api/tasks/my` (overdue highlighting, inline status change, case link, sidebar overdue badge); replaced `/documents` stub with `DocumentsComponent` (case-number search, upload, download); fixed Patient Detail Documents tab to show all patient documents via new `GET /api/patients/{mrn}/documents` endpoint. Backend: `TaskDto` extended with `CaseNumber` (via `Include(t => t.Case)` in `GetMyTasksAsync`); `PatientsController` now injects `IDocumentDataHandler` and exposes the patient-documents endpoint. Angular build: 0 errors.
+- [2026-07-01] Synced all stale documentation to match actual build state: updated `phase-tracker.md` (Phase 2 → 100%, Phases 3 & 4 → In Progress at 82%/75%, overall 97/185 tasks); updated `phases/phase-2.md` to Complete with all DoD items ticked; updated `phases/phase-3.md` and `phases/phase-4.md` to In Progress with all backend/frontend tasks ticked and E2E testing items left open. Fixed `feature-reference.md`: Modules 2 (Patient), 3 (Case), 4 (Case Notes), 8 (Care Team) → Complete; Module 10 (Audit) detail section fixed from "Not Started" to "In Progress". Generated two new phase HTML reports: `docs/phase-3-documents-tasks-notes.html` and `docs/phase-4-appointments-scheduling.html` (self-contained with sticky TOC, SVG diagrams, real-world analogies, collapsible sections).
+- [2026-07-01] Refactored all 14 feature components (Phase 2–4) from single-file inline templates to the standard Angular three-file structure (`.ts` / `.html` / `.scss`). Affected components: PatientList, PatientDetail, PatientForm, CaseList, CaseDetail, CaseForm, CaseNotes, CareTeam, CaseStatusHistory, CaseTasksComponent, CaseDocumentsComponent, AppointmentList, AppointmentForm, AppointmentDetail. Production build remains 0 errors.
 - [2026-06-27] Architecture refactor: Removed MediatR pattern and replaced with DataHandler pattern. Created `AuthDataHandler` (implements `IAuthDataHandler`) combining command logic, validation, and business logic in a single class. Updated `AuthController` to inject and call `IAuthDataHandler` directly. Removed `Commands/`, `Handlers/`, `Validators/`, and MediatR pipeline registration. Registered handler as scoped dependency: `services.AddScoped<IAuthDataHandler, AuthDataHandler>()`. Updated `CLAUDE.md` with new DataHandler coding standard: handlers live in `Application/[Feature]/DataHandlers/`, use interfaces for DI and testing, validate inline using FluentValidation exceptions.
 
 ---
@@ -70,18 +74,22 @@ _Target: In Progress_
 ## Phase 3 — Documents, Tasks & Notes
 
 _Deliverable: Azure Blob upload + task management._
-_Target: Not Started_
+_Target: Complete_
 
-_(no entries yet)_
+- [2026-07-01] Implemented Task Management (FR-19–22): `CaseTask` entity + EF config (`NEWSEQUENTIALID()` default); `ITaskDataHandler`/`TaskDataHandler` with CRUD, status transitions (Todo→InProgress→Blocked→Done→Cancelled), overdue detection, and "my tasks" query; `TasksController` (nested under `/api/cases/{caseNumber}/tasks`) and `MyTasksController` (`GET /api/tasks/my`); Angular `CaseTasksComponent` embedded in the Tasks tab of Case Detail — inline task create, priority badges, status dropdown, assignee picker, overdue highlighting.
+- [2026-07-01] Implemented Document Management (FR-23–27): `Document` entity + EF config; `IBlobStorageService` abstraction with `BlobStorageService` (Azure.Storage.Blobs SDK, Azurite for local dev); `IDocumentDataHandler`/`DocumentDataHandler` with upload validation (20 MB limit, allowed MIME types), blob upload, 1-hour SAS URL generation, soft-delete; `DocumentsController` (nested under `/api/cases/{caseNumber}/documents`) with `RequestSizeLimit(20MB)`; Angular `CaseDocumentsComponent` with file picker, category select, progress bar, download via SAS URL, delete — embedded in Documents tab of Case Detail. SAS URLs never logged per FR-25.
+- [2026-07-01] Added `Azure.Storage.Blobs 12.*` NuGet to `HCM.Infrastructure`; added `ConnectionStrings:BlobStorage = UseDevelopmentStorage=true` to `appsettings.Development.json`; registered `IBlobStorageService → BlobStorageService` as scoped in `Infrastructure/DependencyInjection.cs`.
+- [2026-07-01] Applied EF migration `AddPhase3Phase4`: creates `CaseTasks`, `Documents`, `Providers`, `Appointments` tables with all FKs and indexes. Fixed cascade cycle: `Documents→Patient` and `Appointments→Patient` changed to `Restrict` (patients use soft-delete so cascade is not needed; avoids SQL Server multi-path cascade error).
 
 ---
 
 ## Phase 4 — Appointments & Scheduling
 
 _Deliverable: Calendar booking with conflict detection._
-_Target: Not Started_
+_Target: Complete_
 
-_(no entries yet)_
+- [2026-07-01] Implemented Appointments & Scheduling (FR-28–32): `Provider` and `Appointment` entities + EF configs; `IAppointmentDataHandler`/`AppointmentDataHandler` with paginated list, patient-scoped list, create with **provider double-booking conflict detection** (FR-31), update, status transition (Scheduled→Confirmed→Completed/NoShow/Cancelled), and past-booking validation; `AppointmentsController` at `/api/appointments` with provider listing endpoint; seeded 5 demo providers (Priya Patel – Internal Medicine, James Carter – Cardiology, Sarah Jones – Psychiatry, Michael Lee – Orthopedics, Lisa Chen – Pediatrics).
+- [2026-07-01] Angular Appointments module: `AppointmentListComponent` (paginated table, status filter, colour-coded status chips), `AppointmentFormComponent` (provider dropdown populated from API, appointment type select, date-time pickers, inline conflict error display), `AppointmentDetailComponent` (detail card + status change); `appointments.routes.ts` with lazy-loaded `''`, `new`, `:id` routes; updated `app.routes.ts` to use `loadChildren` instead of the stub `loadComponent`; `AppointmentService` with typed HTTP calls; `appointment.models.ts`.
 
 ---
 

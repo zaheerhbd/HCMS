@@ -1,0 +1,36 @@
+<nav class="breadcrumb">
+  <a routerLink="/cases">Cases</a> / <span>New Case</span>
+</nav>
+
+<h1>New Case</h1>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="case-form">
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Patient MRN</mat-label>
+    <input matInput formControlName="patientMrn" placeholder="e.g. MRN-2026-00001" />
+    <mat-error *ngIf="form.get('patientMrn')?.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Case Type</mat-label>
+    <mat-select formControlName="caseTypeId">
+      <mat-option *ngFor="let ct of caseTypes" [value]="ct.id">{{ ct.name }}</mat-option>
+    </mat-select>
+    <mat-error *ngIf="form.get('caseTypeId')?.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Initial Notes</mat-label>
+    <textarea matInput formControlName="notes" rows="4"></textarea>
+  </mat-form-field>
+
+  <div class="form-actions">
+    <button mat-stroked-button type="button" routerLink="/cases">Cancel</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+      <mat-spinner *ngIf="saving" diameter="18" class="inline-spinner"></mat-spinner>
+      Create Case
+    </button>
+  </div>
+
+</form>

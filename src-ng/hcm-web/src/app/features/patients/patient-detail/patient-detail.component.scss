@@ -1,0 +1,86 @@
+.breadcrumb {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #757575;
+
+  a {
+    color: #1976d2;
+    text-decoration: none;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mrn-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.primary-badge {
+  background: #e8f5e9;
+  color: #388e3c;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.tab-content {
+  padding: 20px 0;
+}
+
+.section-heading {
+  margin-top: 24px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  label {
+    display: block;
+    font-size: 12px;
+    color: #757575;
+    margin-bottom: 2px;
+  }
+
+  span {
+    font-size: 15px;
+  }
+}
+
+.spinner-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #757575;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+}

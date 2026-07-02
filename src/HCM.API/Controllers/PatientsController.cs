@@ -1,3 +1,4 @@
+using HCM.Application.Documents.DataHandlers;
 using HCM.Application.Patients.DTOs;
 using HCM.Application.Patients.DataHandlers;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +13,12 @@ namespace HCM.API.Controllers;
 public class PatientsController : ControllerBase
 {
     private readonly IPatientDataHandler _handler;
+    private readonly IDocumentDataHandler _docHandler;
 
-    public PatientsController(IPatientDataHandler handler)
+    public PatientsController(IPatientDataHandler handler, IDocumentDataHandler docHandler)
     {
         _handler = handler;
+        _docHandler = docHandler;
     }
 
     [HttpGet("{mrn}")]
@@ -90,6 +93,18 @@ public class PatientsController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
+    }
+
+    // Returns all non-deleted documents across all cases belonging to this patient
+    [HttpGet("{mrn}/documents")]
+    public async Task<IActionResult> GetPatientDocuments(string mrn, CancellationToken ct)
+    {
+        try
+        {
+            var docs = await _docHandler.GetDocumentsByPatientMrnAsync(mrn, ct);
+            return Ok(docs);
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
     }
 
     [HttpDelete("{mrn}")]

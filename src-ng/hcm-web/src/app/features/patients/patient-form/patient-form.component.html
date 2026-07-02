@@ -1,0 +1,98 @@
+<nav class="breadcrumb">
+  <a routerLink="/patients">Patients</a> /
+  <span>{{ isEdit ? 'Edit Patient' : 'New Patient' }}</span>
+</nav>
+
+<h1>{{ isEdit ? 'Edit Patient' : 'New Patient' }}</h1>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="patient-form">
+
+  <h3>Demographics</h3>
+
+  <div class="form-row">
+    <mat-form-field appearance="outline">
+      <mat-label>First Name</mat-label>
+      <input matInput formControlName="firstName" />
+      <mat-error *ngIf="form.get('firstName')?.hasError('required')">Required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Last Name</mat-label>
+      <input matInput formControlName="lastName" />
+      <mat-error *ngIf="form.get('lastName')?.hasError('required')">Required</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="form-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Date of Birth</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="dateOfBirth" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      <mat-error *ngIf="form.get('dateOfBirth')?.hasError('required')">Required</mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Gender</mat-label>
+      <mat-select formControlName="gender">
+        <mat-option value="Male">Male</mat-option>
+        <mat-option value="Female">Female</mat-option>
+        <mat-option value="NonBinary">Non-Binary</mat-option>
+        <mat-option value="PreferNotToSay">Prefer Not to Say</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" />
+    </mat-form-field>
+  </div>
+
+  <h3>Address</h3>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Street Address</mat-label>
+    <input matInput formControlName="address" />
+  </mat-form-field>
+
+  <div class="form-row">
+    <mat-form-field appearance="outline">
+      <mat-label>City</mat-label>
+      <input matInput formControlName="city" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>State</mat-label>
+      <input matInput formControlName="state" maxlength="2" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Zip Code</mat-label>
+      <input matInput formControlName="zipCode" />
+    </mat-form-field>
+  </div>
+
+  <h3>Emergency Contact</h3>
+
+  <div class="form-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Contact Name</mat-label>
+      <input matInput formControlName="emergencyContactName" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Contact Phone</mat-label>
+      <input matInput formControlName="emergencyContactPhone" />
+    </mat-form-field>
+  </div>
+
+  <div class="form-actions">
+    <button mat-stroked-button type="button" routerLink="/patients">Cancel</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+      <mat-spinner *ngIf="saving" diameter="18" class="inline-spinner"></mat-spinner>
+      {{ isEdit ? 'Save Changes' : 'Create Patient' }}
+    </button>
+  </div>
+
+</form>

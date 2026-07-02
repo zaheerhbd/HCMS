@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMS Phase 4 — Appointments &amp; Scheduling</title>
+<style>
+  :root {
+    --primary: #1976d2;
+    --primary-dark: #0d47a1;
+    --success: #388e3c;
+    --warn: #e65100;
+    --purple: #6a1b9a;
+    --teal: #00695c;
+    --surface: #fff;
+    --bg: #f5f7fa;
+    --border: #e0e0e0;
+    --text: #212121;
+    --muted: #757575;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .layout { display: flex; min-height: 100vh; }
+  nav.sidebar {
+    width: var(--sidebar-w); background: #004d40; color: #fff;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    flex-shrink: 0; padding: 24px 0;
+  }
+  nav.sidebar .brand { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.15); margin-bottom: 16px; }
+  nav.sidebar .brand h1 { font-size: 15px; font-weight: 700; }
+  nav.sidebar .brand p { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+  nav.sidebar a { display: block; padding: 8px 20px; font-size: 13px; color: rgba(255,255,255,.75); text-decoration: none; border-left: 3px solid transparent; transition: all .15s; }
+  nav.sidebar a:hover { color: #fff; background: rgba(255,255,255,.08); }
+  nav.sidebar a.active { color: #fff; border-left-color: #80cbc4; background: rgba(255,255,255,.1); }
+  nav.sidebar .section-label { padding: 12px 20px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,.4); text-transform: uppercase; }
+
+  main { flex: 1; padding: 40px 48px; max-width: 960px; }
+
+  h1 { font-size: 32px; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 700; color: var(--teal); margin: 40px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  .hero { background: linear-gradient(135deg, #004d40 0%, #00897b 100%); color: #fff; border-radius: 12px; padding: 32px 36px; margin-bottom: 40px; }
+  .hero h1 { color: #fff; }
+  .hero .meta { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .hero .badge { background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 14px; font-size: 13px; }
+  .hero .badge strong { color: #80cbc4; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border-radius: 10px; padding: 20px; border: 1px solid var(--border); text-align: center; }
+  .stat-card .num { font-size: 36px; font-weight: 800; color: var(--teal); }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding: 6px 0 6px 28px; position: relative; font-size: 14px; }
+  .checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 700; }
+  .checklist li.pending::before { content: '○'; color: var(--warn); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card h3 { margin-top: 0; color: var(--teal); }
+
+  .analogy { background: #e0f2f1; border-left: 4px solid var(--teal); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+  .analogy strong { color: var(--teal); }
+
+  .warn-box { background: #fff8e1; border-left: 4px solid #f9a825; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+  .warn-box strong { color: #f57f17; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px; }
+  th { background: var(--teal); color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+
+  .file-tree { background: #1a1a2e; color: #e0e0e0; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 13px; line-height: 1.9; overflow-x: auto; margin-bottom: 16px; }
+  .file-tree .dir { color: #80cbc4; }
+  .file-tree .new { color: #a5d6a7; }
+  .file-tree .mod { color: #fff176; }
+
+  details { margin-bottom: 12px; }
+  details > summary { cursor: pointer; font-weight: 600; padding: 10px 14px; background: #e0f2f1; border-radius: 6px; border: 1px solid #80cbc4; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details > summary::before { content: '▶'; font-size: 10px; color: var(--teal); transition: transform .2s; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  details .detail-body { padding: 16px; border: 1px solid #80cbc4; border-top: none; border-radius: 0 0 6px 6px; background: #f9fdfc; }
+
+  /* Status flow */
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 16px 0; }
+  .flow-node { color: #fff; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; }
+  .flow-node.scheduled { background: var(--primary); }
+  .flow-node.confirmed { background: var(--success); }
+  .flow-node.completed { background: var(--purple); }
+  .flow-node.noshow { background: var(--warn); }
+  .flow-node.cancelled { background: var(--muted); }
+  .flow-arrow { color: var(--muted); padding: 0 6px; font-size: 18px; }
+
+  /* Conflict timeline diagram */
+  .timeline-diagram { position: relative; margin: 20px 0; }
+  .timeline-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+  .timeline-label { width: 90px; font-weight: 600; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .timeline-bar-wrap { flex: 1; position: relative; height: 28px; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0; }
+  .timeline-bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; color: #fff; font-size: 11px; font-weight: 600; }
+  .timeline-bar.ok { background: var(--success); }
+  .timeline-bar.conflict { background: var(--warn); }
+  .timeline-bar.new { background: var(--primary); }
+  .timeline-tick { font-size: 11px; color: var(--muted); margin-left: 4px; white-space: nowrap; }
+
+  @media (max-width: 768px) { nav.sidebar { display: none; } main { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="brand">
+    <h1>HCMS Docs</h1>
+    <p>Phase 4 — Appointments &amp; Scheduling</p>
+  </div>
+  <div class="section-label">Overview</div>
+  <a href="#overview">What was built</a>
+  <a href="#stats">Stats</a>
+  <div class="section-label">Backend</div>
+  <a href="#entities">Entities &amp; Providers</a>
+  <a href="#conflict">Conflict Detection</a>
+  <a href="#endpoints">API Endpoints</a>
+  <a href="#background">Reminder Service</a>
+  <div class="section-label">Frontend</div>
+  <a href="#list">AppointmentList</a>
+  <a href="#form">AppointmentForm</a>
+  <a href="#detail">AppointmentDetail</a>
+  <div class="section-label">Decisions</div>
+  <a href="#decisions">Key Decisions</a>
+  <a href="#security">Security</a>
+  <a href="#files">Files Changed</a>
+  <a href="#next">What's Next</a>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <h1>Phase 4 — Appointments &amp; Scheduling</h1>
+    <p>End-to-end appointment booking with provider conflict detection, status lifecycle, and 24-hour reminder notifications queued by a background service.</p>
+    <div class="meta">
+      <span class="badge"><strong>Status:</strong> In Progress (E2E testing pending)</span>
+      <span class="badge"><strong>Duration:</strong> 2 weeks</span>
+      <span class="badge"><strong>Backend + Frontend:</strong> Complete</span>
+      <span class="badge"><strong>Build:</strong> 0 errors</span>
+    </div>
+  </div>
+
+  <section id="stats">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num">2</div><div class="lbl">New entities</div></div>
+      <div class="stat-card"><div class="num">1</div><div class="lbl">New controller</div></div>
+      <div class="stat-card"><div class="num">3</div><div class="lbl">Angular components</div></div>
+      <div class="stat-card"><div class="num">5</div><div class="lbl">Appointment statuses</div></div>
+      <div class="stat-card"><div class="num">4</div><div class="lbl">Appointment types</div></div>
+      <div class="stat-card"><div class="num">24h</div><div class="lbl">Reminder lead time</div></div>
+    </div>
+  </section>
+
+  <section id="overview">
+    <h2>What Was Built</h2>
+    <p>Phase 4 introduces a full appointment scheduling system. A care coordinator can book an appointment for a patient with a specific provider, choosing a time slot and appointment type. The system validates that the provider is not already booked for any overlapping time — the conflict detection feature prevents double-booking.</p>
+    <p>Appointments move through a defined status lifecycle (Scheduled → Confirmed → Completed / NoShow / Cancelled). A background <code>IHostedService</code> scans for upcoming appointments within 24 hours and queues notification rows to alert the care coordinator.</p>
+    <p>The Angular module has three standalone components: a filterable list view, a booking form with conflict error display, and a detail view with status action controls.</p>
+  </section>
+
+  <!-- Entities -->
+  <section id="entities">
+    <h2>Entities &amp; Provider Seeding</h2>
+    <div class="card">
+      <h3>Provider Entity</h3>
+      <ul>
+        <li><code>Id</code> (GUID, sequential), <code>FullName</code>, <code>Specialty</code>, <code>LicenseNumber</code></li>
+        <li><code>UserId</code> (optional FK to Users — allows a provider to also be a system user)</li>
+        <li><code>IsActive</code></li>
+      </ul>
+      <p style="margin-top:8px">Initial providers are seeded in <code>DataSeeder</code> linked to the clinician users created in Phase 1.</p>
+    </div>
+    <div class="card">
+      <h3>Appointment Entity</h3>
+      <ul>
+        <li><code>Id</code> (GUID, sequential), <code>PatientId</code>, <code>ProviderId</code>, <code>CaseId</code> (optional)</li>
+        <li><code>AppointmentType</code> (InitialAssessment | FollowUp | SpecialistReferral | Telehealth)</li>
+        <li><code>Status</code> (Scheduled | Confirmed | Completed | NoShow | Cancelled)</li>
+        <li><code>ScheduledStart</code>, <code>ScheduledEnd</code> (UTC datetime — client sends ISO 8601)</li>
+        <li><code>Location</code>, <code>Notes</code></li>
+        <li><code>ReminderSentAt</code> (nullable) — set by the reminder background service; prevents duplicate notifications</li>
+      </ul>
+    </div>
+
+    <h3>Appointment Status Lifecycle</h3>
+    <div class="flow">
+      <div class="flow-node scheduled">Scheduled</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node confirmed">Confirmed</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node completed">Completed</div>
+    </div>
+    <div class="flow" style="margin-top:8px">
+      <div class="flow-node noshow">NoShow</div>
+      <div class="flow-arrow" style="padding:0 8px">or</div>
+      <div class="flow-node cancelled">Cancelled</div>
+      <span style="padding-left:12px;font-size:13px;color:var(--muted)">← from Scheduled or Confirmed</span>
+    </div>
+  </section>
+
+  <!-- Conflict Detection -->
+  <section id="conflict">
+    <h2>Conflict Detection</h2>
+    <p>The core scheduling rule: a provider cannot have two overlapping appointments. The DataHandler validates this on both create and reschedule using an EF LINQ query.</p>
+
+    <details>
+      <summary>Overlap detection query logic</summary>
+      <div class="detail-body">
+        <p>Two time slots overlap if: <code>existingStart &lt; newEnd AND existingEnd &gt; newStart</code>. In LINQ:</p>
+        <pre style="background:#1a1a2e;color:#a5d6a7;padding:12px;border-radius:6px;font-size:13px;overflow-x:auto">bool conflict = await _db.Appointments.AnyAsync(a =>
+    a.ProviderId == providerId &&
+    a.Id != appointmentId &&  // exclude self on reschedule
+    a.Status != "Cancelled" &&
+    a.ScheduledStart &lt; scheduledEnd &&
+    a.ScheduledEnd &gt; scheduledStart);</pre>
+        <p>If a conflict is found, the DataHandler throws a <code>ValidationException</code> with the message <em>"Provider already has an appointment during this time slot."</em> The controller maps this to a <code>422 Unprocessable Entity</code> response. The Angular form checks for this specific message string and shows it inline (not as a toast) so the user can see it while adjusting the time.</p>
+      </div>
+    </details>
+
+    <!-- Visual conflict diagram -->
+    <h3 style="margin-top:24px">Visualising a Conflict</h3>
+    <div class="timeline-diagram">
+      <div class="timeline-row">
+        <div class="timeline-label">Dr. Smith</div>
+        <div class="timeline-bar-wrap">
+          <div class="timeline-bar ok" style="left:5%;width:30%">9:00–10:30 ✓</div>
+          <div class="timeline-bar ok" style="left:60%;width:35%">13:00–15:00 ✓</div>
+        </div>
+      </div>
+      <div class="timeline-row">
+        <div class="timeline-label">New booking</div>
+        <div class="timeline-bar-wrap">
+          <div class="timeline-bar new" style="left:25%;width:25%">10:00–11:15</div>
+        </div>
+        <div class="timeline-tick">← overlaps existing 9:00–10:30 → conflict!</div>
+      </div>
+    </div>
+    <div class="analogy">
+      <strong>Analogy:</strong> It's the same check an airline makes when you book a seat — it doesn't matter how long or short your flight is, if you're in seat 14A and someone else is already in 14A on that flight, you can't both board. The provider's time is the "seat."
+    </div>
+  </section>
+
+  <!-- Endpoints -->
+  <section id="endpoints">
+    <h2>API Endpoints</h2>
+    <table>
+      <tr><th>Method</th><th>Route</th><th>Role</th><th>Description</th></tr>
+      <tr><td>GET</td><td><code>/api/appointments</code></td><td>All</td><td>Paginated list; filter by status, patient MRN, provider</td></tr>
+      <tr><td>GET</td><td><code>/api/appointments/{id}</code></td><td>All</td><td>Full appointment detail</td></tr>
+      <tr><td>POST</td><td><code>/api/appointments</code></td><td>CareCoordinator+</td><td>Create; validates provider conflict → 422 on overlap</td></tr>
+      <tr><td>PUT</td><td><code>/api/appointments/{id}</code></td><td>CareCoordinator+</td><td>Reschedule; re-validates conflict (excludes self)</td></tr>
+      <tr><td>PUT</td><td><code>/api/appointments/{id}/status</code></td><td>CareCoordinator+</td><td>Transition status (Confirm / Complete / NoShow / Cancel)</td></tr>
+      <tr><td>GET</td><td><code>/api/appointments/providers</code></td><td>All</td><td>List active providers (for form dropdown)</td></tr>
+      <tr><td>GET</td><td><code>/api/appointments/providers/{id}/availability</code></td><td>All</td><td>Busy slots for a provider within a date range</td></tr>
+    </table>
+  </section>
+
+  <!-- Background Service -->
+  <section id="background">
+    <h2>Appointment Reminder Service</h2>
+    <div class="card">
+      <h3>AppointmentReminderService (IHostedService)</h3>
+      <p>Runs every 15 minutes. Queries appointments where <code>Status = 'Scheduled' OR Status = 'Confirmed'</code> AND <code>ScheduledStart</code> is between now and now + 24h AND <code>ReminderSentAt IS NULL</code>. For each match:</p>
+      <ol style="margin-top:8px;padding-left:20px">
+        <li>Creates a <code>Notification</code> row for the assigned care coordinator.</li>
+        <li>Sets <code>ReminderSentAt = NOW()</code> on the appointment to prevent duplicate notifications.</li>
+      </ol>
+      <p style="margin-top:12px">The <code>Notifications</code> table is polled by the Angular <code>NotificationBellComponent</code> every 60 seconds (Phase 7). Phase 4 only creates the rows — the UI bell is wired in Phase 7.</p>
+    </div>
+    <div class="analogy">
+      <strong>Analogy:</strong> Think of it like a hospital receptionist who checks the appointment book every 15 minutes and calls patients to confirm tomorrow's appointments. The <code>ReminderSentAt</code> flag is their checkmark next to each patient's name — they won't call the same patient twice.
+    </div>
+  </section>
+
+  <!-- Angular List -->
+  <section id="list">
+    <h2>AppointmentListComponent</h2>
+    <p>Lazy-loaded at <code>/appointments</code>. Shows all appointments with filtering and pagination.</p>
+    <details>
+      <summary>Component details</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Page header: "Appointments" title + "Schedule Appointment" button (CareCoordinator+ only, via <code>*appHasRole</code>).</li>
+          <li>Status filter <code>mat-select</code> (debounced 300ms) — blank = all statuses.</li>
+          <li><code>mat-table</code> columns: patient (name + MRN sub-text), provider, appointment type, scheduled start (date + time range), status chip (colour-coded), chevron action column.</li>
+          <li>Status chips are colour-coded via <code>statusBg()</code> / <code>statusColor()</code> helper methods using <code>STATUS_COLORS</code> constant.</li>
+          <li><code>mat-paginator</code> with page size options.</li>
+          <li>Row click navigates to <code>/appointments/{id}</code>.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- Angular Form -->
+  <section id="form">
+    <h2>AppointmentFormComponent</h2>
+    <p>Route: <code>/appointments/new</code>. A card-wrapped Reactive Form for scheduling a new appointment.</p>
+    <details>
+      <summary>Form fields</summary>
+      <div class="detail-body">
+        <ul>
+          <li><strong>Patient MRN</strong> (required) — free-text input; server resolves to patient.</li>
+          <li><strong>Case Number</strong> (optional) — links appointment to a case for case-centric tracking.</li>
+          <li><strong>Provider</strong> (required) — dropdown populated from <code>GET /api/appointments/providers</code>; shows specialty as hint text below the selection.</li>
+          <li><strong>Appointment Type</strong> (required) — Initial Assessment / Follow-Up / Specialist Referral / Telehealth.</li>
+          <li><strong>Scheduled Start</strong> and <strong>End</strong> (required) — <code>datetime-local</code> inputs; converted to ISO 8601 UTC before POST.</li>
+          <li><strong>Location</strong> (optional) — room number or telehealth link.</li>
+          <li><strong>Notes</strong> (optional) — multiline textarea.</li>
+        </ul>
+      </div>
+    </details>
+    <details>
+      <summary>Conflict error display</summary>
+      <div class="detail-body">
+        <p>When the server returns a 422 with a message containing "already has an appointment", the form sets <code>conflictError</code> and renders a red inline error banner with a warning icon. This is shown inline (not as a toast) because the user needs to see it while adjusting the Start/End times without the message disappearing after 3 seconds.</p>
+        <div class="warn-box">
+          <strong>UX decision:</strong> Toasts auto-dismiss. A conflict error requires the user to take action (change the time) before submitting again. Inline errors are persistent until the user corrects the input and resubmits — which is the correct behaviour for a recoverable validation failure.
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- Angular Detail -->
+  <section id="detail">
+    <h2>AppointmentDetailComponent</h2>
+    <p>Route: <code>/appointments/{id}</code>. Shows full appointment details and allows status changes.</p>
+    <details>
+      <summary>Component details</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Breadcrumb: Appointments → #{id}</li>
+          <li><code>mat-card</code> with a two-column <code>detail-grid</code>: patient name, provider, start, end, location, case link (if linked), notes.</li>
+          <li><strong>Status change section</strong> (CareCoordinator+ only): <code>mat-select</code> for new status + Apply button. Only shown if the appointment is not terminal (Completed / Cancelled).</li>
+          <li>On status change: optimistic update of the displayed status; snack bar confirmation.</li>
+          <li>Back button navigates to <code>/appointments</code>.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- Decisions -->
+  <section id="decisions">
+    <h2>Key Decisions &amp; Trade-offs</h2>
+    <table>
+      <tr><th>Decision</th><th>Chosen</th><th>Rejected</th><th>Reason</th></tr>
+      <tr>
+        <td>Conflict detection timing</td>
+        <td>Server-side on every create/reschedule</td>
+        <td>Client-side only</td>
+        <td>Two coordinators could book the same slot simultaneously — a race condition the client can't detect. The server query runs under a short-lived transaction to minimise the window.</td>
+      </tr>
+      <tr>
+        <td>Conflict error UX</td>
+        <td>Inline persistent error banner</td>
+        <td>Toast notification</td>
+        <td>Toasts auto-dismiss after 3–4 seconds. The user needs to adjust Start/End time fields while the error is still visible — an inline error stays until the form is resubmitted.</td>
+      </tr>
+      <tr>
+        <td>Reminder mechanism</td>
+        <td>Background IHostedService + Notifications table rows</td>
+        <td>SendGrid / email directly from background service</td>
+        <td>In-app notifications are simpler for a portfolio project (no external SMTP dependency). The Notifications table is already there from Phase 2; Phase 7 will wire the notification bell.</td>
+      </tr>
+      <tr>
+        <td>Provider model</td>
+        <td>Separate <code>Providers</code> entity with optional UserId FK</td>
+        <td>Reuse the Users table directly</td>
+        <td>Not all providers are system users (external consultants). A dedicated Provider entity is more flexible and avoids coupling scheduling logic to auth users.</td>
+      </tr>
+      <tr>
+        <td>Appointment routing</td>
+        <td>GUID-based (not a business key)</td>
+        <td>Appointment number slug</td>
+        <td>Appointments don't have a natural, memorable business key like MRN or CaseNumber. A GUID is acceptable here because appointments are navigated from a list, not typed directly into URLs.</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- Security -->
+  <section id="security">
+    <h2>Security Notes</h2>
+    <ul class="checklist">
+      <li>All endpoints require authentication — no public appointment data</li>
+      <li>Create/reschedule/status-change restricted to CareCoordinator, Supervisor, Admin</li>
+      <li>Read access (GET) available to all authenticated roles (Clinicians need to see appointments for their patients)</li>
+      <li>Conflict detection prevents overbooking even if two coordinators submit simultaneously (server-side query)</li>
+      <li>Cancelled/Completed appointments cannot transition to any new status (terminal state machine)</li>
+      <li>No PHI logged — only appointment IDs and user IDs are written to Application Insights</li>
+      <li>Provider availability endpoint exposes only busy time slots, not PHI about the patients booked in those slots</li>
+    </ul>
+  </section>
+
+  <!-- Files -->
+  <section id="files">
+    <h2>Files Added / Changed</h2>
+    <div class="file-tree">
+<span class="dir">src/</span>
+├── <span class="dir">HCM.Domain/Entities/</span>
+│   ├── <span class="new">Provider.cs</span>
+│   └── <span class="new">Appointment.cs</span>
+├── <span class="dir">HCM.Application/Appointments/DataHandlers/</span>
+│   ├── <span class="new">IAppointmentDataHandler.cs</span>
+│   └── <span class="new">AppointmentDataHandler.cs</span>
+├── <span class="dir">HCM.Infrastructure/</span>
+│   ├── <span class="mod">Persistence/ApplicationDbContext.cs</span>  ← Providers, Appointments DbSets
+│   ├── <span class="new">Persistence/Seed/DataSeeder.cs</span>  ← provider seed data
+│   ├── <span class="new">BackgroundServices/AppointmentReminderService.cs</span>
+│   └── <span class="new">Migrations/AddAppointments.cs</span>
+├── <span class="dir">HCM.API/Controllers/</span>
+│   └── <span class="new">AppointmentsController.cs</span>
+└── <span class="mod">HCM.Application/DependencyInjection.cs</span>  ← IAppointmentDataHandler registration
+
+<span class="dir">src-ng/hcm-web/src/app/</span>
+├── <span class="dir">core/models/</span>
+│   └── <span class="new">appointment.models.ts</span>   (AppointmentDto, ProviderDto, CreateAppointmentRequest, ChangeAppointmentStatusRequest)
+├── <span class="dir">features/appointments/</span>
+│   ├── <span class="new">appointment-list/</span>       (3 files: .ts / .html / .scss)
+│   ├── <span class="new">appointment-form/</span>       (3 files)
+│   ├── <span class="new">appointment-detail/</span>     (3 files)
+│   ├── <span class="new">appointment.service.ts</span>
+│   └── <span class="new">appointments.routes.ts</span>
+└── <span class="mod">app.routes.ts</span>              ← lazy load appointments module
+    </div>
+  </section>
+
+  <!-- Next -->
+  <section id="next">
+    <h2>What's Next</h2>
+    <h3>Remaining Phase 4 items</h3>
+    <ul class="checklist">
+      <li class="pending">E2E test: schedule an appointment and confirm it in the browser</li>
+      <li class="pending">E2E test: attempt to double-book a provider; verify conflict error appears inline</li>
+      <li class="pending">E2E test: status transitions (NoShow, Complete, Cancel)</li>
+      <li class="pending">E2E test: verify a Notification row is created in DB for appointments within 24h</li>
+      <li class="pending">ProviderAvailabilityComponent — slot grid for a provider + date (not yet built)</li>
+      <li class="pending">Upcoming appointments widget on Case Detail page</li>
+    </ul>
+
+    <h3 style="margin-top:24px">Phase 5 — FHIR/HL7 Integration</h3>
+    <p>The next phase exposes a FHIR R4-compliant REST API at <code>/fhir/R4/</code>. Key deliverables:</p>
+    <ul style="margin-top:8px">
+      <li>Install <code>Hl7.Fhir.R4</code> (Firely .NET SDK) NuGet package</li>
+      <li><code>FhirController</code> at <code>/fhir/R4/</code> with CapabilityStatement (<code>GET /metadata</code>)</li>
+      <li>Map internal entities → FHIR R4 resources: Patient, Encounter (Case), Appointment, Task, DocumentReference</li>
+      <li><code>GET /fhir/R4/Patient/{id}/$everything</code> — full Bundle export</li>
+      <li><code>POST /fhir/R4/Patient</code> — import a FHIR Patient JSON with validation</li>
+      <li>Angular <code>FhirImportComponent</code> — two-step parse/preview → confirm flow</li>
+      <li>FHIR errors return <code>OperationOutcome</code> (not ProblemDetails)</li>
+    </ul>
+  </section>
+
+</main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav.sidebar a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`nav.sidebar a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

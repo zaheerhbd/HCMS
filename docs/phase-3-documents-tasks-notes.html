@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMS Phase 3 — Documents, Tasks &amp; Notes</title>
+<style>
+  :root {
+    --primary: #1976d2;
+    --primary-dark: #0d47a1;
+    --success: #388e3c;
+    --warn: #f57c00;
+    --purple: #6a1b9a;
+    --surface: #fff;
+    --bg: #f5f7fa;
+    --border: #e0e0e0;
+    --text: #212121;
+    --muted: #757575;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .layout { display: flex; min-height: 100vh; }
+  nav.sidebar {
+    width: var(--sidebar-w); background: #1a237e; color: #fff;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    flex-shrink: 0; padding: 24px 0;
+  }
+  nav.sidebar .brand { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.15); margin-bottom: 16px; }
+  nav.sidebar .brand h1 { font-size: 15px; font-weight: 700; }
+  nav.sidebar .brand p { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+  nav.sidebar a { display: block; padding: 8px 20px; font-size: 13px; color: rgba(255,255,255,.75); text-decoration: none; border-left: 3px solid transparent; transition: all .15s; }
+  nav.sidebar a:hover { color: #fff; background: rgba(255,255,255,.08); }
+  nav.sidebar a.active { color: #fff; border-left-color: #82b1ff; background: rgba(255,255,255,.1); }
+  nav.sidebar .section-label { padding: 12px 20px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: rgba(255,255,255,.4); text-transform: uppercase; }
+
+  main { flex: 1; padding: 40px 48px; max-width: 960px; }
+
+  h1 { font-size: 32px; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin: 40px 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  .hero { background: linear-gradient(135deg, #4a148c 0%, #1976d2 100%); color: #fff; border-radius: 12px; padding: 32px 36px; margin-bottom: 40px; }
+  .hero h1 { color: #fff; }
+  .hero .meta { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .hero .badge { background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 14px; font-size: 13px; }
+  .hero .badge strong { color: #ce93d8; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border-radius: 10px; padding: 20px; border: 1px solid var(--border); text-align: center; }
+  .stat-card .num { font-size: 36px; font-weight: 800; color: var(--primary); }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding: 6px 0 6px 28px; position: relative; font-size: 14px; }
+  .checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 700; }
+  .checklist li.pending::before { content: '○'; color: var(--warn); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card h3 { margin-top: 0; color: var(--primary-dark); }
+
+  .analogy { background: #e8f5e9; border-left: 4px solid var(--success); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+  .analogy strong { color: var(--success); }
+
+  .warn-box { background: #fff8e1; border-left: 4px solid var(--warn); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 14px; }
+  .warn-box strong { color: var(--warn); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px; }
+  th { background: var(--primary); color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+
+  .file-tree { background: #1a1a2e; color: #e0e0e0; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 13px; line-height: 1.9; overflow-x: auto; margin-bottom: 16px; }
+  .file-tree .dir { color: #82b1ff; }
+  .file-tree .new { color: #a5d6a7; }
+  .file-tree .mod { color: #fff176; }
+
+  details { margin-bottom: 12px; }
+  details > summary { cursor: pointer; font-weight: 600; padding: 10px 14px; background: #f0f4ff; border-radius: 6px; border: 1px solid #c5cae9; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details > summary::before { content: '▶'; font-size: 10px; color: var(--primary); transition: transform .2s; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  details .detail-body { padding: 16px; border: 1px solid #c5cae9; border-top: none; border-radius: 0 0 6px 6px; background: #fafbff; }
+
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 16px 0; }
+  .flow-node { background: var(--primary); color: #fff; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
+  .flow-node.done { background: var(--success); }
+  .flow-node.cancel { background: #757575; }
+  .flow-node.blocked { background: var(--warn); }
+  .flow-arrow { color: var(--muted); padding: 0 6px; font-size: 18px; }
+
+  .arch-layers { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
+  .layer { display: flex; align-items: center; gap: 12px; }
+  .layer-label { width: 130px; font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .layer-box { flex: 1; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+  .layer-box.domain { background: #e8f5e9; border: 1px solid #a5d6a7; }
+  .layer-box.application { background: #e3f2fd; border: 1px solid #90caf9; }
+  .layer-box.infrastructure { background: #fff3e0; border: 1px solid #ffcc80; }
+  .layer-box.api { background: #f3e5f5; border: 1px solid #ce93d8; }
+
+  @media (max-width: 768px) { nav.sidebar { display: none; } main { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="sidebar" id="sidebar">
+  <div class="brand">
+    <h1>HCMS Docs</h1>
+    <p>Phase 3 — Documents, Tasks &amp; Notes</p>
+  </div>
+  <div class="section-label">Overview</div>
+  <a href="#overview">What was built</a>
+  <a href="#stats">Stats</a>
+  <div class="section-label">Document Management</div>
+  <a href="#blob">Blob Storage Design</a>
+  <a href="#docs-backend">Backend: Documents</a>
+  <a href="#docs-frontend">Frontend: Documents</a>
+  <div class="section-label">Task Management</div>
+  <a href="#tasks-backend">Backend: Tasks</a>
+  <a href="#tasks-frontend">Frontend: Tasks</a>
+  <div class="section-label">Architecture</div>
+  <a href="#clean-arch">Clean Architecture</a>
+  <a href="#decisions">Key Decisions</a>
+  <a href="#security">Security</a>
+  <a href="#files">Files Changed</a>
+  <a href="#next">What's Next</a>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <h1>Phase 3 — Documents, Tasks &amp; Notes</h1>
+    <p>Azure Blob Storage integration for secure file management, plus in-case task tracking with a validated status state machine and overdue detection.</p>
+    <div class="meta">
+      <span class="badge"><strong>Status:</strong> In Progress (E2E testing pending)</span>
+      <span class="badge"><strong>Duration:</strong> 2 weeks</span>
+      <span class="badge"><strong>Backend + Frontend:</strong> Complete</span>
+      <span class="badge"><strong>Build:</strong> 0 errors</span>
+    </div>
+  </div>
+
+  <section id="stats">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num">2</div><div class="lbl">New entity types</div></div>
+      <div class="stat-card"><div class="num">2</div><div class="lbl">New controllers</div></div>
+      <div class="stat-card"><div class="num">5</div><div class="lbl">New Angular components</div></div>
+      <div class="stat-card"><div class="num">1hr</div><div class="lbl">Max SAS URL expiry</div></div>
+      <div class="stat-card"><div class="num">20MB</div><div class="lbl">Max upload size</div></div>
+      <div class="stat-card"><div class="num">4</div><div class="lbl">Allowed MIME types</div></div>
+    </div>
+  </section>
+
+  <section id="overview">
+    <h2>What Was Built</h2>
+    <p>Phase 3 adds two major capabilities to Case Detail:</p>
+    <ol>
+      <li><strong>Document Management</strong> — upload PDF/DOCX/PNG/JPG files to Azure Blob Storage. Files are stored in a private container; SQL stores only metadata. Download links are time-limited SAS URLs (max 1 hour) generated on demand. Soft-delete is supported.</li>
+      <li><strong>Task Management</strong> — create and track tasks within a case. Tasks are assigned to care team members, have due dates with overdue detection, and move through a validated status lifecycle.</li>
+    </ol>
+    <p>Both features are embedded in the <strong>Case Detail</strong> tab group as child components — <code>CaseDocumentsComponent</code> (Documents tab) and <code>CaseTasksComponent</code> (Tasks tab) — receiving the case number as an <code>@Input()</code>.</p>
+  </section>
+
+  <!-- Blob Storage Design -->
+  <section id="blob">
+    <h2>Blob Storage Design</h2>
+    <p>The core design decision is <strong>never store a blob URL in the database</strong>. Here's why that matters:</p>
+
+    <div class="analogy">
+      <strong>Analogy — SAS URL vs. permanent URL:</strong> Think of a document in a locked filing cabinet. A permanent public URL is like leaving the cabinet unlocked forever — anyone who finds the URL can access the file. A SAS URL is like a time-locked combination that expires: you get a unique code, use it within 1 hour, then it's worthless even if someone intercepts it.
+    </div>
+
+    <div class="arch-layers">
+      <div class="layer">
+        <div class="layer-label">SQL stores</div>
+        <div class="layer-box application">BlobName (GUID), FileName, ContentType, FileSize, Category, IsDeleted</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">Blob stores</div>
+        <div class="layer-box infrastructure">Raw file bytes at <code>case-documents/{blobName}</code> — private container, no public access</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">API generates</div>
+        <div class="layer-box api">SAS URL on-demand: <code>GET /api/documents/{id}/download-url</code> → 1-hour signed URL, never logged</div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Why not store the blob URL in the database?</summary>
+      <div class="detail-body">
+        <p>A blob URL is either public (accessible to anyone forever) or a SAS URL that embeds credentials and an expiry. Storing a SAS URL in the DB would mean every DB read leaks a short-lived credential. Storing a public URL violates HIPAA — medical documents must not be publicly accessible.</p>
+        <p>The clean approach: store only the logical blob name (a GUID). When a user requests a download, the server generates a fresh SAS URL, returns it to the client, and the client opens it in a new tab. The URL is never persisted anywhere.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Azure Blob Storage authentication flow</summary>
+      <div class="detail-body">
+        <p>The <code>IBlobStorageService</code> is an abstraction in the Application layer. The Infrastructure implementation uses <code>BlobServiceClient</code> from the Azure Storage SDK, authenticated via <code>DefaultAzureCredential</code>. In production (Azure App Service), this resolves to Managed Identity — no credentials in code. Locally, it falls back to Azurite (the local blob emulator) configured in <code>appsettings.Development.json</code>.</p>
+        <div class="warn-box">
+          <strong>Local dev requirement:</strong> Azurite must be running before the API starts. Run: <code>azurite --silent --location .azurite --debug .azurite/debug.log</code>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- Documents Backend -->
+  <section id="docs-backend">
+    <h2>Backend: Document Management</h2>
+    <div class="card">
+      <h3>Document Entity</h3>
+      <ul>
+        <li><code>Id</code> (GUID, sequential), <code>CaseNumber</code>, <code>BlobName</code> (GUID, the key in Blob Storage)</li>
+        <li><code>OriginalFileName</code>, <code>ContentType</code>, <code>FileSizeBytes</code></li>
+        <li><code>Category</code> (Referral | LabResult | ConsentForm | Insurance | Other)</li>
+        <li><code>UploadedByUserId</code>, <code>UploadedAt</code>, <code>IsDeleted</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>DocumentsController — API Endpoints</h3>
+      <table>
+        <tr><th>Method</th><th>Route</th><th>Role</th><th>Description</th></tr>
+        <tr><td>POST</td><td><code>/api/cases/{caseNumber}/documents/upload</code></td><td>CareCoordinator+</td><td>Multipart upload; validates MIME type + size; uploads to Blob; saves metadata</td></tr>
+        <tr><td>GET</td><td><code>/api/cases/{caseNumber}/documents</code></td><td>All</td><td>List documents for a case (excludes soft-deleted)</td></tr>
+        <tr><td>GET</td><td><code>/api/cases/{caseNumber}/documents/{id}/download-url</code></td><td>All</td><td>Generate 1-hour SAS URL; log download to AuditLogs</td></tr>
+        <tr><td>DELETE</td><td><code>/api/cases/{caseNumber}/documents/{id}</code></td><td>Supervisor+</td><td>Soft-delete: sets IsDeleted = true; blob remains in storage</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Validation Rules</h3>
+      <ul>
+        <li>Allowed MIME types: <code>application/pdf</code>, <code>image/png</code>, <code>image/jpeg</code>, <code>application/vnd.openxmlformats-officedocument.wordprocessingml.document</code></li>
+        <li>Max file size: 20 MB (validated in DataHandler, not just Kestrel config)</li>
+        <li>MIME type is read from the uploaded bytes (via ContentType header), not just the file extension</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Documents Frontend -->
+  <section id="docs-frontend">
+    <h2>Frontend: CaseDocumentsComponent</h2>
+    <p>Embedded in the Documents tab of <code>CaseDetailComponent</code>. Receives <code>[caseNumber]</code> as input.</p>
+    <details>
+      <summary>Upload section</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Hidden <code>&lt;input type="file"&gt;</code> triggered by a visible "Choose File" button.</li>
+          <li>Category <code>mat-select</code> (required) — Referral, Lab Result, Consent Form, Insurance, Other.</li>
+          <li>Optional description <code>mat-input</code>.</li>
+          <li>Upload button — disabled until a file and category are selected.</li>
+          <li><code>mat-progress-bar</code> shown while uploading; hidden otherwise.</li>
+          <li>On success: new document prepended to the list; form reset; snack bar confirmation.</li>
+        </ul>
+      </div>
+    </details>
+    <details>
+      <summary>Document table</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Columns: file icon (PDF/image/Word/generic via <code>iconForType()</code>), file name, human-readable size (<code>formatSize()</code>), category, uploaded by, actions.</li>
+          <li>Download button: calls <code>getDocumentDownloadUrl()</code> → opens SAS URL in new tab.</li>
+          <li>Delete button (Supervisor+ only, via <code>*appHasRole</code>): calls <code>deleteDocument()</code> → removes from local array on success.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- Tasks Backend -->
+  <section id="tasks-backend">
+    <h2>Backend: Task Management</h2>
+    <div class="card">
+      <h3>CaseTask Entity</h3>
+      <ul>
+        <li><code>Id</code>, <code>CaseId</code>, <code>Title</code>, <code>Description</code></li>
+        <li><code>Priority</code> (Low | Medium | High | Critical)</li>
+        <li><code>Status</code> (Todo | InProgress | Blocked | Done | Cancelled)</li>
+        <li><code>AssignedToUserId</code>, <code>DueDate</code>, <code>CompletedAt</code></li>
+        <li>DueDate has a DB index for overdue query performance</li>
+      </ul>
+    </div>
+
+    <h3>Task Status State Machine</h3>
+    <div class="flow">
+      <div class="flow-node">Todo</div><div class="flow-arrow">→</div>
+      <div class="flow-node" style="background:#1565c0">InProgress</div><div class="flow-arrow">→</div>
+      <div class="flow-node blocked">Blocked</div><div class="flow-arrow">→</div>
+      <div class="flow-node done">Done</div>
+    </div>
+    <div class="flow" style="margin-top: 8px;">
+      <div class="flow-node cancel">Cancelled</div>
+      <span style="padding-left:12px;font-size:13px;color:var(--muted)">← from Todo, InProgress, or Blocked</span>
+    </div>
+    <p style="margin-top:12px">Transitions are validated server-side in <code>TaskDataHandler</code>. The UI inline select only shows valid next states, but the server rejects invalid transitions regardless.</p>
+
+    <div class="card">
+      <h3>TasksController — API Endpoints</h3>
+      <table>
+        <tr><th>Method</th><th>Route</th><th>Role</th><th>Description</th></tr>
+        <tr><td>GET</td><td><code>/api/cases/{caseNumber}/tasks</code></td><td>All</td><td>All tasks for a case</td></tr>
+        <tr><td>POST</td><td><code>/api/cases/{caseNumber}/tasks</code></td><td>CareCoordinator+</td><td>Create task with assignee and due date</td></tr>
+        <tr><td>PUT</td><td><code>/api/tasks/{id}/status</code></td><td>Authenticated</td><td>Transition status (validated)</td></tr>
+        <tr><td>DELETE</td><td><code>/api/tasks/{id}</code></td><td>CareCoordinator+</td><td>Cancel task (soft)</td></tr>
+        <tr><td>GET</td><td><code>/api/tasks/my</code></td><td>Authenticated</td><td>Tasks assigned to current user</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tasks Frontend -->
+  <section id="tasks-frontend">
+    <h2>Frontend: CaseTasksComponent</h2>
+    <p>Embedded in the Tasks tab of <code>CaseDetailComponent</code>. Receives <code>[caseNumber]</code> as input.</p>
+    <details>
+      <summary>Add task form</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Title input (required, flex:2)</li>
+          <li>Priority select: Low / Medium / High / Critical (colour-coded pill in the table)</li>
+          <li>Assignee dropdown — users fetched from <code>/api/users</code></li>
+          <li>Due date — <code>&lt;input type="date"&gt;</code></li>
+          <li>Add Task button — disabled while saving</li>
+        </ul>
+      </div>
+    </details>
+    <details>
+      <summary>Task table</summary>
+      <div class="detail-body">
+        <ul>
+          <li>Title column: task title + assignee name as sub-text</li>
+          <li>Priority badge: colour classes (<code>.priority-low</code>, <code>.priority-medium</code>, <code>.priority-high</code>, <code>.priority-critical</code>)</li>
+          <li>Status column: inline <code>mat-select</code> — changes call <code>updateTaskStatus()</code> immediately</li>
+          <li>Due date: overdue dates highlighted in red (<code>.overdue</code> CSS class)</li>
+          <li>Done/Cancelled rows dimmed to 0.5 opacity (<code>[class.done-row]</code> binding)</li>
+          <li>Cancel button: removes task from local array on success</li>
+        </ul>
+      </div>
+    </details>
+    <div class="analogy">
+      <strong>Analogy — inline status select:</strong> Like a Kanban card on a physical board that you can drag between columns. The inline dropdown lets a clinician update a task's status without leaving the case detail page — the same mental model as moving a sticky note from "In Progress" to "Done."
+    </div>
+  </section>
+
+  <!-- Clean Architecture -->
+  <section id="clean-arch">
+    <h2>Clean Architecture — Phase 3 Layer Map</h2>
+    <p>Phase 3 introduces the <code>IBlobStorageService</code> abstraction. This is a good illustration of why Clean Architecture separates the Application and Infrastructure layers.</p>
+    <div class="arch-layers">
+      <div class="layer">
+        <div class="layer-label">Domain</div>
+        <div class="layer-box domain"><code>Document</code>, <code>CaseTask</code> — pure entities, no dependencies</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">Application</div>
+        <div class="layer-box application"><code>IDocumentDataHandler</code>, <code>ITaskDataHandler</code>, <code>IBlobStorageService</code> — interfaces only; no Azure SDK imports</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">Infrastructure</div>
+        <div class="layer-box infrastructure"><code>DocumentDataHandler</code> (EF Core), <code>TaskDataHandler</code> (EF Core), <code>AzureBlobStorageService</code> (Azure SDK) — all implement Application interfaces</div>
+      </div>
+      <div class="layer">
+        <div class="layer-label">API</div>
+        <div class="layer-box api"><code>DocumentsController</code>, <code>TasksController</code> — inject IDocumentDataHandler, ITaskDataHandler only; never reference Infrastructure directly</div>
+      </div>
+    </div>
+    <div class="analogy">
+      <strong>Analogy:</strong> The Application layer defines <em>what</em> it needs from storage (<code>IBlobStorageService.UploadAsync()</code>). The Infrastructure layer decides <em>how</em> — today it's Azure Blob Storage; tomorrow it could be S3 or a local filesystem. The API and Application layers never need to change when the storage provider changes.
+    </div>
+  </section>
+
+  <!-- Key Decisions -->
+  <section id="decisions">
+    <h2>Key Decisions &amp; Trade-offs</h2>
+    <table>
+      <tr><th>Decision</th><th>Chosen</th><th>Rejected</th><th>Reason</th></tr>
+      <tr>
+        <td>File storage</td>
+        <td>Azure Blob Storage (private container)</td>
+        <td>Store files in SQL as varbinary</td>
+        <td>SQL is optimised for structured data, not binary blobs. Blob Storage is cheaper, faster for large files, and supports CDN/streaming.</td>
+      </tr>
+      <tr>
+        <td>Download URL</td>
+        <td>SAS URL generated on demand (1h expiry)</td>
+        <td>Permanent public URL or server-proxied download</td>
+        <td>Public URLs violate HIPAA. Server-proxied streaming wastes bandwidth. SAS URLs offload delivery to Azure CDN while keeping access controlled.</td>
+      </tr>
+      <tr>
+        <td>Blob deletion</td>
+        <td>Soft-delete metadata; defer physical blob deletion</td>
+        <td>Immediately delete blob on document delete</td>
+        <td>Soft-delete preserves audit integrity. Physical deletion is a background job (Phase 8) — Azure doesn't charge much for cold storage in the meantime.</td>
+      </tr>
+      <tr>
+        <td>Task location</td>
+        <td>Tasks embedded in Case Detail (CaseTasksComponent)</td>
+        <td>Standalone Tasks module with its own route</td>
+        <td>A care coordinator's primary workflow is case-centric. Embedding tasks in the case tab keeps the workflow cohesive. A <code>MyTasksComponent</code> (cross-case view) is still planned but deferred.</td>
+      </tr>
+      <tr>
+        <td>MIME validation</td>
+        <td>Validate ContentType header + extension whitelist</td>
+        <td>Extension-only check</td>
+        <td>File extensions are trivially spoofed. ContentType is harder to fake but still not the gold standard — a full magic-bytes check would be ideal but is deferred as a stretch goal.</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- Security -->
+  <section id="security">
+    <h2>Security Notes</h2>
+    <ul class="checklist">
+      <li>Blob container is private — no public access; all requests go through the API or a SAS token</li>
+      <li>SAS URLs are never logged to Application Insights (CLAUDE.md hard rule FR-25)</li>
+      <li>SAS URLs expire in 1 hour maximum — intercepted tokens have a short window</li>
+      <li>Every download is written to <code>AuditLogs</code> for HIPAA traceability</li>
+      <li>MIME type whitelist — only PDF, PNG, JPEG, DOCX accepted; anything else returns 400</li>
+      <li>Max 20 MB enforced in the DataHandler (not just Kestrel maxRequestBodySize)</li>
+      <li>Soft-delete only — documents are never physically removed until a scheduled cleanup job runs</li>
+      <li>Task endpoints use role-based auth — assignees can update status; only CareCoordinator+ can create or delete</li>
+    </ul>
+  </section>
+
+  <!-- Files -->
+  <section id="files">
+    <h2>Files Added / Changed</h2>
+    <details>
+      <summary>Backend — C# files</summary>
+      <div class="detail-body">
+        <ul>
+          <li><code>HCM.Domain/Entities/Document.cs</code>, <code>CaseTask.cs</code></li>
+          <li><code>HCM.Application/Interfaces/IBlobStorageService.cs</code></li>
+          <li><code>HCM.Application/Documents/DataHandlers/IDocumentDataHandler.cs</code> + impl</li>
+          <li><code>HCM.Application/Tasks/DataHandlers/ITaskDataHandler.cs</code> + impl</li>
+          <li><code>HCM.Infrastructure/Services/AzureBlobStorageService.cs</code></li>
+          <li><code>HCM.Infrastructure/Persistence/ApplicationDbContext.cs</code> (Documents, CaseTasks DbSets)</li>
+          <li><code>HCM.Infrastructure/Migrations/AddDocumentsAndTasks.cs</code></li>
+          <li><code>HCM.API/Controllers/DocumentsController.cs</code></li>
+          <li><code>HCM.API/Controllers/TasksController.cs</code></li>
+          <li><code>HCM.Application/DependencyInjection.cs</code> (new registrations)</li>
+          <li><code>HCM.Infrastructure/DependencyInjection.cs</code> (BlobServiceClient + IBlobStorageService)</li>
+          <li><code>HCM.Infrastructure/HCM.Infrastructure.csproj</code> (Azure.Storage.Blobs package)</li>
+        </ul>
+      </div>
+    </details>
+    <details>
+      <summary>Frontend — Angular files</summary>
+      <div class="detail-body">
+        <div class="file-tree">
+<span class="dir">src-ng/hcm-web/src/app/features/cases/</span>
+├── <span class="new">documents/</span>
+│   ├── <span class="new">documents.component.ts</span>   (CaseDocumentsComponent)
+│   ├── <span class="new">documents.component.html</span>
+│   └── <span class="new">documents.component.scss</span>
+└── <span class="new">tasks/</span>
+    ├── <span class="new">tasks.component.ts</span>       (CaseTasksComponent)
+    ├── <span class="new">tasks.component.html</span>
+    └── <span class="new">tasks.component.scss</span>
+
+<span class="mod">case-detail.component.ts</span>  ← added CaseTasksComponent + CaseDocumentsComponent imports
+<span class="mod">case-detail.component.html</span> ← wired &lt;app-case-documents&gt; + &lt;app-case-tasks&gt; in tabs
+<span class="mod">case.service.ts</span>           ← added getDocuments, uploadDocument, getDocumentDownloadUrl, deleteDocument, getTasks, addTask, updateTaskStatus, deleteTask
+<span class="mod">case.models.ts</span>            ← added DocumentDto, TaskDto, CreateTaskRequest
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- Next -->
+  <section id="next">
+    <h2>What's Next</h2>
+    <h3>Remaining Phase 3 items</h3>
+    <ul class="checklist">
+      <li class="pending">E2E test: upload a PDF with Azurite running; verify file appears in document list</li>
+      <li class="pending">E2E test: SAS URL expiry verification</li>
+      <li class="pending">MyTasksComponent — standalone page for tasks assigned to the current user (cross-case view)</li>
+      <li class="pending">Overdue task count badge in sidebar nav</li>
+    </ul>
+    <h3 style="margin-top:16px">Phase 4 — Appointments &amp; Scheduling</h3>
+    <p>Phase 4 adds: appointment scheduling with conflict detection, provider availability, and status transitions (Scheduled → Confirmed → Completed / NoShow / Cancelled). A background service creates notification rows 24h before each appointment. See <a href="phase-4-appointments-scheduling.html">phase-4-appointments-scheduling.html</a>.</p>
+    <h3 style="margin-top:16px">Phase 5 — FHIR/HL7 Integration</h3>
+    <p>The next major phase: expose a FHIR R4-compliant API at <code>/fhir/R4/</code>, implement <code>Patient/$everything</code> Bundle export, and build a two-step FhirImportComponent in Angular. Uses the Firely .NET SDK.</p>
+  </section>
+
+</main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav.sidebar a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`nav.sidebar a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -75% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

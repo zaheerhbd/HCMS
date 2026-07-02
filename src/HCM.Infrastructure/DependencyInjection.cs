@@ -2,6 +2,7 @@
 using HCM.Infrastructure.BackgroundJobs;
 using HCM.Infrastructure.Identity;
 using HCM.Infrastructure.Persistence;
+using HCM.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,7 @@ public static class DependencyInjection
             provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IBlobStorageService, BlobStorageService>();
 
         services.AddHostedService<CaseNoteEditLockService>();
 

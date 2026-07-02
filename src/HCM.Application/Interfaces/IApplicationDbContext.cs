@@ -21,5 +21,10 @@ public interface IApplicationDbContext
     DbSet<CaseNote> CaseNotes { get; }
     DbSet<AuditLog> AuditLogs { get; }
 
+    DbSet<CaseTask> CaseTasks { get; }
+    DbSet<Document> Documents { get; }
+    DbSet<Provider> Providers { get; }
+    DbSet<Appointment> Appointments { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

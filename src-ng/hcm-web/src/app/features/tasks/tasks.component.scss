@@ -1,0 +1,111 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+  }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.overdue-chip {
+  background: #fce4ec;
+  color: #c62828;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.spinner-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.tasks-table {
+  width: 100%;
+}
+
+.task-title {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.overdue-title {
+  color: #c62828;
+}
+
+.warn-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #f44336;
+}
+
+.task-desc {
+  font-size: 12px;
+  color: #757575;
+  margin-top: 2px;
+}
+
+.case-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 13px;
+
+  &:hover { text-decoration: underline; }
+}
+
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.priority-low      { background: #e8f5e9; color: #2e7d32; }
+.priority-medium   { background: #fff3e0; color: #e65100; }
+.priority-high     { background: #fce4ec; color: #c62828; }
+.priority-critical { background: #b71c1c; color: white; }
+
+.status-select {
+  font-size: 13px;
+}
+
+.muted {
+  color: #bdbdbd;
+}
+
+.overdue {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #9e9e9e;
+  padding: 60px 20px;
+
+  .empty-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+
+  p { margin: 0; font-size: 15px; }
+}

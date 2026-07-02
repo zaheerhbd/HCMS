@@ -33,80 +33,8 @@ import { AuthService } from '../../../core/services/auth.service';
     MatTooltipModule,
     MatSnackBarModule
   ],
-  template: `
-    <div class="page-header">
-      <h1>Patients</h1>
-      <button mat-flat-button color="primary" routerLink="new"
-        *ngIf="canCreate">
-        <mat-icon>person_add</mat-icon> New Patient
-      </button>
-    </div>
-
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Search by name, MRN, or insurance ID</mat-label>
-      <input matInput [formControl]="searchControl" />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-
-    <div *ngIf="loading" class="spinner-wrap">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <table mat-table [dataSource]="rows" *ngIf="!loading">
-      <ng-container matColumnDef="mrn">
-        <th mat-header-cell *matHeaderCellDef>MRN</th>
-        <td mat-cell *matCellDef="let p">{{ p.mrn }}</td>
-      </ng-container>
-      <ng-container matColumnDef="fullName">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let p">{{ p.fullName }}</td>
-      </ng-container>
-      <ng-container matColumnDef="dateOfBirth">
-        <th mat-header-cell *matHeaderCellDef>Date of Birth</th>
-        <td mat-cell *matCellDef="let p">{{ p.dateOfBirth | date:'mediumDate' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="phone">
-        <th mat-header-cell *matHeaderCellDef>Phone</th>
-        <td mat-cell *matCellDef="let p">{{ p.phone ?? '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let p">
-          <button mat-icon-button [routerLink]="p.mrn" matTooltip="View patient">
-            <mat-icon>visibility</mat-icon>
-          </button>
-          <button mat-icon-button [routerLink]="[p.mrn, 'edit']" matTooltip="Edit patient"
-            *ngIf="canCreate">
-            <mat-icon>edit</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns;" class="clickable-row"
-        (click)="navigate(row.mrn)"></tr>
-    </table>
-
-    <div *ngIf="!loading && rows.length === 0" class="empty-state">
-      No patients found.
-    </div>
-
-    <mat-paginator
-      [length]="totalCount"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="onPage($event)">
-    </mat-paginator>
-  `,
-  styles: [`
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .search-field { width: 100%; margin-bottom: 16px; }
-    .spinner-wrap { display: flex; justify-content: center; padding: 40px; }
-    .empty-state { text-align: center; padding: 40px; color: #757575; }
-    .clickable-row { cursor: pointer; }
-    .clickable-row:hover { background: #f5f5f5; }
-    table { width: 100%; }
-  `]
+  templateUrl: './patient-list.component.html',
+  styleUrls: ['./patient-list.component.scss']
 })
 export class PatientListComponent implements OnInit, OnDestroy {
   rows: PatientListItemDto[] = [];

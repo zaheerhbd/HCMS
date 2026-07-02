@@ -29,76 +29,8 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
     MatSelectModule,
     MatSnackBarModule
   ],
-  template: `
-    <div *ngIf="canManage" class="add-form">
-      <form [formGroup]="addForm" (ngSubmit)="addMember()">
-        <mat-form-field appearance="outline">
-          <mat-label>Team Member</mat-label>
-          <mat-select formControlName="userId">
-            <mat-option *ngFor="let u of assignableUsers" [value]="u.id">
-              {{ u.fullName }} <span class="role-hint">({{ u.roles[0] }})</span>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Role on Team</mat-label>
-          <mat-select formControlName="teamRole">
-            <mat-option value="Lead Coordinator">Lead Coordinator</mat-option>
-            <mat-option value="Care Coordinator">Care Coordinator</mat-option>
-            <mat-option value="Clinician">Clinician</mat-option>
-            <mat-option value="Specialist">Specialist</mat-option>
-            <mat-option value="Support">Support</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <button mat-flat-button color="primary" type="submit" [disabled]="addForm.invalid || adding">
-          Add Member
-        </button>
-      </form>
-    </div>
-
-    <table mat-table [dataSource]="members" *ngIf="members.length > 0">
-      <ng-container matColumnDef="user">
-        <th mat-header-cell *matHeaderCellDef>User</th>
-        <td mat-cell *matCellDef="let m">
-          <div class="user-cell">
-            <span class="user-name">{{ m.userName }}</span>
-            <span class="user-email">{{ m.userEmail }}</span>
-          </div>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="teamRole">
-        <th mat-header-cell *matHeaderCellDef>Role</th>
-        <td mat-cell *matCellDef="let m">{{ m.teamRole }}</td>
-      </ng-container>
-      <ng-container matColumnDef="joinedAt">
-        <th mat-header-cell *matHeaderCellDef>Joined</th>
-        <td mat-cell *matCellDef="let m">{{ m.joinedAt | date:'mediumDate' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let m">
-          <button mat-icon-button color="warn" (click)="removeMember(m)" *ngIf="canManage && m.isActive">
-            <mat-icon>person_remove</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns;"
-        [class.inactive]="!row.isActive"></tr>
-    </table>
-    <div *ngIf="members.length === 0" class="empty">No team members assigned.</div>
-  `,
-  styles: [`
-    .add-form form { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; }
-    .add-form mat-form-field { flex: 1; min-width: 180px; }
-    .role-hint { font-size: 12px; color: #757575; }
-    .user-cell { display: flex; flex-direction: column; }
-    .user-name { font-weight: 500; }
-    .user-email { font-size: 12px; color: #757575; }
-    .inactive { opacity: 0.5; }
-    .empty { color: #757575; text-align: center; padding: 20px; }
-    table { width: 100%; }
-  `]
+  templateUrl: './care-team.component.html',
+  styleUrls: ['./care-team.component.scss']
 })
 export class CareTeamComponent implements OnInit {
   @Input() caseNumber = '';

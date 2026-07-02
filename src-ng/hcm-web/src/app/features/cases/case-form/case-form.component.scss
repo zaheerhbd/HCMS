@@ -1,0 +1,29 @@
+.breadcrumb {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #757575;
+
+  a {
+    color: #1976d2;
+    text-decoration: none;
+  }
+}
+
+.case-form {
+  max-width: 600px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.inline-spinner {
+  display: inline-block;
+  margin-right: 6px;
+}

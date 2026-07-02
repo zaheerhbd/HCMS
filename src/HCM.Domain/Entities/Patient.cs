@@ -24,6 +24,8 @@ public class Patient
     // Navigation properties
     public virtual ICollection<PatientInsurance> Insurance { get; set; } = [];
     public virtual ICollection<Case> Cases { get; set; } = [];
+    public virtual ICollection<Document> Documents { get; set; } = [];
+    public virtual ICollection<Appointment> Appointments { get; set; } = [];
 
     public string FullName => $"{FirstName} {LastName}";
 }

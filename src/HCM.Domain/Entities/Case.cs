@@ -23,4 +23,7 @@ public class Case
     public virtual ICollection<CareTeamMember> CareTeam { get; set; } = [];
     public virtual ICollection<CaseNote> Notes_Collection { get; set; } = [];
     public virtual ICollection<CaseCaseTag> CaseTags { get; set; } = [];
+    public virtual ICollection<CaseTask> Tasks { get; set; } = [];
+    public virtual ICollection<Document> Documents { get; set; } = [];
+    public virtual ICollection<Appointment> Appointments { get; set; } = [];
 }

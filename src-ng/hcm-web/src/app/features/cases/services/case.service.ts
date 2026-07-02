@@ -12,7 +12,12 @@ import {
   AddCareTeamMemberRequest,
   CareTeamMemberDto,
   CaseNoteDto,
-  CreateCaseNoteRequest
+  CreateCaseNoteRequest,
+  TaskDto,
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  TaskStatusChangeRequest,
+  DocumentDto
 } from '../../../core/models/case.models';
 
 @Injectable({ providedIn: 'root' })
@@ -73,5 +78,43 @@ export class CaseService {
 
   addNote(caseNumber: string, request: CreateCaseNoteRequest): Observable<CaseNoteDto> {
     return this.http.post<CaseNoteDto>(`${this.base}/${caseNumber}/notes`, request);
+  }
+
+  // Tasks
+  getTasks(caseNumber: string): Observable<TaskDto[]> {
+    return this.http.get<TaskDto[]>(`${this.base}/${caseNumber}/tasks`);
+  }
+
+  createTask(caseNumber: string, request: CreateTaskRequest): Observable<TaskDto> {
+    return this.http.post<TaskDto>(`${this.base}/${caseNumber}/tasks`, request);
+  }
+
+  updateTask(caseNumber: string, taskId: string, request: UpdateTaskRequest): Observable<TaskDto> {
+    return this.http.put<TaskDto>(`${this.base}/${caseNumber}/tasks/${taskId}`, request);
+  }
+
+  changeTaskStatus(caseNumber: string, taskId: string, request: TaskStatusChangeRequest): Observable<TaskDto> {
+    return this.http.post<TaskDto>(`${this.base}/${caseNumber}/tasks/${taskId}/status`, request);
+  }
+
+  deleteTask(caseNumber: string, taskId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${caseNumber}/tasks/${taskId}`);
+  }
+
+  // Documents
+  getDocuments(caseNumber: string): Observable<DocumentDto[]> {
+    return this.http.get<DocumentDto[]>(`${this.base}/${caseNumber}/documents`);
+  }
+
+  uploadDocument(caseNumber: string, formData: FormData): Observable<DocumentDto> {
+    return this.http.post<DocumentDto>(`${this.base}/${caseNumber}/documents/upload`, formData);
+  }
+
+  getDocumentDownloadUrl(caseNumber: string, documentId: string): Observable<{ url: string; expiresInMinutes: number }> {
+    return this.http.get<{ url: string; expiresInMinutes: number }>(`${this.base}/${caseNumber}/documents/${documentId}/download-url`);
+  }
+
+  deleteDocument(caseNumber: string, documentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${caseNumber}/documents/${documentId}`);
   }
 }

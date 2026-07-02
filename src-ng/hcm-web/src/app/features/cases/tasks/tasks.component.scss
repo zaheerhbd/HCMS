@@ -1,0 +1,68 @@
+.add-form {
+  margin-bottom: 16px;
+
+  form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+.field-title {
+  flex: 2;
+  min-width: 200px;
+}
+
+.field-medium {
+  flex: 1;
+  min-width: 140px;
+}
+
+.tasks-table {
+  width: 100%;
+}
+
+.task-title {
+  font-weight: 500;
+}
+
+.task-assignee {
+  font-size: 12px;
+  color: #757575;
+}
+
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.priority-low      { background: #e8f5e9; color: #2e7d32; }
+.priority-medium   { background: #fff3e0; color: #e65100; }
+.priority-high     { background: #fce4ec; color: #c62828; }
+.priority-critical { background: #b71c1c; color: white; }
+
+.status-select {
+  font-size: 13px;
+}
+
+.muted {
+  color: #bdbdbd;
+}
+
+.overdue {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.done-row {
+  opacity: 0.5;
+}
+
+.empty {
+  color: #757575;
+  text-align: center;
+  padding: 20px;
+}

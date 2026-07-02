@@ -98,3 +98,57 @@ export interface CaseTypeDto {
   name: string;
   isActive: boolean;
 }
+
+// Task models (Phase 3)
+export interface TaskDto {
+  id: string;
+  caseId: string;
+  caseNumber?: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  assignedTo?: string;
+  assignedToUserName?: string;
+  dueDate?: string;
+  completedAt?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  priority: string;
+  assignedTo?: string;
+  dueDate?: string;
+}
+
+export interface UpdateTaskRequest {
+  title?: string;
+  description?: string;
+  priority?: string;
+  assignedTo?: string;
+  dueDate?: string;
+}
+
+export interface TaskStatusChangeRequest {
+  newStatus: string;
+}
+
+// Document models (Phase 3)
+export interface DocumentDto {
+  id: string;
+  caseId: string;
+  patientId: string;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  category: string;
+  description?: string;
+  isDeleted: boolean;
+  uploadedBy: string;
+  uploadedByUserName?: string;
+  uploadedAt: string;
+}

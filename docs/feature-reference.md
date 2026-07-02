@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-06-29 (session 3)
+**Last Updated:** 2026-07-02 (Module 6 Document Management UI hidden — nav item, Case Detail tab, Patient Detail tab, and route removed; backend and component files retained)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -12,13 +12,13 @@
 | # | Module | Phase | Status | FR References |
 |---|---|---|---|---|
 | 1 | Identity & Access (Auth) | 1 | Complete | FR-01 – FR-04 |
-| 2 | Patient Management | 2 | In Progress | FR-05 – FR-08 |
-| 3 | Case Management | 2 | In Progress | FR-09 – FR-14 |
-| 4 | Case Notes | 2 | In Progress | FR-15 – FR-18 |
-| 5 | Task Management | 3 | Not Started | FR-19 – FR-22 |
-| 6 | Document Management | 3 | Not Started | FR-23 – FR-27 |
-| 7 | Appointments & Scheduling | 4 | Not Started | FR-28 – FR-32 |
-| 8 | Care Team | 2 | In Progress | FR-33 – FR-35 |
+| 2 | Patient Management | 2 | Complete | FR-05 – FR-08 |
+| 3 | Case Management | 2 | Complete | FR-09 – FR-14 |
+| 4 | Case Notes | 2 | Complete | FR-15 – FR-18 |
+| 5 | Task Management | 3 | Complete | FR-19 – FR-22 |
+| 6 | Document Management | 3 | Hidden (UI disabled) | FR-23 – FR-27 |
+| 7 | Appointments & Scheduling | 4 | Complete | FR-28 – FR-32 |
+| 8 | Care Team | 2 | Complete | FR-33 – FR-35 |
 | 9 | Dashboard & Reports | 6 | Not Started | FR-36 – FR-39 |
 | 10 | Audit & Compliance | 2 | In Progress | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Not Started | FR-43 – FR-45 |
@@ -66,7 +66,7 @@
 
 ## 2. Patient Management
 
-**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete; routes use MRN: `/api/patients/{mrn}`)
+**Phase:** 2 | **Status:** Complete
 
 ### Features
 - Register patients with demographics, contact info, and insurance.
@@ -100,7 +100,7 @@
 
 ## 3. Case Management
 
-**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete; routes use CaseNumber: `/api/cases/{caseNumber}`)
+**Phase:** 2 | **Status:** Complete
 
 ### Features
 - Create cases linked to a patient with case type, priority, tags, and lead coordinator.
@@ -154,7 +154,7 @@ Closed       → (terminal — no transitions)
 
 ## 4. Case Notes
 
-**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete)
+**Phase:** 2 | **Status:** Complete
 
 ### Features
 - Timestamped, author-attributed notes on any case.
@@ -171,7 +171,7 @@ Closed       → (terminal — no transitions)
 
 ## 5. Task Management
 
-**Phase:** 3 | **Status:** Not Started
+**Phase:** 3 | **Status:** Complete
 
 ### Features
 - Tasks created within a case, assigned to any care team member.
@@ -210,7 +210,7 @@ Cancelled → (terminal)
 
 ## 6. Document Management
 
-**Phase:** 3 | **Status:** Not Started
+**Phase:** 3 | **Status:** Hidden (UI disabled — backend complete, component files retained)
 
 ### Features
 - Upload PDF, DOCX, PNG, JPG — max 20 MB per file.
@@ -245,7 +245,7 @@ Cancelled → (terminal)
 
 ## 7. Appointments & Scheduling
 
-**Phase:** 4 | **Status:** Not Started
+**Phase:** 4 | **Status:** Complete
 
 ### Features
 - Schedule appointments linked to a patient (optionally to a case).
@@ -278,7 +278,7 @@ Cancelled → (terminal)
 
 ## 8. Care Team
 
-**Phase:** 2 | **Status:** In Progress (Backend + Frontend complete)
+**Phase:** 2 | **Status:** Complete
 
 ### Features
 - Each case has one lead coordinator plus optional clinicians and specialists.
@@ -327,7 +327,7 @@ Cancelled → (terminal)
 
 ## 10. Audit & Compliance
 
-**Phase:** 2 (interceptor) + 7 (UI) | **Status:** Not Started
+**Phase:** 2 (interceptor) + 7 (UI) | **Status:** In Progress (AuditInterceptor complete; admin UI deferred to Phase 7)
 
 ### Features
 - Every create/update/delete on Patient, Case, CaseNote, Document, User produces an audit entry.

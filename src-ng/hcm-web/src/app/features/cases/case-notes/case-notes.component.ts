@@ -24,45 +24,8 @@ import { AuthService } from '../../../core/services/auth.service';
     MatIconModule,
     MatSnackBarModule
   ],
-  template: `
-    <!-- Add note form -->
-    <div class="add-note" *ngIf="canAddNote">
-      <mat-form-field appearance="outline" class="note-field">
-        <mat-label>Add a note…</mat-label>
-        <textarea matInput [formControl]="noteControl" rows="3" maxlength="5000"></textarea>
-        <mat-hint align="end">{{ noteControl.value?.length ?? 0 }} / 5000</mat-hint>
-      </mat-form-field>
-      <button mat-flat-button color="primary" [disabled]="noteControl.invalid || saving"
-        (click)="addNote()">
-        <mat-icon>send</mat-icon> Post Note
-      </button>
-    </div>
-
-    <!-- Note list -->
-    <mat-card *ngFor="let note of notes" class="note-card" [class.locked]="!note.isEditable">
-      <mat-card-header>
-        <mat-card-subtitle>
-          {{ note.createdByUserName }} · {{ note.createdAt | date:'medium' }}
-          <span *ngIf="!note.isEditable" class="locked-badge">
-            <mat-icon style="font-size:14px;vertical-align:middle">lock</mat-icon> Read-only
-          </span>
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ note.content }}</p>
-      </mat-card-content>
-    </mat-card>
-
-    <div *ngIf="notes.length === 0" class="empty">No notes yet.</div>
-  `,
-  styles: [`
-    .add-note { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .note-field { width: 100%; }
-    .note-card { margin-bottom: 12px; }
-    .note-card.locked { background: #fafafa; }
-    .locked-badge { color: #757575; font-size: 12px; margin-left: 8px; }
-    .empty { color: #757575; text-align: center; padding: 20px; }
-  `]
+  templateUrl: './case-notes.component.html',
+  styleUrls: ['./case-notes.component.scss']
 })
 export class CaseNotesComponent implements OnInit {
   @Input() caseNumber = '';

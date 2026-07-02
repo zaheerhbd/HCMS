@@ -1,0 +1,35 @@
+.add-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.note-field {
+  width: 100%;
+}
+
+.note-card {
+  margin-bottom: 12px;
+
+  &.locked {
+    background: #fafafa;
+  }
+}
+
+.locked-badge {
+  color: #757575;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.lock-icon {
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.empty {
+  color: #757575;
+  text-align: center;
+  padding: 20px;
+}

@@ -1,0 +1,48 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filters {
+  margin-bottom: 16px;
+}
+
+.status-filter {
+  width: 180px;
+}
+
+.appt-table {
+  width: 100%;
+}
+
+.bold {
+  font-weight: 500;
+}
+
+.muted {
+  font-size: 12px;
+  color: #757575;
+}
+
+.status-chip {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.clickable {
+  cursor: pointer;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.empty {
+  text-align: center;
+  color: #757575;
+  padding: 40px;
+}

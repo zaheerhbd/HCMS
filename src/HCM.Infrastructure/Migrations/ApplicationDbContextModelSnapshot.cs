@@ -22,6 +22,73 @@ namespace HCM.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HCM.Domain.Entities.Appointment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<string>("AppointmentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReminderSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ScheduledEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ScheduledStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Scheduled");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("ProviderId", "ScheduledStart", "ScheduledEnd");
+
+                    b.ToTable("Appointments");
+                });
+
             modelBuilder.Entity("HCM.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
@@ -294,6 +361,71 @@ namespace HCM.Infrastructure.Migrations
                     b.ToTable("CaseTags");
                 });
 
+            modelBuilder.Entity("HCM.Domain.Entities.CaseTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<Guid?>("AssignedTo")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CompletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Medium");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Todo");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedTo");
+
+                    b.HasIndex("CaseId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("CaseTasks");
+                });
+
             modelBuilder.Entity("HCM.Domain.Entities.CaseType", b =>
                 {
                     b.Property<int>("Id")
@@ -325,6 +457,79 @@ namespace HCM.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("CaseTypes");
+                });
+
+            modelBuilder.Entity("HCM.Domain.Entities.Document", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<string>("BlobContainerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("BlobName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("CaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UploadedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("HCM.Domain.Entities.Patient", b =>
@@ -458,6 +663,37 @@ namespace HCM.Infrastructure.Migrations
                     b.ToTable("PatientInsurances");
                 });
 
+            modelBuilder.Entity("HCM.Domain.Entities.Provider", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Specialty")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Providers");
+                });
+
             modelBuilder.Entity("HCM.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -585,6 +821,40 @@ namespace HCM.Infrastructure.Migrations
                     b.ToTable("UserRoles");
                 });
 
+            modelBuilder.Entity("HCM.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("HCM.Domain.Entities.Case", "Case")
+                        .WithMany("Appointments")
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("HCM.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HCM.Domain.Entities.Patient", "Patient")
+                        .WithMany("Appointments")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HCM.Domain.Entities.Provider", "Provider")
+                        .WithMany("Appointments")
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Case");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("Provider");
+                });
+
             modelBuilder.Entity("HCM.Domain.Entities.CareTeamMember", b =>
                 {
                     b.HasOne("HCM.Domain.Entities.Case", "Case")
@@ -664,6 +934,59 @@ namespace HCM.Infrastructure.Migrations
                     b.Navigation("Case");
                 });
 
+            modelBuilder.Entity("HCM.Domain.Entities.CaseTask", b =>
+                {
+                    b.HasOne("HCM.Domain.Entities.User", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedTo")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("HCM.Domain.Entities.Case", "Case")
+                        .WithMany("Tasks")
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HCM.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("Case");
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("HCM.Domain.Entities.Document", b =>
+                {
+                    b.HasOne("HCM.Domain.Entities.Case", "Case")
+                        .WithMany("Documents")
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HCM.Domain.Entities.Patient", "Patient")
+                        .WithMany("Documents")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HCM.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Case");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("HCM.Domain.Entities.PatientInsurance", b =>
                 {
                     b.HasOne("HCM.Domain.Entities.Patient", "Patient")
@@ -673,6 +996,16 @@ namespace HCM.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HCM.Domain.Entities.Provider", b =>
+                {
+                    b.HasOne("HCM.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HCM.Domain.Entities.RefreshToken", b =>
@@ -707,13 +1040,19 @@ namespace HCM.Infrastructure.Migrations
 
             modelBuilder.Entity("HCM.Domain.Entities.Case", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("CareTeam");
 
                     b.Navigation("CaseTags");
 
+                    b.Navigation("Documents");
+
                     b.Navigation("Notes_Collection");
 
                     b.Navigation("StatusHistory");
+
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("HCM.Domain.Entities.CaseTag", b =>
@@ -728,9 +1067,18 @@ namespace HCM.Infrastructure.Migrations
 
             modelBuilder.Entity("HCM.Domain.Entities.Patient", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("Cases");
 
+                    b.Navigation("Documents");
+
                     b.Navigation("Insurance");
+                });
+
+            modelBuilder.Entity("HCM.Domain.Entities.Provider", b =>
+                {
+                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("HCM.Domain.Entities.Role", b =>

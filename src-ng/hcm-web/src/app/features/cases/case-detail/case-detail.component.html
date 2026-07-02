@@ -1,0 +1,93 @@
+<div *ngIf="loading" class="spinner-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<ng-container *ngIf="c && !loading">
+
+  <!-- Breadcrumb navigation -->
+  <nav class="breadcrumb">
+    <a routerLink="/cases">Cases</a> /
+    <a *ngIf="c.patientId" [routerLink]="['/patients', c.patientId]">Patient</a> /
+    <span>{{ c.caseNumber }}</span>
+  </nav>
+
+  <!-- Case header: number, status chip, status transition controls -->
+  <mat-card class="header-card">
+    <mat-card-content>
+      <div class="header-row">
+
+        <div>
+          <h1 class="case-number">{{ c.caseNumber }}</h1>
+          <div class="case-meta">
+            <app-status-badge [status]="c.currentStatus"></app-status-badge>
+            <span class="type-label">{{ c.caseTypeName }}</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <!-- Status transition dropdown — shown to CareCoordinator, Supervisor, Admin -->
+          <ng-container *ngIf="canChangeStatus && availableTransitions.length">
+            <mat-form-field appearance="outline" class="status-field">
+              <mat-label>Change status</mat-label>
+              <mat-select [formControl]="statusSelect">
+                <mat-option *ngFor="let s of availableTransitions" [value]="s">{{ s }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button (click)="changeStatus()" [disabled]="!statusSelect.value || transitioning">
+              Apply
+            </button>
+          </ng-container>
+
+          <!-- Close case button — Supervisor and Admin only -->
+          <button mat-flat-button color="warn" *ngIf="canClose && c.currentStatus !== 'Closed'"
+            (click)="closeCase()">
+            <mat-icon>close</mat-icon> Close Case
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Case metadata row -->
+      <div class="meta-grid">
+        <div><label>Opened</label><span>{{ c.openedAt | date:'mediumDate' }}</span></div>
+        <div *ngIf="c.closedAt"><label>Closed</label><span>{{ c.closedAt | date:'mediumDate' }}</span></div>
+        <div><label>Assigned To</label><span>{{ c.assignedToUserName ?? 'Unassigned' }}</span></div>
+      </div>
+
+      <!-- Initial case notes (set at creation time, read-only here) -->
+      <div *ngIf="c.notes" class="case-notes-preview">
+        <label class="preview-label">Case Notes</label>
+        <p>{{ c.notes }}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Detail tabs -->
+  <mat-tab-group class="detail-tabs">
+    <mat-tab label="Notes">
+      <div class="tab-content">
+        <app-case-notes [caseNumber]="c.caseNumber"></app-case-notes>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Care Team">
+      <div class="tab-content">
+        <app-care-team [caseNumber]="c.caseNumber"></app-care-team>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="History">
+      <div class="tab-content">
+        <app-case-status-history [history]="c.statusHistory"></app-case-status-history>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Tasks">
+      <div class="tab-content">
+        <app-case-tasks [caseNumber]="c.caseNumber"></app-case-tasks>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+</ng-container>

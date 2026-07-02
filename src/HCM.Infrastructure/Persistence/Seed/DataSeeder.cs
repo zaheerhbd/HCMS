@@ -21,6 +21,7 @@ public static class DataSeeder
             await SeedDemoUsersAsync(db);
             await SeedCaseTypesAsync(db);
             await SeedCaseTagsAsync(db);
+            await SeedProvidersAsync(db);
         }
         catch (Exception ex)
         {
@@ -140,6 +141,26 @@ public static class DataSeeder
         {
             if (!await db.CaseTags.AnyAsync(t => t.Name == name))
                 db.CaseTags.Add(new CaseTag { Name = name, IsActive = true, CreatedAt = DateTime.UtcNow });
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedProvidersAsync(ApplicationDbContext db)
+    {
+        var providers = new[]
+        {
+            ("Dr. Priya Patel",   "Internal Medicine"),
+            ("Dr. James Carter",  "Cardiology"),
+            ("Dr. Sarah Jones",   "Psychiatry"),
+            ("Dr. Michael Lee",   "Orthopedics"),
+            ("Dr. Lisa Chen",     "Pediatrics")
+        };
+
+        foreach (var (name, specialty) in providers)
+        {
+            if (!await db.Providers.AnyAsync(p => p.Name == name))
+                db.Providers.Add(new Provider { Name = name, Specialty = specialty, IsActive = true });
         }
 
         await db.SaveChangesAsync();

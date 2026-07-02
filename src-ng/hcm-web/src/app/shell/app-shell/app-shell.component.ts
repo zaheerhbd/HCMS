@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -8,6 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../core/services/auth.service';
+import { TaskService } from '../../features/tasks/task.service';
+import { TaskDto } from '../../core/models/case.models';
 
 interface NavItem {
   label: string;
@@ -34,19 +36,35 @@ interface NavItem {
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.scss']
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit {
+  overdueTaskCount = 0;
+
   navItems: NavItem[] = [
-    { label: 'Dashboard',    icon: 'dashboard',        route: '/dashboard' },
-    { label: 'Patients',     icon: 'people',           route: '/patients' },
-    { label: 'Cases',        icon: 'folder_open',      route: '/cases' },
-    { label: 'Tasks',        icon: 'task_alt',         route: '/tasks' },
-    { label: 'Documents',    icon: 'description',      route: '/documents' },
-    { label: 'Appointments', icon: 'event',            route: '/appointments' },
-    { label: 'Reports',      icon: 'bar_chart',        route: '/reports' },
+    { label: 'Dashboard',    icon: 'dashboard',            route: '/dashboard' },
+    { label: 'Patients',     icon: 'people',               route: '/patients' },
+    { label: 'Cases',        icon: 'folder_open',          route: '/cases' },
+    { label: 'Tasks',        icon: 'task_alt',             route: '/tasks' },
+    { label: 'Appointments', icon: 'event',                route: '/appointments' },
+    { label: 'Reports',      icon: 'bar_chart',            route: '/reports' },
     { label: 'Admin',        icon: 'admin_panel_settings', route: '/admin', roles: ['Admin'] }
   ];
 
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private taskSvc: TaskService) {}
+
+  ngOnInit(): void {
+    this.taskSvc.getMyTasks().subscribe({
+      next: (tasks: TaskDto[]) => {
+        const now = new Date();
+        this.overdueTaskCount = tasks.filter(t =>
+          t.dueDate &&
+          t.status !== 'Done' &&
+          t.status !== 'Cancelled' &&
+          new Date(t.dueDate) < now
+        ).length;
+      },
+      error: () => {}
+    });
+  }
 
   get visibleNav(): NavItem[] {
     return this.navItems.filter(item =>

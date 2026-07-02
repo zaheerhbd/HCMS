@@ -1,0 +1,81 @@
+<div class="page-header">
+  <h1>Appointments</h1>
+  <button mat-flat-button color="primary" *ngIf="canSchedule" routerLink="new">
+    <mat-icon>add</mat-icon> Schedule Appointment
+  </button>
+</div>
+
+<!-- Status filter -->
+<div class="filters">
+  <mat-form-field appearance="outline" class="status-filter">
+    <mat-label>Status</mat-label>
+    <mat-select [formControl]="statusFilter">
+      <mat-option value="">All statuses</mat-option>
+      <mat-option *ngFor="let s of statuses" [value]="s">{{ s }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<!-- Appointments table -->
+<table mat-table [dataSource]="appointments" class="appt-table">
+
+  <ng-container matColumnDef="patient">
+    <th mat-header-cell *matHeaderCellDef>Patient</th>
+    <td mat-cell *matCellDef="let a">
+      <div class="bold">{{ a.patientName }}</div>
+      <div class="muted">{{ a.patientMrn }}</div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="provider">
+    <th mat-header-cell *matHeaderCellDef>Provider</th>
+    <td mat-cell *matCellDef="let a">{{ a.providerName }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="type">
+    <th mat-header-cell *matHeaderCellDef>Type</th>
+    <td mat-cell *matCellDef="let a">{{ a.appointmentType }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="scheduledStart">
+    <th mat-header-cell *matHeaderCellDef>Date & Time</th>
+    <td mat-cell *matCellDef="let a">
+      <div>{{ a.scheduledStart | date:'mediumDate' }}</div>
+      <div class="muted">{{ a.scheduledStart | date:'shortTime' }} – {{ a.scheduledEnd | date:'shortTime' }}</div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef>Status</th>
+    <td mat-cell *matCellDef="let a">
+      <!-- Colour-coded chip: background and text colour come from statusBg / statusColor methods -->
+      <span class="status-chip" [style.background]="statusBg(a.status)" [style.color]="statusColor(a.status)">
+        {{ a.status }}
+      </span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let a">
+      <button mat-icon-button [routerLink]="[a.id]">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns;" class="clickable"
+    (click)="router.navigate(['/appointments', row.id])"></tr>
+</table>
+
+<div *ngIf="appointments.length === 0 && !loading" class="empty">
+  No appointments found.
+</div>
+
+<mat-paginator
+  [length]="totalCount"
+  [pageSize]="pageSize"
+  [pageSizeOptions]="[10, 20, 50]"
+  (page)="onPage($event)">
+</mat-paginator>

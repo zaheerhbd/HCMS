@@ -8,6 +8,7 @@ import {
   CreatePatientRequest,
   UpdatePatientRequest
 } from '../../../core/models/patient.models';
+import { DocumentDto } from '../../../core/models/case.models';
 
 @Injectable({ providedIn: 'root' })
 export class PatientService {
@@ -37,5 +38,9 @@ export class PatientService {
 
   delete(mrn: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${mrn}`);
+  }
+
+  getDocuments(mrn: string): Observable<DocumentDto[]> {
+    return this.http.get<DocumentDto[]>(`${this.base}/${mrn}/documents`);
   }
 }

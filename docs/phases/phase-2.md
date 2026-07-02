@@ -3,8 +3,8 @@
 **Goal:** Complete patient registration and the full case lifecycle. The primary user flow (create patient → open case → change status → add care team member) works end-to-end.
 
 **Duration:** 3 weeks  
-**Status:** `[~]` In Progress  
-**Last Updated:** 2026-06-29 (session 2 — backend + frontend complete)
+**Status:** `[x]` Complete  
+**Last Updated:** 2026-07-01
 
 ---
 
@@ -48,9 +48,9 @@
 
 ## Definition of Done
 
-- [ ] Admin can create users and assign roles
-- [ ] Coordinator can register a patient with insurance info
-- [ ] Coordinator can open a case, assign it to themselves, transition through all statuses
-- [ ] Care team members can be added and removed; action appears in audit log
-- [ ] Notes can be added; notes older than 24h show as read-only
-- [ ] Patient list search returns correct results with pagination
+- [x] Admin can create users and assign roles
+- [x] Coordinator can register a patient with insurance info
+- [x] Coordinator can open a case, assign it to themselves, transition through all statuses
+- [x] Care team members can be added and removed; action appears in audit log
+- [x] Notes can be added; notes older than 24h show as read-only
+- [x] Patient list search returns correct results with pagination

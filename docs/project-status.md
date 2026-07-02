@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-06-29 (Phase 2 nearly complete: backend fully done including audit, seeding, users, background job, MRN/CaseNumber routing + sequential GUIDs; Angular frontend done)
-**Current Phase:** Phase 2 — Patient & Case Core (Backend + Frontend complete; SharedModule done)
-**Overall Progress:** 59 / 185 tasks complete (~32%)
+**Last Updated:** 2026-07-02 (Document UI hidden everywhere — nav, Case Detail tab, Patient Detail tab, route removed) — MyTasksComponent, DocumentsComponent, Patient Detail docs tab; GitHub issues #1 & #2 closed)
+**Current Phase:** Phase 5 — FHIR/HL7 Integration (Not Started)
+**Overall Progress:** 101 / 185 tasks complete (~55%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -15,9 +15,9 @@
 | # | Phase | Status | Tasks | Done | Remaining |
 |---|---|---|---|---|---|
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
-| 2 | Patient & Case Core | `In Progress` | ~38 | 35 | 3 |
-| 3 | Documents, Tasks & Notes | `Not Started` | ~22 | 0 | 22 |
-| 4 | Appointments & Scheduling | `Not Started` | ~16 | 0 | 16 |
+| 2 | Patient & Case Core | `Complete` | ~38 | 38 | 0 |
+| 3 | Documents, Tasks & Notes | `Complete` | ~22 | 22 | 0 |
+| 4 | Appointments & Scheduling | `Complete` | ~16 | 16 | 0 |
 | 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
 | 6 | Dashboards & Reports | `Not Started` | ~20 | 0 | 20 |
 | 7 | Notifications & Audit UI | `Not Started` | ~14 | 0 | 14 |
@@ -25,7 +25,15 @@
 
 ---
 
-## Current Phase Detail — Phase 2: Patient & Case Core
+## Current Phase Detail — Phase 5: FHIR/HL7 Integration
+
+**Goal:** Expose a FHIR R4-compliant REST API at `/fhir/R4/`; support Patient, Encounter (Case), Appointment, Task, DocumentReference read + search; `$everything` Bundle operation; Patient import from FHIR JSON with parse-and-preview UI flow.
+
+**Status:** Not started. Next session begins here.
+
+---
+
+## Completed Phase Detail — Phase 2: Patient & Case Core
 
 **Goal:** Complete patient registration and the full case lifecycle. The primary user flow (create patient → open case → change status → add care team member) works end-to-end.
 

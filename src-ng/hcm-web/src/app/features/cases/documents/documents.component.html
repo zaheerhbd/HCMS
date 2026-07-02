@@ -1,0 +1,87 @@
+<!-- Upload section — visible to CareCoordinator, Supervisor, Admin -->
+<div *ngIf="canUpload" class="upload-section">
+  <form [formGroup]="uploadForm" (ngSubmit)="upload()">
+    <div class="file-row">
+      <!-- Hidden native file input triggered by the button below -->
+      <button mat-stroked-button type="button" (click)="fileInput.click()">
+        <mat-icon>attach_file</mat-icon>
+        {{ selectedFile ? selectedFile.name : 'Choose file' }}
+      </button>
+      <input #fileInput type="file" hidden accept=".pdf,.docx,.png,.jpg,.jpeg"
+        (change)="onFileSelected($event)">
+
+      <mat-form-field appearance="outline" class="field-category">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="category">
+          <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="field-description">
+        <mat-label>Description (optional)</mat-label>
+        <input matInput formControlName="description" placeholder="Brief description">
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" type="submit"
+        [disabled]="!selectedFile || uploadForm.invalid || uploading">
+        <mat-icon>cloud_upload</mat-icon> Upload
+      </button>
+    </div>
+
+    <!-- Upload progress indicator -->
+    <mat-progress-bar mode="indeterminate" *ngIf="uploading" class="upload-progress"></mat-progress-bar>
+
+    <!-- Selected file metadata preview -->
+    <div *ngIf="selectedFile" class="file-info">
+      {{ formatSize(selectedFile.size) }} · {{ selectedFile.type || 'Unknown type' }}
+    </div>
+  </form>
+</div>
+
+<!-- Documents table -->
+<table mat-table [dataSource]="documents" *ngIf="documents.length > 0" class="docs-table">
+
+  <ng-container matColumnDef="fileName">
+    <th mat-header-cell *matHeaderCellDef>File</th>
+    <td mat-cell *matCellDef="let d">
+      <div class="file-name">
+        <mat-icon class="file-icon">{{ iconForType(d.contentType) }}</mat-icon>
+        <div>
+          <div>{{ d.fileName }}</div>
+          <div class="file-meta">{{ formatSize(d.fileSizeBytes) }}</div>
+        </div>
+      </div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="category">
+    <th mat-header-cell *matHeaderCellDef>Category</th>
+    <td mat-cell *matCellDef="let d">{{ d.category }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="uploadedBy">
+    <th mat-header-cell *matHeaderCellDef>Uploaded By</th>
+    <td mat-cell *matCellDef="let d">
+      <div>{{ d.uploadedByUserName ?? 'Unknown' }}</div>
+      <div class="file-meta">{{ d.uploadedAt | date:'mediumDate' }}</div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let d">
+      <!-- Download opens a 1-hour SAS URL in a new tab -->
+      <button mat-icon-button color="primary" (click)="download(d)" matTooltip="Download">
+        <mat-icon>download</mat-icon>
+      </button>
+      <button mat-icon-button color="warn" *ngIf="canUpload" (click)="deleteDoc(d)" matTooltip="Delete">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columns"></tr>
+  <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+</table>
+
+<div *ngIf="documents.length === 0" class="empty">No documents uploaded yet.</div>
