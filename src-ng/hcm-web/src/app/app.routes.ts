@@ -46,6 +46,11 @@ export const routes: Routes = [
           import('./features/reports/reports.component').then(m => m.ReportsComponent)
       },
       {
+        path: 'fhir',
+        loadChildren: () =>
+          import('./features/fhir/fhir.routes').then(m => m.FHIR_ROUTES)
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard],
         data: { roles: ['Admin'] },

@@ -40,6 +40,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Provider> Providers => Set<Provider>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<FhirImportLog> FhirImportLogs => Set<FhirImportLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

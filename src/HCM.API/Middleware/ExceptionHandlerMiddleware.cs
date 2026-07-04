@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace HCM.API.Middleware;
 
 /// <summary>
@@ -73,6 +74,37 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
         // Log 500 errors with full exception details for investigation
         if (statusCode == HttpStatusCode.InternalServerError)
             _logger.LogError(exception, "Unhandled exception: {ExceptionType} - {Message}", exception.GetType().Name, exception.Message);
+
+        // FHIR routes return HL7 OperationOutcome; all other routes return RFC 7807 ProblemDetails
+        if (context.Request.Path.StartsWithSegments("/fhir"))
+        {
+            var issueCode = statusCode switch
+            {
+                HttpStatusCode.NotFound => "not-found",
+                HttpStatusCode.BadRequest => "invalid",
+                HttpStatusCode.Unauthorized => "forbidden",
+                _ => "exception"
+            };
+
+            var operationOutcome = new
+            {
+                resourceType = "OperationOutcome",
+                issue = new[]
+                {
+                    new
+                    {
+                        severity = "error",
+                        code = issueCode,
+                        diagnostics = detail
+                    }
+                }
+            };
+
+            context.Response.StatusCode = (int)statusCode;
+            context.Response.ContentType = "application/fhir+json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(operationOutcome));
+            return;
+        }
 
         // Build RFC 7807 ProblemDetails response
         var problem = new ProblemDetails

@@ -46,6 +46,7 @@ export class AppShellComponent implements OnInit {
     { label: 'Tasks',        icon: 'task_alt',             route: '/tasks' },
     { label: 'Appointments', icon: 'event',                route: '/appointments' },
     { label: 'Reports',      icon: 'bar_chart',            route: '/reports' },
+    { label: 'FHIR',         icon: 'hub',                  route: '/fhir' },
     { label: 'Admin',        icon: 'admin_panel_settings', route: '/admin', roles: ['Admin'] }
   ];
 

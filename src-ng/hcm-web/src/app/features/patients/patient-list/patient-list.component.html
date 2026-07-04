@@ -1,8 +1,13 @@
 <div class="page-header">
   <h1>Patients</h1>
-  <button mat-flat-button color="primary" routerLink="new" *ngIf="canCreate">
-    <mat-icon>person_add</mat-icon> New Patient
-  </button>
+  <div class="header-actions">
+    <button mat-stroked-button routerLink="/fhir/import" *ngIf="canCreate">
+      <mat-icon>cloud_upload</mat-icon> Import from FHIR
+    </button>
+    <button mat-flat-button color="primary" routerLink="new" *ngIf="canCreate">
+      <mat-icon>person_add</mat-icon> New Patient
+    </button>
+  </div>
 </div>
 
 <mat-form-field appearance="outline" class="search-field">

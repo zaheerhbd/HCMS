@@ -19,6 +19,9 @@
       <button mat-stroked-button [routerLink]="['edit']" *ngIf="canEdit">
         <mat-icon>edit</mat-icon> Edit
       </button>
+      <button mat-stroked-button (click)="exportFhirBundle()" [disabled]="exportingFhir" title="Download full FHIR R4 Bundle for this patient">
+        <mat-icon>download</mat-icon> {{ exportingFhir ? 'Exporting…' : 'Export FHIR Bundle' }}
+      </button>
       <button mat-flat-button color="primary" routerLink="/cases/new"
         [queryParams]="{ patientMrn: patient.mrn }" *ngIf="canCreateCase">
         <mat-icon>folder_open</mat-icon> New Case

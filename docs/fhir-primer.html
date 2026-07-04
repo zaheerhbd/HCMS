@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FHIR Primer — HCMS Phase 5 Guide</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sidebar-w: 260px;
+    --blue: #1565c0;
+    --blue-light: #e3f2fd;
+    --green: #2e7d32;
+    --green-light: #e8f5e9;
+    --orange: #e65100;
+    --orange-light: #fff3e0;
+    --purple: #6a1b9a;
+    --purple-light: #f3e5f5;
+    --red: #c62828;
+    --red-light: #fce4ec;
+    --teal: #00695c;
+    --teal-light: #e0f2f1;
+    --gray: #455a64;
+    --gray-light: #f5f7f8;
+    --border: #dde3e8;
+    --text: #212529;
+    --text-muted: #6c757d;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: #fafbfc;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  nav#sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: #1a2332;
+    color: #cdd6e0;
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 100;
+    padding-bottom: 40px;
+  }
+
+  .sidebar-brand {
+    padding: 20px 18px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #7ecbff;
+    border-bottom: 1px solid #263347;
+  }
+
+  .sidebar-brand span { display: block; font-size: 10px; font-weight: 400; color: #6b7f96; margin-top: 2px; letter-spacing: .03em; text-transform: none; }
+
+  nav#sidebar ul { list-style: none; padding: 10px 0; }
+
+  nav#sidebar ul li a {
+    display: block;
+    padding: 7px 18px;
+    color: #9aafc4;
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+  }
+
+  nav#sidebar ul li a:hover { color: #e8f0fe; background: #1e2d42; }
+  nav#sidebar ul li a.active { color: #7ecbff; border-left-color: #7ecbff; background: #1e2d42; font-weight: 600; }
+
+  .nav-section {
+    padding: 14px 18px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #455f78;
+    font-weight: 700;
+  }
+
+  /* ── MAIN ── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 900px;
+    padding: 48px 52px 80px;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h1 { font-size: 32px; font-weight: 800; color: #0d1b2a; margin-bottom: 6px; }
+  h2 { font-size: 22px; font-weight: 700; color: #0d1b2a; margin: 52px 0 14px; padding-top: 8px; border-top: 2px solid var(--border); }
+  h3 { font-size: 17px; font-weight: 700; color: #1a2332; margin: 28px 0 10px; }
+  h4 { font-size: 14px; font-weight: 700; color: var(--gray); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .05em; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 10px 0 16px 22px; }
+  li { margin-bottom: 5px; }
+  strong { color: #0d1b2a; }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; background: #eef1f5; padding: 2px 6px; border-radius: 4px; color: var(--purple); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 60%, #0288d1 100%);
+    border-radius: 12px;
+    padding: 32px 36px;
+    color: white;
+    margin-bottom: 40px;
+  }
+  .hero h1 { color: white; font-size: 28px; }
+  .hero p { color: rgba(255,255,255,.88); margin-bottom: 0; font-size: 15px; }
+  .hero .badge { display: inline-block; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); color: white; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; font-weight: 600; letter-spacing: .05em; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-left: 4px solid;
+  }
+  .callout-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .callout.blue  { background: var(--blue-light);   border-color: var(--blue);   }
+  .callout.green { background: var(--green-light);  border-color: var(--green);  }
+  .callout.orange{ background: var(--orange-light); border-color: var(--orange); }
+  .callout.purple{ background: var(--purple-light); border-color: var(--purple); }
+  .callout.red   { background: var(--red-light);    border-color: var(--red);    }
+  .callout.teal  { background: var(--teal-light);   border-color: var(--teal);   }
+  .callout.blue   .callout-title { color: var(--blue);   }
+  .callout.green  .callout-title { color: var(--green);  }
+  .callout.orange .callout-title { color: var(--orange); }
+  .callout.purple .callout-title { color: var(--purple); }
+  .callout.red    .callout-title { color: var(--red);    }
+  .callout.teal   .callout-title { color: var(--teal);   }
+
+  /* ── ANALOGY CARD ── */
+  .analogy {
+    background: #fffde7;
+    border: 1px solid #f9a825;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .analogy::before { content: '💡 Real-world analogy'; display: block; font-weight: 700; font-size: 12px; color: #e65100; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; }
+  th { background: #1a2332; color: #cdd6e0; padding: 10px 14px; text-align: left; font-size: 12px; letter-spacing: .04em; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--gray-light); }
+
+  /* ── DETAILS / COLLAPSIBLE ── */
+  details { border: 1px solid var(--border); border-radius: 8px; margin: 14px 0; background: white; }
+  summary { padding: 12px 16px; font-weight: 600; cursor: pointer; color: var(--blue); font-size: 14px; list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::before { content: '▶'; font-size: 10px; transition: transform .2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) { padding: 16px; border-top: 1px solid var(--border); }
+
+  /* ── STEP FLOW ── */
+  .steps { counter-reset: step; margin: 20px 0; }
+  .step { display: flex; gap: 16px; margin-bottom: 18px; align-items: flex-start; }
+  .step-num { counter-increment: step; content: counter(step); min-width: 36px; height: 36px; background: var(--blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .step-body h4 { margin-top: 0; text-transform: none; font-size: 15px; color: var(--text); letter-spacing: 0; }
+
+  /* ── TAG CHIPS ── */
+  .chip { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 2px; }
+  .chip-blue   { background: var(--blue-light);   color: var(--blue);   }
+  .chip-green  { background: var(--green-light);  color: var(--green);  }
+  .chip-purple { background: var(--purple-light); color: var(--purple); }
+  .chip-orange { background: var(--orange-light); color: var(--orange); }
+  .chip-teal   { background: var(--teal-light);   color: var(--teal);   }
+
+  /* ── GRID ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+  .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 18px; }
+  .card-icon { font-size: 28px; margin-bottom: 8px; }
+  .card h4 { margin: 0 0 6px; font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--text); }
+  .card p { margin: 0; font-size: 13px; color: var(--text-muted); }
+
+  /* ── SVG DIAGRAMS ── */
+  .diagram { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; overflow-x: auto; }
+  .diagram figcaption { font-size: 12px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+  /* ── ENDPOINT LIST ── */
+  .endpoint { display: flex; gap: 10px; align-items: baseline; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .endpoint:last-child { border-bottom: none; }
+  .method { font-weight: 700; font-size: 11px; min-width: 44px; padding: 2px 6px; border-radius: 4px; text-align: center; }
+  .method-get  { background: #e8f5e9; color: #2e7d32; }
+  .method-post { background: #fff3e0; color: #e65100; }
+  .endpoint-path { font-family: monospace; color: var(--blue); font-size: 13px; flex: 1; }
+  .endpoint-desc { color: var(--text-muted); font-size: 12.5px; }
+
+  /* ── AI SECTION ── */
+  .ai-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e8eaf6; border-radius: 10px; padding: 24px 28px; margin: 16px 0; }
+  .ai-card h4 { color: #7ecbff; margin-top: 0; text-transform: none; letter-spacing: 0; font-size: 16px; }
+  .ai-card p { color: #b0bec5; margin-bottom: 10px; }
+  .ai-card code { background: #263238; color: #80cbc4; }
+  .ai-card ul { color: #b0bec5; }
+
+  /* ── FOOTER ── */
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
+
+  /* ── SECTION NAV ── */
+  .section-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+    gap: 12px;
+  }
+  .section-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--blue);
+    transition: background .15s, border-color .15s, transform .15s;
+    max-width: 45%;
+  }
+  .section-nav a:hover { background: var(--blue-light); border-color: var(--blue); transform: translateY(-1px); }
+  .section-nav a.prev { flex-direction: row; }
+  .section-nav a.next { flex-direction: row-reverse; margin-left: auto; }
+  .section-nav .nav-label { font-size: 10px; font-weight: 400; color: var(--text-muted); display: block; line-height: 1; }
+  .section-nav .nav-title { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .section-nav .nav-spacer { flex: 1; }
+
+  /* ── BACK TO TOP ── */
+  #back-to-top {
+    position: fixed;
+    bottom: 96px;
+    left: calc(var(--sidebar-w) + 20px);
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--gray);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  #back-to-top.visible { opacity: 1; pointer-events: all; }
+  #back-to-top:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+
+  @media (max-width: 768px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; padding: 24px 20px; }
+    #back-to-top { left: 16px; }
+  }
+
+  /* ── CHAT PANEL ── */
+  #chat-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1565c0, #0288d1);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(21,101,192,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    z-index: 200;
+    transition: transform .2s, box-shadow .2s;
+  }
+  #chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(21,101,192,.55); }
+  #chat-fab .fab-badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 18px; height: 18px;
+    background: #ef5350;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    display: none;
+  }
+
+  #chat-panel {
+    position: fixed;
+    bottom: 96px;
+    right: 28px;
+    width: 380px;
+    height: 560px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 12px 48px rgba(0,0,0,.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 199;
+    overflow: hidden;
+    transform: translateY(20px) scale(.96);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+  }
+  #chat-panel.open {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .chat-header {
+    background: linear-gradient(135deg, #1a2332, #263447);
+    color: white;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .chat-header-title { flex: 1; font-weight: 700; font-size: 14px; }
+  .chat-header-sub { font-size: 11px; color: #7ecbff; }
+  .chat-header-btn {
+    background: none;
+    border: none;
+    color: #9aafc4;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color .15s, background .15s;
+  }
+  .chat-header-btn:hover { color: white; background: rgba(255,255,255,.1); }
+
+  /* settings panel */
+  #chat-settings {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  #chat-settings.visible { display: flex; }
+  .settings-row { display: flex; flex-direction: column; gap: 4px; }
+  .settings-row label { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .04em; }
+  .settings-row input, .settings-row select {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: var(--text);
+    background: white;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .settings-row input:focus, .settings-row select:focus { border-color: var(--blue); }
+  .settings-save {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background .15s;
+  }
+  .settings-save:hover { background: #0d47a1; }
+
+  /* messages */
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+  }
+  .chat-msg {
+    max-width: 88%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    word-break: break-word;
+  }
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--blue);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-msg.assistant {
+    align-self: flex-start;
+    background: #f0f4f8;
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .chat-msg.assistant code { background: #dde3ea; color: #6a1b9a; }
+  .chat-msg.error {
+    align-self: flex-start;
+    background: var(--red-light);
+    color: var(--red);
+    border-bottom-left-radius: 4px;
+    font-size: 12.5px;
+  }
+  .chat-msg.system-note {
+    align-self: center;
+    background: none;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-style: italic;
+    max-width: 100%;
+    text-align: center;
+    padding: 4px 0;
+  }
+  .typing-indicator {
+    align-self: flex-start;
+    background: #f0f4f8;
+    border-radius: 12px;
+    border-bottom-left-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .typing-dot {
+    width: 7px; height: 7px;
+    background: #90a4ae;
+    border-radius: 50%;
+    animation: typingBounce 1.2s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  /* input row */
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    background: white;
+    flex-shrink: 0;
+  }
+  #chat-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    line-height: 1.4;
+    max-height: 100px;
+    overflow-y: auto;
+    transition: border-color .15s;
+  }
+  #chat-input:focus { border-color: var(--blue); }
+  #chat-send {
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background .15s;
+    flex-shrink: 0;
+    align-self: flex-end;
+  }
+  #chat-send:hover { background: #0d47a1; }
+  #chat-send:disabled { background: #b0bec5; cursor: not-allowed; }
+
+  .chat-clear { font-size: 11px; color: var(--text-muted); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .chat-clear:hover { color: var(--red); background: var(--red-light); }
+
+  @media (max-width: 480px) {
+    #chat-panel { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
+    #chat-fab { right: 16px; bottom: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    HCMS
+    <span>Phase 5 — FHIR Primer</span>
+  </div>
+  <ul>
+    <li class="nav-section">The Problem</li>
+    <li><a href="#what-is-fhir">What is FHIR?</a></li>
+    <li><a href="#why-it-exists">Why does it exist?</a></li>
+    <li><a href="#usb-analogy">The USB Analogy</a></li>
+
+    <li class="nav-section">FHIR Concepts</li>
+    <li><a href="#resources">Resources — the building blocks</a></li>
+    <li><a href="#bundle">Bundles — packaging resources</a></li>
+    <li><a href="#operations">Operations &amp; Search</a></li>
+    <li><a href="#capability">CapabilityStatement</a></li>
+
+    <li class="nav-section">Phase 5 — What We Build</li>
+    <li><a href="#phase5-overview">Overview</a></li>
+    <li><a href="#endpoints">API Endpoints</a></li>
+    <li><a href="#import-flow">Patient Import Flow</a></li>
+    <li><a href="#export-flow">Patient Export ($everything)</a></li>
+    <li><a href="#mapping">Field Mapping</a></li>
+    <li><a href="#hl7">HL7 v2 (stretch)</a></li>
+
+    <li class="nav-section">Use Cases</li>
+    <li><a href="#usecases">Who benefits &amp; how</a></li>
+
+    <li class="nav-section">Developer Guide</li>
+    <li><a href="#firely">Firely .NET SDK</a></li>
+    <li><a href="#dev-responsibilities">Responsibilities</a></li>
+    <li><a href="#gotchas">Common gotchas</a></li>
+
+    <li class="nav-section">AI Integration</li>
+    <li><a href="#ai-rag">RAG on FHIR data</a></li>
+    <li><a href="#ai-agents">Clinical AI Agents</a></li>
+    <li><a href="#ai-architecture">Architecture</a></li>
+
+    <li class="nav-section">Ask AI</li>
+    <li><a href="#" id="nav-chat-open" style="color:#7ecbff;font-weight:600">💬 Open AI Chat</a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════════ MAIN ═══════════════════════════════ -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">Phase 5 · FHIR / HL7 Integration</div>
+    <h1>FHIR — Complete Beginner's Guide</h1>
+    <p>What it is, why it matters, what we're building, and how AI fits in. No prior healthcare IT knowledge assumed.</p>
+  </div>
+
+  <!-- ─────────────────── SECTION 1: What is FHIR ─────────────────── -->
+  <section id="what-is-fhir">
+    <h2>What is FHIR?</h2>
+
+    <p><strong>FHIR</strong> stands for <strong>Fast Healthcare Interoperability Resources</strong>. It is a standard — a shared language — that healthcare software systems use to talk to each other.</p>
+
+    <p>It is published by <strong>HL7 International</strong>, a non-profit organisation that has been defining healthcare data standards since 1987. The current version is <strong>FHIR R4</strong> (R4 = Release 4), which became the dominant standard around 2019 and is now mandated by law in the United States for any software touching Medicare/Medicaid data.</p>
+
+    <div class="analogy">
+      Imagine ten different hospitals each keep patient records in their own format — one uses Excel, one uses a PDF printout, one uses a custom database only they understand. When a patient moves between hospitals, a nurse has to manually re-type the same information. FHIR is the agreement that says: <em>"everyone will describe a patient using the same JSON structure, so any system can read any other system's data without translation."</em>
+    </div>
+  </section>
+
+  <!-- ─────────────────── SECTION 2: Why it exists ─────────────────── -->
+  <section id="why-it-exists">
+    <h2>Why does it exist?</h2>
+
+    <p>Before FHIR, healthcare IT was a silo. A hospital's radiology system could not talk to its pharmacy system. A patient's GP in London could not electronically receive discharge notes from a hospital in Manchester. Electronic Health Records (EHRs) from different vendors — Epic, Cerner, Meditech — stored data in completely incompatible formats.</p>
+
+    <p>The consequences were real and serious:</p>
+    <ul>
+      <li>Patients were asked to repeat their medical history at every appointment.</li>
+      <li>Doctors made prescribing errors because they couldn't see what another doctor had already prescribed.</li>
+      <li>Researchers couldn't aggregate data across hospitals for clinical studies.</li>
+      <li>Insurance companies couldn't verify claims without manual paperwork.</li>
+    </ul>
+
+    <div class="callout blue">
+      <div class="callout-title">The core promise of FHIR</div>
+      Any FHIR-compliant system can send data to, and receive data from, any other FHIR-compliant system — regardless of vendor, language, or database — because they all agree on the format.
+    </div>
+
+    <p>The US government made this concrete in 2020: the <strong>21st Century Cures Act</strong> now legally requires hospitals and EHR vendors receiving federal funding to expose FHIR R4 APIs. This is why FHIR expertise is now one of the most in-demand skills in healthcare software.</p>
+  </section>
+
+  <!-- ─────────────────── USB ANALOGY ─────────────────── -->
+  <section id="usb-analogy">
+    <h2>The USB Analogy</h2>
+
+    <div class="analogy">
+      Before USB existed, every device — keyboards, mice, printers, cameras — had its own proprietary plug. You needed a different port on your computer for each device. USB said: <em>"every device will use this one standard connector."</em> Now any USB device plugs into any USB port, from any manufacturer.<br><br>
+      FHIR is USB for healthcare data. It defines the "plug shape" (JSON format) and the "electrical signal" (HTTP REST API). Any FHIR system can plug into any other FHIR system.
+    </div>
+
+    <p>Just like USB has versions (USB 2, USB 3, USB-C), FHIR has versions (DSTU2, STU3, R4, R5). <strong>R4 is the one that matters right now</strong> — it's what regulators require and what every major EHR vendor has implemented.</p>
+  </section>
+
+  <!-- ─────────────────── RESOURCES ─────────────────── -->
+  <section id="resources">
+    <h2>Resources — the building blocks</h2>
+
+    <p>Everything in FHIR is a <strong>Resource</strong>. A resource is simply a JSON object that represents one piece of healthcare information. Each resource has a <code>resourceType</code> field that says what it is.</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🧑</div>
+        <h4>Patient</h4>
+        <p>Demographics: name, date of birth, gender, address, phone. Maps to our internal <code>Patient</code> table.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏥</div>
+        <h4>Encounter</h4>
+        <p>A visit, admission, or care episode. Maps to our internal <code>Case</code> (a case IS an encounter in FHIR terms).</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📅</div>
+        <h4>Appointment</h4>
+        <p>A scheduled meeting between a patient and a provider. Maps to our <code>Appointment</code> table directly.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">✅</div>
+        <h4>Task</h4>
+        <p>A unit of work to be done. Maps to our <code>CaseTask</code> table — e.g. "Schedule follow-up call."</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h4>DocumentReference</h4>
+        <p>Metadata about a clinical document (referral, lab result). Maps to our <code>Document</code> table.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <h4>Bundle</h4>
+        <p>A container that holds multiple resources together — like a zip file for FHIR data.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Show example: What a FHIR Patient resource looks like in JSON</summary>
+      <pre style="background:#1a2332;color:#cdd6e0;padding:16px;border-radius:6px;font-size:12.5px;overflow-x:auto;line-height:1.6">{
+  "resourceType": "Patient",
+  "id": "MRN-2026-00001",
+  "identifier": [{
+    "system": "https://hcms.example.com/mrn",
+    "value": "MRN-2026-00001"
+  }],
+  "name": [{
+    "family": "Smith",
+    "given": ["Jane", "Marie"]
+  }],
+  "birthDate": "1985-03-22",
+  "gender": "female",
+  "telecom": [
+    { "system": "phone", "value": "+1-555-0100" },
+    { "system": "email", "value": "jane.smith@email.com" }
+  ],
+  "address": [{
+    "line": ["123 Maple Street"],
+    "city": "Springfield",
+    "state": "IL",
+    "postalCode": "62701"
+  }]
+}</pre>
+      <p style="margin-top:12px;font-size:13px;color:#555">This is exactly the JSON our <code>FhirController</code> will return when someone calls <code>GET /fhir/R4/Patient/MRN-2026-00001</code>. We build this on-the-fly from our SQL <code>Patients</code> table — no separate FHIR database needed.</p>
+    </details>
+  </section>
+
+  <!-- ─────────────────── BUNDLES ─────────────────── -->
+  <section id="bundle">
+    <h2>Bundles — packaging resources together</h2>
+
+    <p>A <strong>Bundle</strong> is a FHIR resource that holds a list of other resources. Think of it as an envelope containing multiple documents. There are two bundle types we use:</p>
+
+    <table>
+      <tr><th>Bundle Type</th><th>When used</th><th>Our use</th></tr>
+      <tr><td><strong>searchset</strong></td><td>Response to a search query — "give me all patients named Smith"</td><td><code>GET /fhir/R4/Patient?name=Smith</code></td></tr>
+      <tr><td><strong>collection</strong></td><td>A group of related resources packaged together</td><td><code>GET /fhir/R4/Patient/{id}/$everything</code></td></tr>
+    </table>
+
+    <div class="analogy">
+      A searchset Bundle is like Google search results — a list of matching items. A collection Bundle is like a patient's paper file folder — everything about one person, all together in one place.
+    </div>
+  </section>
+
+  <!-- ─────────────────── OPERATIONS ─────────────────── -->
+  <section id="operations">
+    <h2>Operations &amp; Search</h2>
+
+    <p>FHIR uses standard HTTP verbs (GET, POST, PUT, DELETE) but adds some special conventions:</p>
+
+    <table>
+      <tr><th>Pattern</th><th>Example</th><th>Meaning</th></tr>
+      <tr><td>Read</td><td><code>GET /Patient/123</code></td><td>Get one specific patient by ID</td></tr>
+      <tr><td>Search</td><td><code>GET /Patient?name=Smith</code></td><td>Find patients matching criteria</td></tr>
+      <tr><td>Create</td><td><code>POST /Patient</code></td><td>Submit a new patient resource</td></tr>
+      <tr><td>Operation</td><td><code>GET /Patient/123/$everything</code></td><td>Named operation on a resource ($ prefix)</td></tr>
+    </table>
+
+    <p>The <strong>$everything</strong> operation is special — it's a FHIR standard named operation that says "give me everything related to this patient." A system receiving this call must return a Bundle containing the patient plus all their linked resources.</p>
+  </section>
+
+  <!-- ─────────────────── CAPABILITY STATEMENT ─────────────────── -->
+  <section id="capability">
+    <h2>CapabilityStatement — the menu card</h2>
+
+    <div class="analogy">
+      When you walk into a restaurant, the first thing you ask for is a menu. It tells you what they serve, what the prices are, and what's available today. FHIR's <strong>CapabilityStatement</strong> (returned at <code>GET /fhir/R4/metadata</code>) is the menu card for a FHIR server — it lists every resource type it supports, every search parameter, and every operation.
+    </div>
+
+    <p>Any FHIR client application — another hospital's EHR, a mobile health app, a research tool — will first call <code>/metadata</code> to discover what your server can do. This is how interoperability is achieved programmatically. Our server will declare support for Patient, Encounter, Appointment, Task, and DocumentReference.</p>
+  </section>
+
+  <!-- ─────────────────── PHASE 5 OVERVIEW ─────────────────── -->
+  <section id="phase5-overview">
+    <h2>Phase 5 — What we're building</h2>
+
+    <p>Right now, HCMS is a closed system. Only our own Angular front-end can read and write patient data. Phase 5 opens a FHIR "window" on the side of our system so that <em>any FHIR-compliant external system</em> can:</p>
+
+    <ul>
+      <li>Query our patient records in standard FHIR format</li>
+      <li>Import a new patient from an external EHR (Epic, Cerner) by posting FHIR JSON</li>
+      <li>Download a complete patient record as a portable FHIR Bundle</li>
+    </ul>
+
+    <div class="diagram">
+      <svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" style="max-width:680px;width:100%">
+        <!-- External systems -->
+        <rect x="10" y="80" width="130" height="50" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+        <text x="75" y="99" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#1565c0">Epic / Cerner</text>
+        <text x="75" y="116" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">External EHR</text>
+
+        <rect x="10" y="160" width="130" height="50" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+        <text x="75" y="179" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#1565c0">Research Tools</text>
+        <text x="75" y="196" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555">Analytics / AI</text>
+
+        <!-- Arrows to FHIR gateway -->
+        <line x1="140" y1="105" x2="200" y2="130" stroke="#90caf9" stroke-width="2" stroke-dasharray="5,3"/>
+        <line x1="140" y1="185" x2="200" y2="160" stroke="#90caf9" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="165" y="146" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1976d2">FHIR R4</text>
+
+        <!-- FHIR Gateway -->
+        <rect x="200" y="100" width="160" height="80" rx="10" fill="#1565c0"/>
+        <text x="280" y="132" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="white">FHIR Gateway</text>
+        <text x="280" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#90caf9">/fhir/R4/</text>
+        <text x="280" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#90caf9">FhirController</text>
+
+        <!-- Arrow to mapping -->
+        <line x1="360" y1="140" x2="420" y2="140" stroke="#ccc" stroke-width="2"/>
+        <polygon points="420,135 430,140 420,145" fill="#ccc"/>
+
+        <!-- Mapping layer -->
+        <rect x="430" y="100" width="140" height="80" rx="10" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+        <text x="500" y="132" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#4a148c">FhirMapping</text>
+        <text x="500" y="150" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6a1b9a">Service</text>
+        <text x="500" y="166" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7b1fa2">Firely SDK</text>
+
+        <!-- Arrow to DB -->
+        <line x1="570" y1="140" x2="630" y2="140" stroke="#ccc" stroke-width="2"/>
+        <polygon points="630,135 640,140 630,145" fill="#ccc"/>
+
+        <!-- SQL DB -->
+        <ellipse cx="670" cy="130" rx="40" ry="18" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <rect x="630" y="130" width="80" height="30" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" stroke-top="none"/>
+        <ellipse cx="670" cy="160" rx="40" ry="18" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="670" y="148" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="600" fill="#2e7d32">SQL Server</text>
+
+        <!-- Label -->
+        <text x="360" y="240" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#888">No separate FHIR database — we map on the fly from our existing SQL tables</text>
+      </svg>
+      <figcaption>Our FHIR architecture: the gateway translates between external FHIR JSON and our internal SQL data using the Firely SDK</figcaption>
+    </div>
+
+    <div class="callout green">
+      <div class="callout-title">Key design decision</div>
+      We do <strong>not</strong> create a separate FHIR database. Everything lives in our existing SQL Server tables (<code>Patients</code>, <code>Cases</code>, <code>Appointments</code>, etc.). The <code>FhirMappingService</code> translates between our internal format and FHIR JSON on every request. This keeps the system simple and avoids data duplication.
+    </div>
+  </section>
+
+  <!-- ─────────────────── ENDPOINTS ─────────────────── -->
+  <section id="endpoints">
+    <h2>API Endpoints we're building</h2>
+
+    <div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:20px 0">
+      <div style="background:#1a2332;padding:12px 16px;color:#7ecbff;font-size:12px;font-weight:700;letter-spacing:.05em">BASE PATH: /fhir/R4/ — All endpoints require JWT auth</div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/metadata</span><span class="endpoint-desc">Returns the CapabilityStatement (the "menu card" of what we support)</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Patient</span><span class="endpoint-desc">Search patients: <code>?name=</code> <code>?birthdate=</code> <code>?identifier=</code> → returns searchset Bundle</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Patient/{id}</span><span class="endpoint-desc">Read one patient as a FHIR Patient resource</span></div>
+      <div class="endpoint"><span class="method method-post">POST</span><span class="endpoint-path">/Patient</span><span class="endpoint-desc">Import a FHIR Patient JSON from an external system → creates a new patient with auto-generated MRN</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Patient/{id}/$everything</span><span class="endpoint-desc">Export the complete patient record as a FHIR Bundle (Patient + Encounters + Tasks + Appointments + DocumentReferences)</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Encounter</span><span class="endpoint-desc">Search cases: <code>?patient=</code> <code>?status=</code></span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Encounter/{id}</span><span class="endpoint-desc">Read one case as a FHIR Encounter resource</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Appointment/{id}</span><span class="endpoint-desc">Read one appointment as a FHIR Appointment resource</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/Task/{id}</span><span class="endpoint-desc">Read one case task as a FHIR Task resource</span></div>
+      <div class="endpoint"><span class="method method-get">GET</span><span class="endpoint-path">/DocumentReference/{id}</span><span class="endpoint-desc">Read one document's metadata as a FHIR DocumentReference</span></div>
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-title">Errors are different here</div>
+      On our normal <code>/api/</code> routes, errors return RFC 7807 <code>ProblemDetails</code> JSON. On <code>/fhir/R4/</code> routes, all errors must return a FHIR <code>OperationOutcome</code> resource. This is a FHIR R4 rule — any FHIR client expects this format, so we need a separate exception handler just for the FHIR route prefix.
+    </div>
+  </section>
+
+  <!-- ─────────────────── IMPORT FLOW ─────────────────── -->
+  <section id="import-flow">
+    <h2>Patient Import Flow — POST /fhir/R4/Patient</h2>
+
+    <p>This is the most complex endpoint. An external EHR (or a user pasting JSON in our UI) posts a FHIR Patient resource. We validate it, create the patient in our database, and respond with the created resource including the new MRN.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body"><h4>Deserialise with Firely SDK</h4><p>The raw JSON is parsed by the Firely .NET SDK. If the JSON is not valid FHIR, Firely throws a parse error → we return an <code>OperationOutcome</code> with HTTP 400.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body"><h4>Validate the resource</h4><p>Check that <code>resourceType === "Patient"</code> and that at least one name entry exists. If not → <code>OperationOutcome</code> with HTTP 422.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body"><h4>Map FHIR fields → internal Patient</h4><p>Extract <code>name[0].family</code> → <code>LastName</code>, <code>birthDate</code> → <code>DateOfBirth</code>, etc. Generate a new MRN in <code>MRN-YYYY-NNNNN</code> format.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body"><h4>Save to database</h4><p>Insert into the <code>Patients</code> table via EF Core. The same logic as our <code>PatientDataHandler.CreatePatientAsync</code>.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body"><h4>Write FhirImportLogs</h4><p>Record the full raw FHIR payload, source system, external ID, status (<code>Success</code>), and timestamp. This is our traceability record.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body"><h4>Write AuditLogs</h4><p>Write a standard audit entry: <code>Action = Create</code>, <code>EntityType = Patient</code>, with a note identifying the source system.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body"><h4>Return 201 Created</h4><p>Respond with the newly created patient serialised back to FHIR JSON, including the assigned MRN as the FHIR <code>identifier</code>. <code>Location</code> header points to the new resource URL.</p></div>
+      </div>
+    </div>
+
+    <p>The Angular <code>FhirImportComponent</code> provides a two-step UI: first paste the JSON and preview the parsed fields; then confirm the import. This prevents accidents.</p>
+  </section>
+
+  <!-- ─────────────────── EXPORT FLOW ─────────────────── -->
+  <section id="export-flow">
+    <h2>Patient Export — GET /Patient/{id}/$everything</h2>
+
+    <div class="analogy">
+      Imagine a patient is transferring from our hospital to a specialist centre. The specialist needs everything: demographics, all their open cases, upcoming appointments, outstanding tasks, and uploaded documents. Instead of printing a 40-page PDF, we hand them a single FHIR Bundle JSON file. Their system imports it directly — no re-typing, no data loss.
+    </div>
+
+    <p>When this endpoint is called, we:</p>
+    <ol>
+      <li>Load the Patient from our database</li>
+      <li>Load all their Cases, Appointments, CaseTasks, and Documents</li>
+      <li>Map each one to the corresponding FHIR resource type</li>
+      <li>Package everything into one FHIR <strong>collection Bundle</strong></li>
+      <li>Log the export action to <code>AuditLogs</code> (action: <code>FhirExport</code>)</li>
+      <li>Return the Bundle JSON</li>
+    </ol>
+
+    <p>The Angular <strong>"Export as FHIR Bundle"</strong> button on the Patient Detail page calls this endpoint and triggers a file download named <code>patient-MRN-2026-00001-fhir-bundle.json</code>.</p>
+  </section>
+
+  <!-- ─────────────────── FIELD MAPPING ─────────────────── -->
+  <section id="mapping">
+    <h2>Field Mapping — Internal ↔ FHIR</h2>
+
+    <p>This is where the translation happens. Our <code>FhirMappingService</code> in <code>HCM.Infrastructure</code> implements these mappings:</p>
+
+    <details open>
+      <summary>Patient ↔ FHIR Patient</summary>
+      <table>
+        <tr><th>Our field</th><th>FHIR field</th><th>Notes</th></tr>
+        <tr><td><code>Patient.Id</code> (GUID)</td><td><code>Patient.id</code></td><td>Internal identifier</td></tr>
+        <tr><td><code>Patient.MRN</code></td><td><code>Patient.identifier[].value</code></td><td>System = our MRN namespace URI</td></tr>
+        <tr><td><code>Patient.FirstName</code></td><td><code>Patient.name[0].given[0]</code></td><td></td></tr>
+        <tr><td><code>Patient.LastName</code></td><td><code>Patient.name[0].family</code></td><td></td></tr>
+        <tr><td><code>Patient.DateOfBirth</code></td><td><code>Patient.birthDate</code></td><td>Format: YYYY-MM-DD</td></tr>
+        <tr><td><code>Patient.Gender</code></td><td><code>Patient.gender</code></td><td>Must map to FHIR gender codes: male/female/other/unknown</td></tr>
+        <tr><td><code>Patient.Phone</code></td><td><code>Patient.telecom[].value</code></td><td>system = "phone"</td></tr>
+        <tr><td><code>Patient.Email</code></td><td><code>Patient.telecom[].value</code></td><td>system = "email"</td></tr>
+      </table>
+    </details>
+
+    <details>
+      <summary>Case ↔ FHIR Encounter</summary>
+      <table>
+        <tr><th>Our field</th><th>FHIR field</th><th>Notes</th></tr>
+        <tr><td><code>Case.Id</code></td><td><code>Encounter.id</code></td><td></td></tr>
+        <tr><td><code>Case.CaseNumber</code></td><td><code>Encounter.identifier[].value</code></td><td></td></tr>
+        <tr><td><code>Case.CurrentStatus</code></td><td><code>Encounter.status</code></td><td>Must map: Open→in-progress, Closed→finished, OnHold→on-leave</td></tr>
+        <tr><td><code>Case.PatientId</code></td><td><code>Encounter.subject.reference</code></td><td>"Patient/{MRN}"</td></tr>
+        <tr><td><code>Case.OpenedAt</code></td><td><code>Encounter.period.start</code></td><td></td></tr>
+        <tr><td><code>Case.ClosedAt</code></td><td><code>Encounter.period.end</code></td><td></td></tr>
+      </table>
+    </details>
+
+    <details>
+      <summary>CaseTask ↔ FHIR Task</summary>
+      <table>
+        <tr><th>Our field</th><th>FHIR field</th><th>Notes</th></tr>
+        <tr><td><code>CaseTask.Id</code></td><td><code>Task.id</code></td><td></td></tr>
+        <tr><td><code>CaseTask.Title</code></td><td><code>Task.description</code></td><td></td></tr>
+        <tr><td><code>CaseTask.Status</code></td><td><code>Task.status</code></td><td>Todo→requested, InProgress→in-progress, Done→completed, Cancelled→cancelled</td></tr>
+        <tr><td><code>CaseTask.Priority</code></td><td><code>Task.priority</code></td><td>routine / urgent / asap / stat</td></tr>
+        <tr><td><code>CaseTask.DueDate</code></td><td><code>Task.executionPeriod.end</code></td><td></td></tr>
+        <tr><td><code>CaseTask.AssignedTo</code> (User)</td><td><code>Task.owner.reference</code></td><td>"Practitioner/{userId}"</td></tr>
+      </table>
+    </details>
+  </section>
+
+  <!-- ─────────────────── HL7 ─────────────────── -->
+  <section id="hl7">
+    <h2>HL7 v2 — the older standard (stretch goal)</h2>
+
+    <p>HL7 v2 is an older message format from the 1980s still used by many legacy hospital systems (lab machines, radiology systems). Unlike FHIR's clean JSON, HL7 v2 looks like this:</p>
+
+    <pre style="background:#1a2332;color:#cdd6e0;padding:14px;border-radius:8px;font-size:12px;overflow-x:auto">MSH|^~\&|EPIC|HOSPITAL|HCMS|HCMS|20260702120000||ADT^A01|MSG001|P|2.5
+PID|||MRN-2026-00001||Smith^Jane^^^||19850322|F|||123 Maple St^^Springfield^IL^62701</pre>
+
+    <div class="analogy">
+      If FHIR is a modern REST API with clean JSON, HL7 v2 is a fax machine from 1987. It still works, millions of hospitals still use it, but nobody would design it that way today. We use the <strong>NHapi</strong> library to parse these messages.
+    </div>
+
+    <p>The two stretch-goal endpoints:</p>
+    <ul>
+      <li><code>POST /api/hl7/adt</code> — receives an <strong>ADT^A01</strong> (Admit/Register Patient) message and creates/updates the patient record</li>
+      <li><code>POST /api/hl7/oru</code> — receives an <strong>ORU^R01</strong> (Observation Result, i.e. lab results) and attaches it as a case note</li>
+    </ul>
+  </section>
+
+  <!-- ─────────────────── USE CASES ─────────────────── -->
+  <section id="usecases">
+    <h2>Use Cases — who benefits and how</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🏥</div>
+        <h4>Referring Hospital</h4>
+        <p>Sends a patient referral as a FHIR Patient JSON. Our system imports it, generating an MRN automatically. No manual data entry.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔬</div>
+        <h4>Research Team</h4>
+        <p>Queries <code>GET /Patient?birthdate=lt1960</code> to get anonymised cohort data for a clinical study — without needing database access.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h4>Insurance / Payer</h4>
+        <p>Downloads a patient's $everything Bundle to verify care episodes and document referrals for claim processing.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h4>Patient Health App</h4>
+        <p>A patient-facing mobile app (Apple Health, Google Health) can pull the patient's FHIR record directly — this is what the 21st Century Cures Act enables.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <h4>AI / Analytics</h4>
+        <p>An AI system fetches FHIR Bundles as structured context for clinical decision support, risk scoring, or care gap detection.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗂️</div>
+        <h4>Patient Transfer</h4>
+        <p>A patient moving to a different care facility gets their complete FHIR Bundle — the receiving system imports it in seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── FIRELY SDK ─────────────────── -->
+  <section id="firely">
+    <h2>Firely .NET SDK — our FHIR toolkit</h2>
+
+    <p>We use the <strong>Firely .NET SDK</strong> (<code>Hl7.Fhir.R4</code> NuGet package). It gives us:</p>
+
+    <ul>
+      <li><strong>Serialiser/Deserialiser</strong> — parse incoming FHIR JSON and serialise our objects back to FHIR JSON</li>
+      <li><strong>Strongly-typed models</strong> — C# classes like <code>Hl7.Fhir.Model.Patient</code>, <code>Hl7.Fhir.Model.Encounter</code>, etc.</li>
+      <li><strong>Validation</strong> — check that a submitted resource conforms to the FHIR R4 spec before we accept it</li>
+      <li><strong>CapabilityStatement builder</strong> — helps construct the metadata response</li>
+    </ul>
+
+    <details>
+      <summary>Code sketch: building a FHIR Patient from our entity</summary>
+      <pre style="background:#1a2332;color:#cdd6e0;padding:16px;border-radius:6px;font-size:12.5px;overflow-x:auto;line-height:1.6">// In FhirMappingService.cs (HCM.Infrastructure)
+public Hl7.Fhir.Model.Patient ToFhirPatient(Patient p)
+{
+    return new Hl7.Fhir.Model.Patient
+    {
+        Id = p.Id.ToString(),
+        Identifier = [ new() {
+            System = "https://hcms.example.com/mrn",
+            Value  = p.MRN
+        }],
+        Name = [ new() {
+            Family = p.LastName,
+            Given  = [ p.FirstName ]
+        }],
+        BirthDate = p.DateOfBirth.ToString("yyyy-MM-dd"),
+        Gender    = MapGender(p.Gender)
+    };
+}</pre>
+    </details>
+
+    <div class="callout purple">
+      <div class="callout-title">Why isolate FHIR behind an interface?</div>
+      The Firely SDK adds ~15 MB of dependencies. We isolate all SDK usage inside <code>IFhirMappingService</code> in <code>HCM.Infrastructure</code>. The Application layer only sees the interface — it never imports Firely directly. This keeps the SDK confined to one layer and means it's only loaded on FHIR request paths.
+    </div>
+  </section>
+
+  <!-- ─────────────────── DEV RESPONSIBILITIES ─────────────────── -->
+  <section id="dev-responsibilities">
+    <h2>Developer Responsibilities</h2>
+
+    <p>Maintaining a FHIR API is not just about writing code. Here is what you need to stay on top of:</p>
+
+    <table>
+      <tr><th>Area</th><th>What to do</th><th>Why</th></tr>
+      <tr><td><strong>FHIR spec compliance</strong></td><td>Run the free online FHIR validator on your CapabilityStatement and resource responses after any change</td><td>A non-compliant response breaks any external FHIR client that calls your API</td></tr>
+      <tr><td><strong>Status code mappings</strong></td><td>When adding new case statuses, update the <code>MapCaseStatus()</code> function</td><td>FHIR Encounter.status has a fixed set of values — unmapped statuses will cause validation failures</td></tr>
+      <tr><td><strong>Firely SDK version</strong></td><td>Keep the NuGet package updated; watch the changelog for breaking changes</td><td>New FHIR profiles and bugfixes ship frequently</td></tr>
+      <tr><td><strong>FhirImportLogs cleanup</strong></td><td>Add a background job to archive logs older than 2 years</td><td>The <code>RawPayload</code> column stores full FHIR JSON — large payloads accumulate fast</td></tr>
+      <tr><td><strong>Audit every export</strong></td><td>Never skip the <code>AuditLogs</code> write on $everything calls</td><td>HIPAA requires a record of who accessed patient data and when</td></tr>
+      <tr><td><strong>OperationOutcome errors</strong></td><td>All errors under <code>/fhir/R4/</code> must return OperationOutcome, never ProblemDetails</td><td>FHIR clients parse OperationOutcome specifically — ProblemDetails will cause silent client failures</td></tr>
+      <tr><td><strong>Content-Type header</strong></td><td>FHIR requests/responses use <code>application/fhir+json</code>, not <code>application/json</code></td><td>Some FHIR clients reject responses with the wrong content-type</td></tr>
+    </table>
+  </section>
+
+  <!-- ─────────────────── GOTCHAS ─────────────────── -->
+  <section id="gotchas">
+    <h2>Common gotchas for new developers</h2>
+
+    <div class="callout red">
+      <div class="callout-title">Gender enum mismatch</div>
+      FHIR's <code>Patient.gender</code> only accepts: <code>male</code>, <code>female</code>, <code>other</code>, <code>unknown</code>. Our database might store "M", "Male", or "Non-binary". Your mapping function must handle all variants and fall back to <code>unknown</code> for anything unrecognised. Never return null — the FHIR validator will reject it.
+    </div>
+
+    <div class="callout red">
+      <div class="callout-title">DateTime format</div>
+      FHIR dates must be <code>YYYY-MM-DD</code> (not <code>DD/MM/YYYY</code> or <code>MM-DD-YYYY</code>). DateTimes must be ISO 8601 with timezone: <code>2026-07-02T14:30:00+00:00</code>. Always use UTC and always include the timezone offset.
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-title">Reference format</div>
+      When one resource references another (e.g. an Encounter references its Patient), the reference must be in the format <code>"Patient/MRN-2026-00001"</code> — the resource type plus the ID, separated by a slash. A bare GUID is not a valid FHIR reference.
+    </div>
+
+    <div class="callout orange">
+      <div class="callout-title">$everything performance</div>
+      The <code>$everything</code> operation loads a patient plus ALL their related data. For a patient with 10 years of history, this could be hundreds of records. Use <code>AsNoTracking()</code> on all queries, consider adding date range parameters, and set a reasonable response size limit.
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ AI SECTION ═══════════════════════════════ -->
+  <section id="ai-rag">
+    <h2>AI Integration — RAG on FHIR Data</h2>
+
+    <p><strong>RAG</strong> stands for <strong>Retrieval-Augmented Generation</strong>. It is the technique of giving an AI language model relevant facts at query time, rather than relying solely on what it learned during training.</p>
+
+    <div class="analogy">
+      Imagine asking a doctor a question. Without context, they can only answer based on their medical training. With RAG, you hand them the patient's full chart before they answer. They use the chart as reference while formulating their response. RAG does the same thing for AI — it retrieves specific records and puts them in the AI's "context window" before it generates a response.
+    </div>
+
+    <p>FHIR is <em>ideal</em> for RAG because the <code>$everything</code> Bundle gives you every piece of structured information about a patient in one JSON payload. This is already in a machine-readable, standardised format that AI can consume directly.</p>
+
+    <h3>How it works with our system</h3>
+
+    <div class="ai-card">
+      <h4>Step 1 — Index FHIR Bundles into a Vector Store</h4>
+      <p>Periodically fetch <code>GET /fhir/R4/Patient/{id}/$everything</code> for each patient. Chunk the Bundle into logical segments (one chunk per Encounter, one per set of Tasks, etc.). Embed each chunk using an embedding model (Azure OpenAI <code>text-embedding-3-small</code> or OpenAI). Store the embeddings in a vector database (Azure AI Search, Pinecone, Weaviate).</p>
+      <ul>
+        <li><code>chunk_id</code>: patient MRN + resource type + resource ID</li>
+        <li><code>text</code>: human-readable summary of the resource</li>
+        <li><code>embedding</code>: 1536-dimensional float vector</li>
+        <li><code>metadata</code>: patientMrn, resourceType, date</li>
+      </ul>
+    </div>
+
+    <div class="ai-card">
+      <h4>Step 2 — Retrieve on query</h4>
+      <p>A care coordinator types: <em>"What were Jane Smith's last three case statuses and any overdue tasks?"</em></p>
+      <p>The system: embeds the question → does a similarity search in the vector store filtered by <code>patientMrn = "MRN-2026-00001"</code> → retrieves the 5 most relevant FHIR resource chunks → puts them in the LLM prompt as context.</p>
+    </div>
+
+    <div class="ai-card">
+      <h4>Step 3 — Generate with an LLM</h4>
+      <p>The LLM (Claude, GPT-4o, etc.) receives the retrieved FHIR chunks as context and generates a precise, factual answer grounded in the actual patient record. No hallucination of facts — everything stated is sourced from real FHIR data.</p>
+      <pre><code>System: You are a clinical AI assistant. Answer based only on the FHIR data provided.
+Context: [retrieved FHIR chunks for MRN-2026-00001]
+User: What were Jane's last three case statuses and any overdue tasks?</code></pre>
+    </div>
+  </section>
+
+  <section id="ai-agents">
+    <h2>AI Agents on top of FHIR</h2>
+
+    <p>An <strong>AI Agent</strong> goes further than RAG — it can take actions, call tools, and chain multiple steps together. Here are concrete agents we could build on top of our FHIR layer:</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🩺</div>
+        <h4>Care Gap Detector</h4>
+        <p>Agent fetches a patient's $everything Bundle, analyses task completion rates, overdue appointments, and last case activity, then generates a "care gap report" with recommended actions.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚠️</div>
+        <h4>Risk Scorer</h4>
+        <p>Agent reads all Encounters, Tasks (overdue count), and Appointment no-shows for a patient. Calls an LLM to assign a risk score (Low/Medium/High/Critical) with reasoning.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📝</div>
+        <h4>Case Summary Writer</h4>
+        <p>Agent fetches all CaseNotes and Encounters for a case, then generates a structured clinical summary paragraph — useful for handover between coordinators.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔔</div>
+        <h4>Smart Notifier</h4>
+        <p>Agent monitors the FHIR Task endpoint for overdue tasks, then composes personalised notifications rather than generic "Task overdue" alerts.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📥</div>
+        <h4>FHIR Import Validator</h4>
+        <p>Before importing a FHIR Patient, an AI agent checks for potential duplicate patients by comparing name, DOB, and address against existing records and flags likely matches.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h4>Cross-System Reconciler</h4>
+        <p>Agent periodically queries an external FHIR server (e.g., a hospital's Epic system), compares data with our internal records, and flags discrepancies for a coordinator to review.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai-architecture">
+    <h2>AI Architecture — How to wire it up</h2>
+
+    <div class="diagram">
+      <svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" style="max-width:700px;width:100%">
+        <!-- HCMS FHIR API -->
+        <rect x="10" y="130" width="140" height="60" rx="8" fill="#1565c0"/>
+        <text x="80" y="155" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="white">HCMS</text>
+        <text x="80" y="172" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#90caf9">FHIR API</text>
+        <text x="80" y="186" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#90caf9">/fhir/R4/</text>
+
+        <!-- Arrow 1 -->
+        <line x1="150" y1="160" x2="200" y2="160" stroke="#ccc" stroke-width="2"/>
+        <polygon points="200,155 210,160 200,165" fill="#ccc"/>
+        <text x="178" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#888">$everything</text>
+
+        <!-- Chunker -->
+        <rect x="210" y="130" width="110" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="265" y="155" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#1b5e20">Chunker</text>
+        <text x="265" y="171" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#388e3c">Split Bundle</text>
+        <text x="265" y="184" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#388e3c">into segments</text>
+
+        <!-- Arrow 2 -->
+        <line x1="320" y1="160" x2="368" y2="160" stroke="#ccc" stroke-width="2"/>
+        <polygon points="368,155 378,160 368,165" fill="#ccc"/>
+
+        <!-- Embedder -->
+        <rect x="378" y="130" width="110" height="60" rx="8" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+        <text x="433" y="155" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#4a148c">Embedder</text>
+        <text x="433" y="171" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7b1fa2">Azure OpenAI</text>
+        <text x="433" y="184" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#7b1fa2">text-embedding-3</text>
+
+        <!-- Arrow 3 -->
+        <line x1="488" y1="160" x2="536" y2="160" stroke="#ccc" stroke-width="2"/>
+        <polygon points="536,155 546,160 536,165" fill="#ccc"/>
+
+        <!-- Vector Store -->
+        <rect x="546" y="118" width="120" height="84" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <text x="606" y="147" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#bf360c">Vector Store</text>
+        <text x="606" y="163" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#e64a19">Azure AI Search</text>
+        <text x="606" y="177" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#e64a19">or Pinecone</text>
+        <text x="606" y="193" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#e64a19">or Weaviate</text>
+
+        <!-- Query path (bottom) -->
+        <text x="360" y="270" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="600" fill="#333">Query Path</text>
+        <rect x="10" y="285" width="100" height="30" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+        <text x="60" y="304" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1565c0">User Question</text>
+
+        <line x1="110" y1="300" x2="158" y2="300" stroke="#90caf9" stroke-width="1.5"/>
+        <polygon points="158,296 166,300 158,304" fill="#90caf9"/>
+
+        <rect x="166" y="285" width="100" height="30" rx="6" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+        <text x="216" y="304" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6a1b9a">Embed query</text>
+
+        <line x1="266" y1="300" x2="314" y2="300" stroke="#90caf9" stroke-width="1.5"/>
+        <polygon points="314,296 322,300 314,304" fill="#90caf9"/>
+
+        <rect x="322" y="285" width="110" height="30" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <text x="377" y="304" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#e65100">Similarity search</text>
+
+        <line x1="432" y1="300" x2="480" y2="300" stroke="#90caf9" stroke-width="1.5"/>
+        <polygon points="480,296 488,300 480,304" fill="#90caf9"/>
+
+        <rect x="488" y="285" width="90" height="30" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="533" y="304" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#2e7d32">LLM + context</text>
+
+        <line x1="578" y1="300" x2="626" y2="300" stroke="#90caf9" stroke-width="1.5"/>
+        <polygon points="626,296 634,300 626,304" fill="#90caf9"/>
+
+        <rect x="634" y="285" width="76" height="30" rx="6" fill="#1565c0"/>
+        <text x="672" y="304" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white">Answer</text>
+      </svg>
+      <figcaption>Top row: indexing pipeline (runs periodically or on data change). Bottom row: query pipeline (runs on each user question).</figcaption>
+    </div>
+
+    <h3>Practical tech choices for this project</h3>
+
+    <table>
+      <tr><th>Component</th><th>Azure option</th><th>Open-source option</th></tr>
+      <tr><td>Embedding model</td><td>Azure OpenAI <code>text-embedding-3-small</code></td><td>Sentence Transformers (local)</td></tr>
+      <tr><td>Vector store</td><td>Azure AI Search (hybrid vector + keyword)</td><td>Weaviate / Qdrant (self-hosted)</td></tr>
+      <tr><td>LLM</td><td>Azure OpenAI GPT-4o or Claude via API</td><td>Ollama (local Llama 3)</td></tr>
+      <tr><td>Agent framework</td><td>Azure AI Agent Service</td><td>LangChain / Semantic Kernel (.NET)</td></tr>
+      <tr><td>Orchestration</td><td>Azure Functions (indexing trigger on FHIR write)</td><td>.NET BackgroundService</td></tr>
+    </table>
+
+    <div class="callout teal">
+      <div class="callout-title">The key insight</div>
+      Because our FHIR <code>$everything</code> endpoint already produces a perfectly structured, standardised JSON payload for any patient, the "chunker" step is trivial — each top-level resource in the Bundle becomes one chunk. The FHIR standard does the hard structuring work; AI sits naturally on top.
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-title">Privacy note</div>
+      Any AI system processing FHIR patient data must comply with HIPAA. In practice: use Azure OpenAI (not the public OpenAI API) because Microsoft provides a HIPAA BAA (Business Associate Agreement) for Azure services. Never send PHI to the public ChatGPT or OpenAI API without a BAA in place. Never log PHI in AI service request/response logs.
+    </div>
+  </section>
+
+  <footer>
+    <p>HCMS — Healthcare Case Management System · Phase 5 FHIR Primer · Generated 2026-07-02 · <strong>Portfolio project — no real patient data.</strong></p>
+  </footer>
+
+</main>
+
+<script>
+// ── Section metadata (id → display title) ──
+const SECTION_META = {
+  'what-is-fhir':        'What is FHIR?',
+  'why-it-exists':       'Why does it exist?',
+  'usb-analogy':         'The USB Analogy',
+  'resources':           'Resources — the building blocks',
+  'bundle':              'Bundles — packaging resources',
+  'operations':          'Operations & Search',
+  'capability':          'CapabilityStatement',
+  'phase5-overview':     'Phase 5 Overview',
+  'endpoints':           'API Endpoints',
+  'import-flow':         'Patient Import Flow',
+  'export-flow':         'Patient Export ($everything)',
+  'mapping':             'Field Mapping',
+  'hl7':                 'HL7 v2 (stretch)',
+  'usecases':            'Use Cases',
+  'firely':              'Firely .NET SDK',
+  'dev-responsibilities':'Developer Responsibilities',
+  'gotchas':             'Common Gotchas',
+  'ai-rag':              'RAG on FHIR Data',
+  'ai-agents':           'Clinical AI Agents',
+  'ai-architecture':     'AI Architecture',
+};
+
+// ── Inject prev/next nav into every section ──
+(function buildSectionNav() {
+  const sectionIds = Object.keys(SECTION_META);
+  sectionIds.forEach((id, i) => {
+    const section = document.getElementById(id);
+    if (!section) return;
+
+    const prevId = sectionIds[i - 1];
+    const nextId = sectionIds[i + 1];
+
+    const nav = document.createElement('div');
+    nav.className = 'section-nav';
+
+    if (prevId) {
+      nav.innerHTML += `
+        <a href="#${prevId}" class="prev" onclick="smoothNav(event,'${prevId}')">
+          <span>◀</span>
+          <span>
+            <span class="nav-label">Previous</span>
+            <span class="nav-title">${SECTION_META[prevId]}</span>
+          </span>
+        </a>`;
+    } else {
+      nav.innerHTML += `<span></span>`;
+    }
+
+    if (nextId) {
+      nav.innerHTML += `
+        <a href="#${nextId}" class="next" onclick="smoothNav(event,'${nextId}')">
+          <span>
+            <span class="nav-label">Next</span>
+            <span class="nav-title">${SECTION_META[nextId]}</span>
+          </span>
+          <span>▶</span>
+        </a>`;
+    }
+
+    section.appendChild(nav);
+  });
+})();
+
+function smoothNav(e, id) {
+  e.preventDefault();
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Back to top button ──
+const backToTop = document.getElementById('back-to-top');
+backToTop.addEventListener('click', e => {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+window.addEventListener('scroll', () => {
+  backToTop.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+// Active section highlighting via IntersectionObserver
+const sections = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('nav#sidebar a');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`nav#sidebar a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// Smooth scroll (skip the chat link which has its own handler)
+links.forEach(link => {
+  if (link.id === 'nav-chat-open') return;
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+<!-- ══════════════════ BACK TO TOP ══════════════════ -->
+<a id="back-to-top" href="#" title="Back to top">▲ Top</a>
+
+<!-- ══════════════════ CHAT FAB ══════════════════ -->
+<button id="chat-fab" title="Ask AI about FHIR" aria-label="Open AI chat">
+  💬
+  <span class="fab-badge" id="fab-badge">1</span>
+</button>
+
+<!-- ══════════════════ CHAT PANEL ══════════════════ -->
+<div id="chat-panel" role="dialog" aria-label="AI Chat">
+
+  <!-- header -->
+  <div class="chat-header">
+    <div>
+      <div class="chat-header-title">AI Assistant</div>
+      <div class="chat-header-sub" id="chat-provider-label">Configure API key to start</div>
+    </div>
+    <button class="chat-header-btn" id="chat-settings-btn" title="Settings">⚙</button>
+    <button class="chat-header-btn chat-clear" id="chat-clear-btn" title="Clear conversation">🗑</button>
+    <button class="chat-header-btn" id="chat-close-btn" title="Close">✕</button>
+  </div>
+
+  <!-- settings drawer -->
+  <div id="chat-settings">
+    <div class="settings-row">
+      <label>Provider</label>
+      <select id="settings-provider">
+        <option value="claude">Anthropic — Claude</option>
+        <option value="openai">OpenAI — ChatGPT</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label>Model</label>
+      <select id="settings-model">
+        <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+        <option value="claude-opus-4-8">claude-opus-4-8</option>
+        <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 (fast)</option>
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-4o-mini">gpt-4o-mini (cheap)</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label>API Key <span style="font-weight:400;text-transform:none;color:#90a4ae">(stored in memory only — never sent anywhere except the chosen API)</span></label>
+      <input type="password" id="settings-key" placeholder="sk-ant-... or sk-..." autocomplete="off" spellcheck="false"/>
+    </div>
+    <button class="settings-save" id="settings-save-btn">Save &amp; Close</button>
+  </div>
+
+  <!-- messages -->
+  <div id="chat-messages">
+    <div class="chat-msg system-note">👋 Ask anything about FHIR, Phase 5, or healthcare interoperability. Configure your API key via ⚙ to enable AI responses.</div>
+  </div>
+
+  <!-- input -->
+  <div class="chat-input-row">
+    <textarea id="chat-input" rows="1" placeholder="Ask about FHIR, HCMS Phase 5, AI integration…" aria-label="Chat input"></textarea>
+    <button id="chat-send" title="Send (Enter)">➤</button>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CHAT LOGIC
+   ═══════════════════════════════════════════════════ */
+
+const SYSTEM_PROMPT = `You are an expert healthcare interoperability assistant embedded in an HCMS (Healthcare Case Management System) FHIR primer document.
+
+You have deep knowledge of:
+- HL7 FHIR R4 standard: resources, bundles, operations, CapabilityStatement, OperationOutcome
+- The HCMS project: a .NET 8 Clean Architecture + Angular 19 portfolio healthcare case management system
+- Phase 5 of HCMS: building a FHIR R4 gateway at /fhir/R4/ using the Firely .NET SDK (Hl7.Fhir.R4 NuGet)
+- FHIR resource mappings: Patient↔Patient, Case↔Encounter, CaseTask↔Task, Appointment↔Appointment, Document↔DocumentReference
+- Clinical AI integration: RAG on FHIR Bundles, vector stores (Azure AI Search, Pinecone), embedding models, clinical decision support agents
+- HIPAA compliance, PHI handling, Azure OpenAI BAA requirements
+
+Answer questions clearly, using real-world analogies when explaining complex concepts. Keep answers concise unless detail is requested. When referencing code, use inline code formatting. This is a portfolio/learning project — no real patient data is involved.`;
+
+let chatConfig = { provider: 'claude', model: 'claude-sonnet-4-6', key: '' };
+let chatHistory = [];
+let isStreaming = false;
+
+const panel      = document.getElementById('chat-panel');
+const fab        = document.getElementById('chat-fab');
+const fabBadge   = document.getElementById('fab-badge');
+const msgBox     = document.getElementById('chat-messages');
+const input      = document.getElementById('chat-input');
+const sendBtn    = document.getElementById('chat-send');
+const settingsEl = document.getElementById('chat-settings');
+const provLabel  = document.getElementById('chat-provider-label');
+
+// ── open/close ──
+function openChat() {
+  panel.classList.add('open');
+  fabBadge.style.display = 'none';
+  input.focus();
+}
+function closeChat() { panel.classList.remove('open'); }
+
+fab.addEventListener('click', () => panel.classList.contains('open') ? closeChat() : openChat());
+document.getElementById('chat-close-btn').addEventListener('click', closeChat);
+document.getElementById('nav-chat-open').addEventListener('click', e => { e.preventDefault(); openChat(); });
+
+// ── settings ──
+const settingsBtn = document.getElementById('chat-settings-btn');
+settingsBtn.addEventListener('click', () => settingsEl.classList.toggle('visible'));
+
+document.getElementById('settings-provider').addEventListener('change', function() {
+  const isClaude = this.value === 'claude';
+  const modelSel = document.getElementById('settings-model');
+  modelSel.innerHTML = isClaude
+    ? `<option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+       <option value="claude-opus-4-8">claude-opus-4-8</option>
+       <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 (fast)</option>`
+    : `<option value="gpt-4o">gpt-4o</option>
+       <option value="gpt-4o-mini">gpt-4o-mini (cheap)</option>
+       <option value="gpt-4-turbo">gpt-4-turbo</option>`;
+});
+
+document.getElementById('settings-save-btn').addEventListener('click', () => {
+  chatConfig.provider = document.getElementById('settings-provider').value;
+  chatConfig.model    = document.getElementById('settings-model').value;
+  chatConfig.key      = document.getElementById('settings-key').value.trim();
+  settingsEl.classList.remove('visible');
+  provLabel.textContent = chatConfig.key
+    ? `${chatConfig.provider === 'claude' ? 'Claude' : 'ChatGPT'} · ${chatConfig.model}`
+    : 'Configure API key to start';
+  if (chatConfig.key) addMsg('system-note', `✅ Connected to ${chatConfig.provider === 'claude' ? 'Anthropic Claude' : 'OpenAI ChatGPT'} (${chatConfig.model}). Ask away!`);
+});
+
+// ── clear ──
+document.getElementById('chat-clear-btn').addEventListener('click', () => {
+  chatHistory = [];
+  msgBox.innerHTML = '<div class="chat-msg system-note">🗑 Conversation cleared.</div>';
+});
+
+// ── auto-resize textarea ──
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+sendBtn.addEventListener('click', sendMessage);
+
+// ── helpers ──
+function addMsg(type, text) {
+  const div = document.createElement('div');
+  div.className = `chat-msg ${type}`;
+  div.innerHTML = formatText(text);
+  msgBox.appendChild(div);
+  msgBox.scrollTop = msgBox.scrollHeight;
+  return div;
+}
+
+function formatText(t) {
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+}
+
+function showTyping() {
+  const el = document.createElement('div');
+  el.className = 'typing-indicator';
+  el.id = 'typing';
+  el.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  msgBox.appendChild(el);
+  msgBox.scrollTop = msgBox.scrollHeight;
+}
+function removeTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
+
+// ── send ──
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text || isStreaming) return;
+
+  if (!chatConfig.key) {
+    settingsEl.classList.add('visible');
+    addMsg('error', '⚠ Please add your API key in ⚙ Settings first.');
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  isStreaming = true;
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    if (chatConfig.provider === 'claude') {
+      await callClaude();
+    } else {
+      await callOpenAI();
+    }
+  } catch(err) {
+    removeTyping();
+    addMsg('error', `❌ Error: ${err.message}`);
+  } finally {
+    isStreaming = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+// ── Claude (Anthropic Messages API) ──
+async function callClaude() {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': chatConfig.key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: chatConfig.model,
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: chatHistory.slice(-20),
+      stream: true
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  removeTyping();
+  const msgEl = addMsg('assistant', '');
+  let fullText = '';
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const json = line.slice(5).trim();
+      if (json === '[DONE]') continue;
+      try {
+        const evt = JSON.parse(json);
+        if (evt.type === 'content_block_delta' && evt.delta?.text) {
+          fullText += evt.delta.text;
+          msgEl.innerHTML = formatText(fullText);
+          msgBox.scrollTop = msgBox.scrollHeight;
+        }
+      } catch {}
+    }
+  }
+  chatHistory.push({ role: 'assistant', content: fullText });
+}
+
+// ── OpenAI Chat Completions ──
+async function callOpenAI() {
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...chatHistory.slice(-20)
+  ];
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${chatConfig.key}`
+    },
+    body: JSON.stringify({
+      model: chatConfig.model,
+      messages,
+      max_tokens: 1024,
+      stream: true
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  removeTyping();
+  const msgEl = addMsg('assistant', '');
+  let fullText = '';
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data:')) continue;
+      const json = line.slice(5).trim();
+      if (json === '[DONE]') continue;
+      try {
+        const delta = JSON.parse(json).choices?.[0]?.delta?.content;
+        if (delta) {
+          fullText += delta;
+          msgEl.innerHTML = formatText(fullText);
+          msgBox.scrollTop = msgBox.scrollHeight;
+        }
+      } catch {}
+    }
+  }
+  chatHistory.push({ role: 'assistant', content: fullText });
+}
+</script>
+</body>
+</html>

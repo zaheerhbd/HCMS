@@ -116,10 +116,16 @@ A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enab
 - FR-49d: Every import attempt (success or failure) shall be logged in `FhirImportLogs` with the full raw FHIR payload, source system identifier, status (`Success` / `Failed`), and any error message.
 - FR-49e: Successful imports shall also produce an `AuditLogs` entry with `Action = Create`, `EntityType = Patient`, and a detail note identifying the source system and external ID.
 - FR-50: Any patient record may be exported as a downloadable FHIR R4 Bundle (JSON) from the patient detail page; the download is logged in audit.
-- FR-51: FHIR search shall support standard parameters: Patient by `_id`, `name`, `birthdate`, `identifier`; Encounter by `patient`, `status`.
+- FR-51: FHIR search shall support standard parameters: Patient by `_id`, `name`, `birthdate`, `identifier`; Encounter by `patient`, `status`; Appointment by `_id`, `patient`, `status`, `date`; Task by `_id`, `patient`, `focus` (case number), `status`.
 - FR-52: All FHIR API errors shall return HL7-compliant `OperationOutcome` resources; HTTP status codes shall follow FHIR REST semantics.
 - FR-53 *(stretch)*: The system shall accept HL7 v2 ADT^A01 messages via an HTTP endpoint and auto-create or update the corresponding Patient record.
 - FR-54 *(stretch)*: The system shall accept HL7 v2 ORU^R01 messages (lab observation results) and attach the payload as a read-only CaseNote on the patient's active case.
+
+#### FHIR Transaction Bundle Import (Phase 5 Extension / Phase 9)
+- FR-55: The system shall accept a FHIR R4 Transaction Bundle via `POST /fhir/R4/` (root endpoint). The Bundle `type` must be `transaction`. Supported resource types within entries: `Patient`, `Encounter` (Case), `Appointment`, `Task`.
+- FR-56: All entries in a Transaction Bundle shall be processed atomically — if any entry fails validation or persistence, the entire operation is rolled back and no data is written. The response on failure is an `OperationOutcome` with per-entry diagnostics.
+- FR-57: On success, the response shall be a FHIR Bundle of type `transaction-response` with one entry per request entry, each containing the created resource's assigned logical ID (MRN for Patient, CaseNumber for Encounter, GUID for Appointment/Task) and HTTP status `201 Created`.
+- FR-58: Every Transaction Bundle import shall write one `FhirImportLogs` record per created resource type and a single `AuditLogs` entry for the whole operation with `Action = FhirBundleImport` and a summary of resources created.
 
 ### 1.4 Non-Functional Requirements
 

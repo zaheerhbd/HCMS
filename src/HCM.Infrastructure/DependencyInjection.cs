@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace HCM.Infrastructure;
 
 public static class DependencyInjection
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IBlobStorageService, BlobStorageService>();
+        services.AddScoped<IFhirMappingService, FhirMappingService>();
 
         services.AddHostedService<CaseNoteEditLockService>();
 

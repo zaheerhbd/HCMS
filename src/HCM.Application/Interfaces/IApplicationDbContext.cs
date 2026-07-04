@@ -26,5 +26,7 @@ public interface IApplicationDbContext
     DbSet<Provider> Providers { get; }
     DbSet<Appointment> Appointments { get; }
 
+    DbSet<FhirImportLog> FhirImportLogs { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,7 @@
+.page-container { padding: 24px; max-width: 960px; }
+.subtitle { color: #666; margin-bottom: 20px; }
+.query-card { margin-bottom: 24px; }
+.query-form { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.query-form mat-form-field { flex: 1; min-width: 200px; }
+.result-card { margin-top: 16px; }
+.spinner-wrap { display: flex; justify-content: center; padding: 32px; }

@@ -155,7 +155,8 @@ public class PatientDataHandler : IPatientDataHandler
             .FirstOrDefaultAsync(cancellationToken: ct);
 
         int nextSequence = 1;
-        if (lastMrn != null && int.TryParse(lastMrn.MRN.Substring(8), out int lastSequence))
+        var mrnPrefix = $"MRN-{currentYear}-"; // "MRN-2026-" = 9 chars
+        if (lastMrn != null && int.TryParse(lastMrn.MRN.Substring(mrnPrefix.Length), out int lastSequence))
         {
             nextSequence = lastSequence + 1;
         }

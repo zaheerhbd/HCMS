@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-07-02 (Module 6 Document Management UI hidden — nav item, Case Detail tab, Patient Detail tab, and route removed; backend and component files retained)
+**Last Updated:** 2026-07-04 (Module 13 FHIR/HL7 Integration extended — Task/Appointment search endpoints, CapabilityStatement fix, MRN off-by-one fix, Transaction Bundle import planned as Phase 5 extension + Phase 9)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -23,7 +23,7 @@
 | 10 | Audit & Compliance | 2 | In Progress | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Not Started | FR-43 – FR-45 |
 | 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
-| 13 | FHIR / HL7 Integration | 5 | Not Started | FR-46 – FR-54 |
+| 13 | FHIR / HL7 Integration | 5 + 9 | In Progress | FR-46 – FR-58 |
 
 ---
 
@@ -404,18 +404,20 @@ Cancelled → (terminal)
 
 ## 13. FHIR / HL7 Integration
 
-**Phase:** 5 | **Status:** Not Started
+**Phase:** 5 | **Status:** In Progress — backend + frontend complete; E2E testing pending
 
 ### Features
 
 #### FHIR R4 REST Facade (`/fhir/R4/`)
-- `GET /metadata` — FHIR CapabilityStatement.
+- `GET /metadata` — FHIR CapabilityStatement (search params serialized via `TypeElement = new Code<SearchParamType>(...)`).
 - Patient search by `_id`, `name`, `birthdate`, `identifier` (MRN) — returns searchset Bundle.
 - Patient read — returns FHIR Patient resource.
 - `POST /Patient` — import a FHIR R4 Patient JSON; validate with Firely SDK; map fields; auto-generate MRN; write `FhirImportLogs` + `AuditLogs`; return `201 Created`.
 - `GET /Patient/{id}/$everything` — return FHIR Bundle (Patient + Encounters + Appointments + Tasks + DocumentReferences).
-- Encounter (Case) read + search.
-- Appointment, Task, DocumentReference read.
+- Encounter (Case) read + search by `patient`, `status`.
+- Appointment search by `_id` (GUID), `patient` (MRN), `status` (FHIR↔domain status map), `date`.
+- Task search by `_id` (GUID), `patient` (MRN), `focus` (case number, accepts `Encounter/CASE-…` or bare `CASE-…`), `status`.
+- DocumentReference read.
 - All FHIR errors return `OperationOutcome` (not ProblemDetails).
 
 #### Patient Import (Two-Step UI Flow)
@@ -431,7 +433,14 @@ Cancelled → (terminal)
 | `CaseTask` | `Task` | status, priority, owner, executionPeriod.end (dueDate) |
 | `Document` | `DocumentReference` | category, content.attachment (title, contentType) |
 
-#### HL7 v2 (Stretch)
+#### FHIR Transaction Bundle Import (Phase 5 Extension / Phase 9)
+- `POST /fhir/R4/` — accept a FHIR R4 Transaction Bundle containing `Patient`, `Encounter`, `Appointment`, and/or `Task` entries.
+- Processed atomically inside a DB transaction — all resources created or all rolled back.
+- Response: FHIR Bundle of type `transaction-response` with per-entry outcomes (assigned MRN, CaseNumber, GUIDs).
+- Logs one `FhirImportLogs` record per resource type and a single `AuditLogs` entry (`FhirBundleImport`).
+- Real-world use case: external EHR system sends a complete patient intake packet in a single API call.
+
+#### HL7 v2 (Phase 9 / Stretch)
 - `POST /api/hl7/adt` — HL7 v2 ADT^A01; parsed by NHapi; upsert Patient.
 - `POST /api/hl7/oru` — HL7 v2 ORU^R01; attach as read-only CaseNote.
 
@@ -439,13 +448,16 @@ Cancelled → (terminal)
 | Method | Route | Description |
 |---|---|---|
 | GET | `/fhir/R4/metadata` | CapabilityStatement |
-| GET | `/fhir/R4/Patient` | Search patients |
+| POST | `/fhir/R4/` | Import FHIR Transaction Bundle (atomic multi-resource) |
+| GET | `/fhir/R4/Patient` | Search patients (`_id`, `name`, `birthdate`, `identifier`) |
 | GET | `/fhir/R4/Patient/{id}` | Read patient |
-| POST | `/fhir/R4/Patient` | Import patient from FHIR JSON |
+| POST | `/fhir/R4/Patient` | Import single patient from FHIR JSON |
 | GET | `/fhir/R4/Patient/{id}/$everything` | Full Bundle for patient |
-| GET | `/fhir/R4/Encounter` | Search cases |
+| GET | `/fhir/R4/Encounter` | Search cases (`patient`, `status`) |
 | GET | `/fhir/R4/Encounter/{id}` | Read case as Encounter |
+| GET | `/fhir/R4/Appointment` | Search appointments (`_id`, `patient`, `status`, `date`) |
 | GET | `/fhir/R4/Appointment/{id}` | Read appointment |
+| GET | `/fhir/R4/Task` | Search tasks (`_id`, `patient`, `focus`, `status`) |
 | GET | `/fhir/R4/Task/{id}` | Read task |
 | GET | `/fhir/R4/DocumentReference/{id}` | Read document |
 

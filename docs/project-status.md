@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-02 (Document UI hidden everywhere — nav, Case Detail tab, Patient Detail tab, route removed) — MyTasksComponent, DocumentsComponent, Patient Detail docs tab; GitHub issues #1 & #2 closed)
-**Current Phase:** Phase 5 — FHIR/HL7 Integration (Not Started)
-**Overall Progress:** 101 / 185 tasks complete (~55%)
+**Last Updated:** 2026-07-04 (Phase 5 extended — Task/Appointment search endpoints added, CapabilityStatement serialization fixed, MRN generation off-by-one fixed; Transaction Bundle import scoped to Phase 5 Extension + Phase 9)
+**Current Phase:** Phase 5 — FHIR/HL7 Integration (In Progress — core complete; Transaction Bundle implementation remaining)
+**Overall Progress:** 105 / 206 tasks complete (~51%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -18,18 +18,33 @@
 | 2 | Patient & Case Core | `Complete` | ~38 | 38 | 0 |
 | 3 | Documents, Tasks & Notes | `Complete` | ~22 | 22 | 0 |
 | 4 | Appointments & Scheduling | `Complete` | ~16 | 16 | 0 |
-| 5 | FHIR/HL7 Integration | `Not Started` | ~24 | 0 | 24 |
+| 5 | FHIR/HL7 Integration | `In Progress` | ~33 | 26 | 7 |
 | 6 | Dashboards & Reports | `Not Started` | ~20 | 0 | 20 |
 | 7 | Notifications & Audit UI | `Not Started` | ~14 | 0 | 14 |
 | 8 | Testing, Security & Polish | `Not Started` | ~22 | 0 | 22 |
+| 9 | Advanced FHIR & Interoperability | `Not Started` | ~12 | 0 | 12 |
 
 ---
 
 ## Current Phase Detail — Phase 5: FHIR/HL7 Integration
 
-**Goal:** Expose a FHIR R4-compliant REST API at `/fhir/R4/`; support Patient, Encounter (Case), Appointment, Task, DocumentReference read + search; `$everything` Bundle operation; Patient import from FHIR JSON with parse-and-preview UI flow.
+**Goal:** Expose a FHIR R4-compliant REST API at `/fhir/R4/`; support Patient, Encounter (Case), Appointment, Task, DocumentReference read + search; `$everything` Bundle operation; single-Patient import from FHIR JSON (parse-and-preview UI); atomic Transaction Bundle import (Patient + Encounter + Appointment + Task in one call).
 
-**Status:** Not started. Next session begins here.
+**Status:** In Progress — core FHIR endpoints done; Transaction Bundle import (FR-55–FR-58) remaining.
+
+### Completed in Phase 5
+- FHIR CapabilityStatement (Firely `TypeElement` fix for search params)
+- Patient, Encounter, Appointment, Task, DocumentReference read + search
+- `$everything` Bundle for full patient export
+- Single-patient FHIR import (`POST /fhir/R4/Patient`) with FhirImportLogs
+- Angular `FhirExplorerComponent` + `FhirImportComponent`
+- "Export as FHIR Bundle" button on PatientDetail
+- MRN generation off-by-one bug fixed
+
+### Remaining in Phase 5 Extension
+- `POST /fhir/R4/` — Transaction Bundle endpoint (FR-55–FR-58)
+- Frontend: Transaction Bundle import tab in `FhirImportComponent`
+- E2E tests for all FHIR search endpoints
 
 ---
 
