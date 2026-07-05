@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +17,7 @@ Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
   templateUrl: './cases-by-status.component.html',
   styleUrls: ['./cases-by-status.component.scss']
 })
-export class CasesByStatusComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CasesByStatusComponent implements OnInit, OnDestroy {
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   report: CasesByStatusReport | null = null;
@@ -26,16 +26,15 @@ export class CasesByStatusComponent implements OnInit, AfterViewInit, OnDestroy 
   private chart: Chart | null = null;
   columns = ['status', 'count', 'percentage'];
 
-  constructor(private svc: ReportService) {}
+  constructor(private svc: ReportService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.svc.getCasesByStatus().subscribe({
-      next: r => { this.report = r; this.loading = false; setTimeout(() => this.buildChart(), 0); },
+      next: r => { this.report = r; this.loading = false; this.cdr.detectChanges(); this.buildChart(); },
       error: () => { this.error = 'Failed to load report'; this.loading = false; }
     });
   }
 
-  ngAfterViewInit(): void {}
   ngOnDestroy(): void { this.chart?.destroy(); }
 
   private buildChart(): void {

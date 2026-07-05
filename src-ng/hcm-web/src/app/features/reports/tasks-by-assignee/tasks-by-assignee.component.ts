@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,11 +26,11 @@ export class TasksByAssigneeComponent implements OnInit, OnDestroy {
   private chart: Chart | null = null;
   columns = ['userName', 'totalTasks', 'doneTasks', 'inProgressTasks', 'overdueTasks', 'openTasks'];
 
-  constructor(private svc: ReportService) {}
+  constructor(private svc: ReportService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.svc.getTasksByAssignee().subscribe({
-      next: r => { this.report = r; this.loading = false; setTimeout(() => this.buildChart(), 0); },
+      next: r => { this.report = r; this.loading = false; this.cdr.detectChanges(); this.buildChart(); },
       error: () => { this.error = 'Failed to load report'; this.loading = false; }
     });
   }

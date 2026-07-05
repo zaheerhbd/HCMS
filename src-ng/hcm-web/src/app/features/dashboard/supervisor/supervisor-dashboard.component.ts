@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +17,7 @@ Chart.register(BarElement, BarController, CategoryScale, LinearScale, Tooltip, L
   templateUrl: './supervisor-dashboard.component.html',
   styleUrls: ['./supervisor-dashboard.component.scss']
 })
-export class SupervisorDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
 
   data: SupervisorDashboard | null = null;
@@ -28,16 +28,20 @@ export class SupervisorDashboardComponent implements OnInit, AfterViewInit, OnDe
   escalatedColumns = ['caseNumber', 'patientName', 'assignedTo', 'escalatedAt'];
   inactiveColumns  = ['caseNumber', 'patientName', 'assignedTo', 'daysSinceActivity'];
 
-  constructor(private svc: DashboardService) {}
+  constructor(private svc: DashboardService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.svc.getSupervisor().subscribe({
-      next: d => { this.data = d; this.loading = false; setTimeout(() => this.buildChart(), 0); },
+      next: d => {
+        this.data = d;
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.buildChart();
+      },
       error: () => { this.error = 'Failed to load dashboard'; this.loading = false; }
     });
   }
 
-  ngAfterViewInit(): void {}
   ngOnDestroy(): void { this.chart?.destroy(); }
 
   private buildChart(): void {

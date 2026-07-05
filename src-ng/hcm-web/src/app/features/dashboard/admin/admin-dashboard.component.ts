@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,14 +28,17 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   roleColumns = ['role', 'count'];
 
-  constructor(private svc: DashboardService) {}
+  constructor(private svc: DashboardService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.svc.getAdmin().subscribe({
       next: d => {
         this.data = d;
         this.loading = false;
-        setTimeout(() => this.buildCharts(), 0);
+        // detectChanges forces Angular to render the *ngIf block so the canvas
+        // elements exist in the DOM before buildCharts() queries them via @ViewChild.
+        this.cdr.detectChanges();
+        this.buildCharts();
       },
       error: () => { this.error = 'Failed to load admin dashboard'; this.loading = false; }
     });

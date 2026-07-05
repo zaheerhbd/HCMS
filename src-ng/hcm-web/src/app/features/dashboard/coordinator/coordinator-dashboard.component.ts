@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -18,7 +18,7 @@ Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
   templateUrl: './coordinator-dashboard.component.html',
   styleUrls: ['./coordinator-dashboard.component.scss']
 })
-export class CoordinatorDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CoordinatorDashboardComponent implements OnInit, OnDestroy {
   @ViewChild('donutCanvas') donutCanvas!: ElementRef<HTMLCanvasElement>;
 
   data: CoordinatorDashboard | null = null;
@@ -29,17 +29,18 @@ export class CoordinatorDashboardComponent implements OnInit, AfterViewInit, OnD
   overdueColumns = ['title', 'caseNumber', 'priority', 'dueDate'];
   apptColumns    = ['time', 'patientName', 'mrn', 'type', 'status'];
 
-  constructor(private svc: DashboardService) {}
+  constructor(private svc: DashboardService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.svc.getCoordinator().subscribe({
-      next: d => { this.data = d; this.loading = false; },
+      next: d => {
+        this.data = d;
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.buildChart();
+      },
       error: () => { this.error = 'Failed to load dashboard'; this.loading = false; }
     });
-  }
-
-  ngAfterViewInit(): void {
-    if (this.data) this.buildChart();
   }
 
   ngOnDestroy(): void { this.chart?.destroy(); }
