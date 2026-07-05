@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-07-04 (Module 13 FHIR/HL7 Integration extended — Task/Appointment search endpoints, CapabilityStatement fix, MRN off-by-one fix, Transaction Bundle import planned as Phase 5 extension + Phase 9)
+**Last Updated:** 2026-07-04 (Phase 7 complete — Modules 10 Audit and 11 Notifications now Complete; NotificationBellComponent, AuditLogComponent, admin routing, NotificationOverdueService)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -20,8 +20,8 @@
 | 7 | Appointments & Scheduling | 4 | Complete | FR-28 – FR-32 |
 | 8 | Care Team | 2 | Complete | FR-33 – FR-35 |
 | 9 | Dashboard & Reports | 6 | Not Started | FR-36 – FR-39 |
-| 10 | Audit & Compliance | 2 | In Progress | FR-40 – FR-42 |
-| 11 | Notifications | 7 | Not Started | FR-43 – FR-45 |
+| 10 | Audit & Compliance | 7 | Complete | FR-40 – FR-42 |
+| 11 | Notifications | 7 | Complete | FR-43 – FR-45 |
 | 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
 | 13 | FHIR / HL7 Integration | 5 + 9 | In Progress | FR-46 – FR-58 |
 

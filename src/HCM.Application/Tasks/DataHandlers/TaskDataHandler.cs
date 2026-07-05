@@ -1,5 +1,6 @@
 using FluentValidation;
 using HCM.Application.Interfaces;
+using HCM.Application.Notifications.DataHandlers;
 using HCM.Application.Tasks.DTOs;
 using HCM.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,12 @@ namespace HCM.Application.Tasks.DataHandlers;
 public class TaskDataHandler : ITaskDataHandler
 {
     private readonly IApplicationDbContext _db;
+    private readonly INotificationDataHandler _notifications;
 
-    public TaskDataHandler(IApplicationDbContext db)
+    public TaskDataHandler(IApplicationDbContext db, INotificationDataHandler notifications)
     {
         _db = db;
+        _notifications = notifications;
     }
 
     public async Task<List<TaskDto>> GetTasksByCaseNumberAsync(string caseNumber, CancellationToken ct = default)
@@ -86,6 +89,19 @@ public class TaskDataHandler : ITaskDataHandler
         _db.CaseTasks.Add(task);
         await _db.SaveChangesAsync(ct);
 
+        // Notify assignee if different from creator
+        if (dto.AssignedTo.HasValue && dto.AssignedTo.Value != createdBy)
+        {
+            await _notifications.CreateAsync(
+                userId: dto.AssignedTo.Value,
+                type: "TaskAssigned",
+                title: "Task assigned to you",
+                message: $"Task \"{task.Title}\" on case {caseNumber} has been assigned to you. Due: {(task.DueDate.HasValue ? task.DueDate.Value.ToString("yyyy-MM-dd") : "not set")}",
+                entityType: "Task",
+                entityId: task.Id.ToString(),
+                ct: ct);
+        }
+
         return await GetTaskByIdAsync(task.Id, ct);
     }
 
@@ -98,12 +114,27 @@ public class TaskDataHandler : ITaskDataHandler
         if (dto.Title != null) task.Title = dto.Title.Trim();
         if (dto.Description != null) task.Description = dto.Description.Trim();
         if (dto.Priority != null) task.Priority = dto.Priority;
+
+        var previousAssignee = task.AssignedTo;
         if (dto.AssignedTo.HasValue) task.AssignedTo = dto.AssignedTo;
         if (dto.DueDate.HasValue) task.DueDate = dto.DueDate;
 
         task.UpdatedAt = DateTime.UtcNow;
         _db.CaseTasks.Update(task);
         await _db.SaveChangesAsync(ct);
+
+        // Notify new assignee if the assignment changed
+        if (dto.AssignedTo.HasValue && dto.AssignedTo.Value != previousAssignee)
+        {
+            await _notifications.CreateAsync(
+                userId: dto.AssignedTo.Value,
+                type: "TaskAssigned",
+                title: "Task assigned to you",
+                message: $"Task \"{task.Title}\" has been assigned to you.",
+                entityType: "Task",
+                entityId: task.Id.ToString(),
+                ct: ct);
+        }
 
         return await GetTaskByIdAsync(task.Id, ct);
     }

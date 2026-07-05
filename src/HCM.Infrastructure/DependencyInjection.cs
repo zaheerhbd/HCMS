@@ -1,5 +1,6 @@
 ﻿using HCM.Application.Interfaces;
 using HCM.Infrastructure.BackgroundJobs;
+using HCM.Infrastructure.BackgroundServices;
 using HCM.Infrastructure.Identity;
 using HCM.Infrastructure.Persistence;
 using HCM.Infrastructure.Services;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IFhirMappingService, FhirMappingService>();
 
         services.AddHostedService<CaseNoteEditLockService>();
+        services.AddHostedService<NotificationOverdueService>();
 
         return services;
     }

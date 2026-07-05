@@ -3,6 +3,7 @@ using HCM.Application.CareTeam.DTOs;
 using HCM.Application.CaseNotes.DTOs;
 using HCM.Application.Cases.DTOs;
 using HCM.Application.Interfaces;
+using HCM.Application.Notifications.DataHandlers;
 using HCM.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +12,12 @@ namespace HCM.Application.Cases.DataHandlers;
 public class CaseDataHandler : ICaseDataHandler
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly INotificationDataHandler _notifications;
 
-    public CaseDataHandler(IApplicationDbContext dbContext)
+    public CaseDataHandler(IApplicationDbContext dbContext, INotificationDataHandler notifications)
     {
         _dbContext = dbContext;
+        _notifications = notifications;
     }
 
     public async Task<(List<CaseListItemDto> Items, int TotalCount)> GetAllCasesAsync(
@@ -154,6 +157,19 @@ public class CaseDataHandler : ICaseDataHandler
 
         await _dbContext.SaveChangesAsync(ct);
 
+        // Notify assigned coordinator if different from creator
+        if (assignedTo != Guid.Empty && assignedTo != createdBy)
+        {
+            await _notifications.CreateAsync(
+                userId: assignedTo,
+                type: "CaseAssigned",
+                title: "Case assigned to you",
+                message: $"Case {caseNumber} ({caseType.Name}) for patient {patient.FullName} has been assigned to you.",
+                entityType: "Case",
+                entityId: caseNumber,
+                ct: ct);
+        }
+
         return MapToDto(newCase);
     }
 
@@ -190,6 +206,19 @@ public class CaseDataHandler : ICaseDataHandler
 
         _dbContext.Cases.Update(caseEntity);
         await _dbContext.SaveChangesAsync(ct);
+
+        // Notify assigned user on escalation (if domain ever adds an Escalated status)
+        if (dto.NewStatus == "Escalated" && caseEntity.AssignedToUserId.HasValue && caseEntity.AssignedToUserId.Value != changedBy)
+        {
+            await _notifications.CreateAsync(
+                userId: caseEntity.AssignedToUserId.Value,
+                type: "CaseEscalated",
+                title: "Case escalated",
+                message: $"Case {caseNumber} has been escalated to '{dto.NewStatus}'. Comment: {dto.Comment ?? "none"}",
+                entityType: "Case",
+                entityId: caseNumber,
+                ct: ct);
+        }
 
         return MapToDto(caseEntity);
     }

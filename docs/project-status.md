@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-04 (Phase 5 extended — Task/Appointment search endpoints added, CapabilityStatement serialization fixed, MRN generation off-by-one fixed; Transaction Bundle import scoped to Phase 5 Extension + Phase 9)
-**Current Phase:** Phase 5 — FHIR/HL7 Integration (In Progress — core complete; Transaction Bundle implementation remaining)
-**Overall Progress:** 105 / 206 tasks complete (~51%)
+**Last Updated:** 2026-07-04 (Phase 7 complete — Notifications bell + audit log; skipping Phase 6 Dashboards for now)
+**Current Phase:** Phase 8 — Testing, Security & Polish (Not Started)
+**Overall Progress:** 119 / 206 tasks complete (~58%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -19,14 +19,34 @@
 | 3 | Documents, Tasks & Notes | `Complete` | ~22 | 22 | 0 |
 | 4 | Appointments & Scheduling | `Complete` | ~16 | 16 | 0 |
 | 5 | FHIR/HL7 Integration | `In Progress` | ~33 | 26 | 7 |
-| 6 | Dashboards & Reports | `Not Started` | ~20 | 0 | 20 |
-| 7 | Notifications & Audit UI | `Not Started` | ~14 | 0 | 14 |
+| 6 | Dashboards & Reports | `Deferred` | ~20 | 0 | 20 |
+| 7 | Notifications & Audit UI | `Complete` | ~14 | 14 | 0 |
 | 8 | Testing, Security & Polish | `Not Started` | ~22 | 0 | 22 |
 | 9 | Advanced FHIR & Interoperability | `Not Started` | ~12 | 0 | 12 |
 
 ---
 
-## Current Phase Detail — Phase 5: FHIR/HL7 Integration
+## Current Phase Detail — Phase 7: Notifications & Audit UI
+
+**Goal:** In-app notification bell + audit log viewer for admins.
+
+**Status:** Complete — all backend and frontend tasks done, builds clean.
+
+### Completed in Phase 7
+- `Notification` entity + `AddNotifications` EF migration applied
+- `NotificationDataHandler` — create, list, unread count, mark read, mark all read
+- Notification triggers wired: `CaseAssigned`, `TaskAssigned` (create + reassign), `CaseEscalated`
+- `NotificationOverdueService` (BackgroundService) — daily overdue task scan, deduped per day
+- `NotificationsController` at `GET/POST /api/notifications`
+- `AuditDataHandler` + `AuditController` at `GET /api/audit` (Admin-only), filters by entityType, action, changedBy, date range
+- Angular `NotificationService` with 60s polling + `BehaviorSubject` unread count
+- `NotificationBellComponent` in topbar — badge, dropdown with mark-read per item + mark all
+- `AuditLogComponent` — paginated Material table, expandable Before/After JSON diff, color-coded action badges
+- Admin routing refactored to lazy-loaded `ADMIN_ROUTES`; `/admin/audit` child route added
+
+---
+
+## Previous Phase Detail — Phase 5: FHIR/HL7 Integration
 
 **Goal:** Expose a FHIR R4-compliant REST API at `/fhir/R4/`; support Patient, Encounter (Case), Appointment, Task, DocumentReference read + search; `$everything` Bundle operation; single-Patient import from FHIR JSON (parse-and-preview UI); atomic Transaction Bundle import (Patient + Encounter + Appointment + Task in one call).
 

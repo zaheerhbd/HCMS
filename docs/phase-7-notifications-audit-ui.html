@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMS Phase 7 — Notifications &amp; Audit UI</title>
+<style>
+  :root {
+    --primary: #1565c0;
+    --primary-dark: #0d47a1;
+    --success: #2e7d32;
+    --warn: #e65100;
+    --notif: #00838f;
+    --notif-dark: #005662;
+    --notif-light: #e0f7fa;
+    --audit: #4a148c;
+    --audit-light: #f3e5f5;
+    --surface: #fff;
+    --bg: #f4f6fb;
+    --border: #e0e0e0;
+    --text: #212121;
+    --muted: #757575;
+    --sidebar-w: 268px;
+    --code-bg: #1e1e2e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+
+  .layout { display: flex; min-height: 100vh; }
+  nav.sidebar {
+    width: var(--sidebar-w); background: #002733; color: #fff;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    flex-shrink: 0; padding: 24px 0;
+  }
+  nav.sidebar .brand { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.12); margin-bottom: 16px; }
+  nav.sidebar .brand h1 { font-size: 15px; font-weight: 700; letter-spacing: .3px; }
+  nav.sidebar .brand p { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 3px; }
+  nav.sidebar a { display: block; padding: 7px 20px; font-size: 12.5px; color: rgba(255,255,255,.7); text-decoration: none; border-left: 3px solid transparent; transition: all .15s; }
+  nav.sidebar a:hover { color: #fff; background: rgba(255,255,255,.07); }
+  nav.sidebar a.active { color: #fff; border-left-color: #80deea; background: rgba(255,255,255,.1); }
+  nav.sidebar .section-label { padding: 14px 20px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,.35); text-transform: uppercase; }
+
+  main { flex: 1; padding: 40px 52px; max-width: 980px; }
+
+  h1 { font-size: 31px; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px; }
+  h2 { font-size: 21px; font-weight: 700; color: var(--notif-dark); margin: 44px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h2.audit { color: var(--audit); }
+  h3 { font-size: 15.5px; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 5px; }
+  strong { color: #212121; }
+
+  .hero { background: linear-gradient(135deg, #002733 0%, #00838f 100%); color: #fff; border-radius: 14px; padding: 34px 38px; margin-bottom: 44px; }
+  .hero h1 { color: #fff; font-size: 28px; }
+  .hero p { color: rgba(255,255,255,.82); margin-bottom: 0; }
+  .hero .meta { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .hero .badge { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 12.5px; }
+  .hero .badge strong { color: #b2ebf2; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 14px; margin-bottom: 36px; }
+  .stat-card { background: var(--surface); border-radius: 10px; padding: 20px 16px; border: 1px solid var(--border); text-align: center; }
+  .stat-card .num { font-size: 34px; font-weight: 800; color: var(--notif); }
+  .stat-card .num.purple { color: var(--audit); }
+  .stat-card .lbl { font-size: 11.5px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding: 6px 0 6px 28px; position: relative; font-size: 13.5px; }
+  .checklist li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 700; }
+  .checklist li.pending::before { content: '○'; color: var(--warn); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .card h3 { margin-top: 0; color: var(--notif-dark); }
+  .card h3.purple { color: var(--audit); }
+
+  .analogy { background: var(--notif-light); border-left: 4px solid var(--notif); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+  .analogy strong { color: var(--notif-dark); }
+  .analogy.purple { background: var(--audit-light); border-left-color: var(--audit); }
+  .analogy.purple strong { color: var(--audit); }
+
+  .decision-box { background: #e8f5e9; border-left: 4px solid #388e3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+  .decision-box strong { color: #1b5e20; }
+  .warn-box { background: #fff8e1; border-left: 4px solid #f9a825; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13.5px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-bottom: 18px; }
+  th { background: #005662; color: #fff; padding: 10px 14px; text-align: left; font-weight: 600; }
+  th.purple { background: #4a148c; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f9f9fb; }
+  td code { background: rgba(0,131,143,.08); border-radius: 3px; padding: 1px 5px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 12px; }
+
+  .file-tree { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 12.5px; line-height: 2; overflow-x: auto; margin-bottom: 16px; }
+  .file-tree .dir { color: #89dceb; }
+  .file-tree .new { color: #a6e3a1; }
+  .file-tree .mod { color: #f9e2af; }
+  .file-tree .comment { color: #6c7086; }
+
+  code.inline { background: #e0f7fa; border-radius: 4px; padding: 2px 6px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 12.5px; color: #005662; }
+  pre { background: var(--code-bg); color: #cdd6f4; border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 12.5px; overflow-x: auto; margin-bottom: 16px; line-height: 1.75; }
+  pre .kw { color: #cba6f7; }
+  pre .str { color: #a6e3a1; }
+  pre .cmt { color: #6c7086; }
+  pre .type { color: #89dceb; }
+  pre .num { color: #fab387; }
+
+  details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; background: var(--surface); }
+  details summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--notif-dark); list-style: none; display: flex; align-items: center; gap: 8px; }
+  details summary::before { content: '▶'; font-size: 10px; transition: transform .2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .detail-body { padding: 4px 16px 16px; }
+
+  .tag { display: inline-block; border-radius: 12px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; margin-right: 4px; }
+  .tag.new { background: #e8f5e9; color: #2e7d32; }
+  .tag.mod { background: #fff8e1; color: #e65100; }
+  .tag.backend { background: #e8eaf6; color: #283593; }
+  .tag.frontend { background: #fce4ec; color: #880e4f; }
+
+  .endpoint-block { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; font-size: 13.5px; }
+  .method { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; font-family: monospace; min-width: 52px; text-align: center; }
+  .get { background: #e3f2fd; color: #0d47a1; }
+  .post { background: #e8f5e9; color: #1b5e20; }
+  .path { font-family: 'Cascadia Code','Consolas',monospace; font-size: 12.5px; color: #005662; }
+
+  .notif-pill { display: inline-block; border-radius: 4px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; margin: 2px; }
+  .notif-pill.case-assigned { background: #e3f2fd; color: #0d47a1; }
+  .notif-pill.task-assigned { background: #e8f5e9; color: #1b5e20; }
+  .notif-pill.task-overdue { background: #fff3e0; color: #e65100; }
+  .notif-pill.case-escalated { background: #fce4ec; color: #880e4f; }
+
+  svg text { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  @media (max-width: 768px) {
+    nav.sidebar { display: none; }
+    main { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── Sidebar ─── -->
+<nav class="sidebar" id="sidebar">
+  <div class="brand">
+    <h1>HCMS · Phase 7</h1>
+    <p>Notifications &amp; Audit UI</p>
+  </div>
+
+  <div class="section-label">Overview</div>
+  <a href="#overview">What Was Built</a>
+  <a href="#why-notifications">Why Notifications?</a>
+  <a href="#stats">Phase Stats</a>
+
+  <div class="section-label">Notification System</div>
+  <a href="#notif-entity">Entity &amp; Migration</a>
+  <a href="#notif-triggers">Trigger Points</a>
+  <a href="#notif-handler">Data Handler</a>
+  <a href="#notif-overdue">Overdue Service</a>
+  <a href="#notif-api">API Endpoints</a>
+
+  <div class="section-label">Audit Log</div>
+  <a href="#audit-existing">Existing Audit Trail</a>
+  <a href="#audit-handler">Audit Data Handler</a>
+  <a href="#audit-api">Admin API</a>
+
+  <div class="section-label">Frontend</div>
+  <a href="#ng-bell">Notification Bell</a>
+  <a href="#ng-polling">Polling Strategy</a>
+  <a href="#ng-audit">Audit Log Component</a>
+  <a href="#ng-admin">Admin Routing</a>
+
+  <div class="section-label">Reference</div>
+  <a href="#arch-diagram">Architecture</a>
+  <a href="#flow-diagram">Notification Flow</a>
+  <a href="#files-changed">Files Changed</a>
+  <a href="#key-decisions">Key Decisions</a>
+  <a href="#whats-next">What's Next</a>
+</nav>
+
+<!-- ─── Main ─── -->
+<main>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Phase 7 — Notifications &amp; Audit UI</h1>
+  <p>HCMS now proactively tells users what needs their attention. A real-time notification bell surfaces case assignments, task assignments, overdue tasks, and escalations. Admins can browse the full system audit trail with rich filters and before/after JSON diffs.</p>
+  <div class="meta">
+    <div class="badge"><strong>Status:</strong> Complete</div>
+    <div class="badge"><strong>New Entity:</strong> Notifications</div>
+    <div class="badge"><strong>New Services:</strong> 3 backend + 2 Angular</div>
+    <div class="badge"><strong>Build:</strong> 0 errors</div>
+  </div>
+</div>
+
+<!-- ─── OVERVIEW ─── -->
+<h2 id="overview">What Was Built</h2>
+
+<p>Phase 7 delivered two independent but complementary features: a real-time <strong>notification system</strong> that pushes relevant events to each user's bell icon, and an <strong>audit log viewer</strong> that lets admins trace every PHI-touching operation to its actor.</p>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">4</div><div class="lbl">Notification Types</div></div>
+  <div class="stat-card"><div class="num">3</div><div class="lbl">Backend Trigger Points</div></div>
+  <div class="stat-card"><div class="num">60s</div><div class="lbl">Poll Interval</div></div>
+  <div class="stat-card"><div class="num num purple">5</div><div class="lbl">Audit Filters</div></div>
+  <div class="stat-card"><div class="num num purple">1</div><div class="lbl">New Migration</div></div>
+  <div class="stat-card"><div class="num">14</div><div class="lbl">Tasks Complete</div></div>
+</div>
+
+<h2 id="why-notifications">Why Notifications?</h2>
+
+<p>In a case management system, coordinators handle dozens of patients simultaneously. Without notifications, a clinician assigned a task must manually check the task list. A coordinator whose case just escalated won't know until their next login. A daily check-in model creates delays that matter in healthcare.</p>
+
+<div class="analogy">
+  <strong>Real-world analogy — Pager vs. chart rounds:</strong> Before smartphones, doctors relied on pagers to know when something needed immediate attention. Browsing the task list without notifications is like doing chart rounds every hour hoping to spot changes — you will miss things. The notification bell is the pager: it surfaces events the moment they happen, so the right person can act.
+</div>
+
+<p>The <strong>audit log viewer</strong> addresses a different need: compliance and accountability. HIPAA requires that every access and modification to PHI be traceable to a specific user with timestamp. The existing <code>AuditInterceptor</code> was already capturing this — Phase 7 adds the UI and API to make it <em>queryable</em> by admins.</p>
+
+<div class="analogy purple">
+  <strong>Real-world analogy — Hospital security footage:</strong> An audit log without a viewer is like a hospital that records all security footage but has no playback terminal. The data is there — you just can't act on it until someone builds the viewing interface.
+</div>
+
+<!-- ─── STATS ─── -->
+<h2 id="stats">Phase Stats</h2>
+
+<table>
+  <tr><th>Area</th><th>Deliverable</th></tr>
+  <tr><td>Domain</td><td><code>Notification</code> entity with <code>UserId</code>, <code>Type</code>, <code>Title</code>, <code>Message</code>, <code>EntityType</code>, <code>EntityId</code>, <code>IsRead</code>, <code>CreatedAt</code>, <code>ReadAt</code></td></tr>
+  <tr><td>Migration</td><td><code>AddNotifications</code> — creates <code>Notifications</code> table with composite index on <code>(UserId, IsRead, CreatedAt)</code></td></tr>
+  <tr><td>Application</td><td><code>INotificationDataHandler</code> / <code>NotificationDataHandler</code>, <code>IAuditDataHandler</code> / <code>AuditDataHandler</code></td></tr>
+  <tr><td>Triggers</td><td><code>CaseDataHandler</code> → CaseAssigned + CaseEscalated; <code>TaskDataHandler</code> → TaskAssigned (create + reassign)</td></tr>
+  <tr><td>Background</td><td><code>NotificationOverdueService</code> — 24h interval, deduped per day</td></tr>
+  <tr><td>API</td><td><code>NotificationsController</code> (4 endpoints) + <code>AuditController</code> (1 endpoint, Admin-only)</td></tr>
+  <tr><td>Angular</td><td><code>NotificationService</code>, <code>NotificationBellComponent</code>, <code>AuditLogComponent</code>, <code>ADMIN_ROUTES</code></td></tr>
+</table>
+
+<!-- ─── NOTIFICATION ENTITY ─── -->
+<h2 id="notif-entity">Notification Entity &amp; Migration</h2>
+
+<p>The <code>Notification</code> entity lives in <code>HCM.Domain</code> and is a simple inbox record scoped to a user:</p>
+
+<details>
+  <summary>Notification entity definition</summary>
+  <div class="detail-body">
+<pre><span class="kw">public class</span> <span class="type">Notification</span>
+{
+    <span class="kw">public</span> <span class="type">long</span> Id { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="type">Guid</span> UserId { <span class="kw">get</span>; <span class="kw">set</span>; }       <span class="cmt">// recipient</span>
+    <span class="kw">public</span> <span class="type">string</span> Type { <span class="kw">get</span>; <span class="kw">set</span>; }         <span class="cmt">// CaseAssigned | TaskAssigned | TaskOverdue | CaseEscalated</span>
+    <span class="kw">public</span> <span class="type">string</span> Title { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="type">string</span> Message { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="type">string</span>? EntityType { <span class="kw">get</span>; <span class="kw">set</span>; }   <span class="cmt">// "Case" or "Task" — drives deep-link</span>
+    <span class="kw">public</span> <span class="type">string</span>? EntityId { <span class="kw">get</span>; <span class="kw">set</span>; }     <span class="cmt">// CaseNumber or Task GUID</span>
+    <span class="kw">public</span> <span class="type">bool</span> IsRead { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="type">DateTime</span> CreatedAt { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="type">DateTime</span>? ReadAt { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</pre>
+  </div>
+</details>
+
+<p>The EF configuration adds a composite index on <code>(UserId, IsRead, CreatedAt)</code> — the exact query shape used by both the bell badge query (<code>WHERE UserId = X AND IsRead = false</code>) and the list query (<code>ORDER BY CreatedAt DESC TAKE 20</code>). This makes both queries covered by a single index.</p>
+
+<div class="decision-box">
+  <strong>No FK from Notification → User</strong> — same design choice as <code>AuditLog</code>. Notifications must survive user deletion (deactivation) so the coordinator's history is preserved for compliance review. UserId is stored as a raw <code>Guid</code>, not a navigation property.
+</div>
+
+<!-- ─── TRIGGERS ─── -->
+<h2 id="notif-triggers">Notification Trigger Points</h2>
+
+<p>Notifications are created at the point of the business event — inside the DataHandler that owns that event — not in a generic event bus. This keeps the causality obvious and avoids out-of-process messaging infrastructure.</p>
+
+<table>
+  <tr><th>Event</th><th>Type</th><th>Where triggered</th><th>Recipient</th></tr>
+  <tr>
+    <td>Case created with an assigned coordinator</td>
+    <td><span class="notif-pill case-assigned">CaseAssigned</span></td>
+    <td><code>CaseDataHandler.CreateCaseAsync</code></td>
+    <td>Assigned coordinator (if ≠ creator)</td>
+  </tr>
+  <tr>
+    <td>Case status changed to "Escalated"</td>
+    <td><span class="notif-pill case-escalated">CaseEscalated</span></td>
+    <td><code>CaseDataHandler.ChangeCaseStatusAsync</code></td>
+    <td>Assigned coordinator (if ≠ changer)</td>
+  </tr>
+  <tr>
+    <td>Task created with an assignee</td>
+    <td><span class="notif-pill task-assigned">TaskAssigned</span></td>
+    <td><code>TaskDataHandler.CreateTaskAsync</code></td>
+    <td>Assigned user (if ≠ creator)</td>
+  </tr>
+  <tr>
+    <td>Task reassigned to a different user</td>
+    <td><span class="notif-pill task-assigned">TaskAssigned</span></td>
+    <td><code>TaskDataHandler.UpdateTaskAsync</code></td>
+    <td>New assignee</td>
+  </tr>
+  <tr>
+    <td>Task is past due date and still open</td>
+    <td><span class="notif-pill task-overdue">TaskOverdue</span></td>
+    <td><code>NotificationOverdueService</code> (daily)</td>
+    <td>Assigned user</td>
+  </tr>
+</table>
+
+<div class="analogy">
+  <strong>Real-world analogy — No self-notifications:</strong> When a manager assigns a task to themselves, they don't need a notification — they already know. All four trigger points check that the recipient is different from the actor before creating a notification, preventing noisy self-spam.
+</div>
+
+<!-- ─── DATA HANDLER ─── -->
+<h2 id="notif-handler">Notification Data Handler</h2>
+
+<p><code>INotificationDataHandler</code> is injected into both <code>CaseDataHandler</code> and <code>TaskDataHandler</code> as a scoped dependency. The interface is intentionally minimal:</p>
+
+<details>
+  <summary>INotificationDataHandler interface</summary>
+  <div class="detail-body">
+<pre><span class="kw">public interface</span> <span class="type">INotificationDataHandler</span>
+{
+    <span class="cmt">// Write path — called from other DataHandlers and BackgroundService</span>
+    Task CreateAsync(Guid userId, <span class="type">string</span> type, <span class="type">string</span> title, <span class="type">string</span> message,
+        <span class="type">string</span>? entityType = <span class="kw">null</span>, <span class="type">string</span>? entityId = <span class="kw">null</span>, CancellationToken ct = <span class="kw">default</span>);
+
+    <span class="cmt">// Read path — called from NotificationsController</span>
+    Task&lt;<span class="type">NotificationListDto</span>&gt; GetMyNotificationsAsync(Guid userId, <span class="type">int</span> limit = <span class="num">20</span>, CancellationToken ct = <span class="kw">default</span>);
+    Task&lt;<span class="type">UnreadCountDto</span>&gt; GetUnreadCountAsync(Guid userId, CancellationToken ct = <span class="kw">default</span>);
+    Task MarkReadAsync(Guid userId, <span class="type">long</span> notificationId, CancellationToken ct = <span class="kw">default</span>);
+    Task MarkAllReadAsync(Guid userId, CancellationToken ct = <span class="kw">default</span>);
+}</pre>
+  </div>
+</details>
+
+<p>The implementation registers as scoped in <code>DependencyInjection.cs</code>. Because it is scoped, it shares the same <code>IApplicationDbContext</code> instance as the calling handler within the same HTTP request — meaning the notification write happens in the same request lifecycle as the case/task save, but in a <em>separate</em> <code>SaveChangesAsync</code> call so the audit interceptor doesn't double-log it.</p>
+
+<!-- ─── OVERDUE SERVICE ─── -->
+<h2 id="notif-overdue">NotificationOverdueService (BackgroundService)</h2>
+
+<p>Some events are not triggered by an HTTP request — they are discovered by a scheduled scan. Task overdue notifications fall into this category: the system needs to check every day whether any assigned, incomplete tasks have passed their due date.</p>
+
+<div class="analogy">
+  <strong>Real-world analogy — Night supervisor round:</strong> At the end of every shift, a supervisor walks through all open cases and flags anything that was due today but not completed. <code>NotificationOverdueService</code> does exactly this, automatically, every 24 hours.
+</div>
+
+<details>
+  <summary>How the overdue scan works</summary>
+  <div class="detail-body">
+    <ol>
+      <li>Waits 2 minutes after startup (stagger to avoid hammering DB on deploy).</li>
+      <li>Queries <code>CaseTasks</code> for rows where <code>DueDate &lt; today AND AssignedTo IS NOT NULL AND Status NOT IN (Done, Cancelled)</code>.</li>
+      <li>For each matching task, checks whether a <code>TaskOverdue</code> notification for that exact <code>EntityId</code> was already created <strong>today</strong> — if so, skips it. This deduplication prevents the same user from receiving 30 "overdue" notifications for the same task over 30 days.</li>
+      <li>Creates one <code>TaskOverdue</code> notification per task per day if not yet sent.</li>
+      <li>Sleeps 24 hours and repeats.</li>
+    </ol>
+    <p>The service uses <code>IServiceProvider.CreateScope()</code> to resolve scoped services (<code>IApplicationDbContext</code>, <code>INotificationDataHandler</code>) inside the singleton-lifetime hosted service — the standard .NET pattern for scoped-in-singleton access.</p>
+  </div>
+</details>
+
+<!-- ─── NOTIFICATION API ─── -->
+<h2 id="notif-api">Notifications API Endpoints</h2>
+
+<p>All endpoints are under <code>/api/notifications</code>, require JWT auth, and operate on the <strong>current user only</strong> — no admin can read another user's notifications through this controller.</p>
+
+<div class="endpoint-block"><span class="method get">GET</span><span class="path">/api/notifications</span> — latest 20 notifications, sorted newest-first; includes <code>unreadCount</code></div>
+<div class="endpoint-block"><span class="method get">GET</span><span class="path">/api/notifications/unread-count</span> — badge-only endpoint; returns <code>{ count: N }</code></div>
+<div class="endpoint-block"><span class="method post">POST</span><span class="path">/api/notifications/{id}/read</span> — marks single notification as read; sets <code>ReadAt</code></div>
+<div class="endpoint-block"><span class="method post">POST</span><span class="path">/api/notifications/read-all</span> — bulk-marks all unread as read</div>
+
+<div class="decision-box">
+  <strong>Separate unread-count endpoint:</strong> The bell polls <code>/unread-count</code> every 60 seconds, not <code>/notifications</code> (which returns the full list). This keeps the polling payload tiny — just <code>{"count":3}</code> — and avoids the cost of fetching 20 rows and serializing them every minute while the user is just browsing other pages.
+</div>
+
+<!-- ─── AUDIT EXISTING ─── -->
+<h2 id="audit-existing" class="audit">The Existing Audit Trail</h2>
+
+<p>HCMS has captured audit data since Phase 1. The <code>AuditInterceptor</code> in <code>ApplicationDbContext.SaveChangesAsync</code> intercepts EF <code>ChangeTracker</code> entries for tracked entity types (<code>Patient</code>, <code>Case</code>, <code>CaseNote</code>, <code>User</code>) and writes <code>AuditLog</code> rows <strong>after every save</strong>.</p>
+
+<p>Each row contains:</p>
+<ul>
+  <li><strong>EntityType</strong> — e.g. <code>Patient</code>, <code>Case</code></li>
+  <li><strong>EntityId</strong> — business key (MRN, CaseNumber) or GUID</li>
+  <li><strong>Action</strong> — <code>Created</code>, <code>Updated</code>, <code>Deleted</code>, or custom strings like <code>FhirExport</code></li>
+  <li><strong>OldValues / NewValues</strong> — JSON snapshot of changed properties (only modified fields, not the whole row)</li>
+  <li><strong>ChangedBy</strong> — User ID from the JWT claim (no FK — survives user deletion)</li>
+  <li><strong>ChangedAt</strong> — UTC timestamp</li>
+</ul>
+
+<p>Phase 7 adds <strong>no new writes</strong> to this table — it only adds the query layer that makes the data usable.</p>
+
+<!-- ─── AUDIT HANDLER ─── -->
+<h2 id="audit-handler" class="audit">Audit Data Handler</h2>
+
+<p><code>AuditDataHandler</code> builds a filtered, paginated EF query and enriches <code>ChangedBy</code> (a raw user ID string) with the corresponding username in a single batch lookup:</p>
+
+<details>
+  <summary>Username enrichment pattern</summary>
+  <div class="detail-body">
+<pre><span class="cmt">// Collect all user IDs found in this page of results</span>
+<span class="kw">var</span> userIds = logs
+    .Where(l =&gt; l.ChangedBy != <span class="kw">null</span> &amp;&amp; Guid.TryParse(l.ChangedBy, <span class="kw">out</span> _))
+    .Select(l =&gt; Guid.Parse(l.ChangedBy!))
+    .Distinct().ToHashSet();
+
+<span class="cmt">// One round-trip to get all usernames for this page</span>
+<span class="kw">var</span> userNames = userIds.Count &gt; <span class="num">0</span>
+    ? <span class="kw">await</span> _db.Users.AsNoTracking()
+        .Where(u =&gt; userIds.Contains(u.Id))
+        .ToDictionaryAsync(u =&gt; u.Id.ToString(), u =&gt; u.Username, ct)
+    : [];</pre>
+    <p>This avoids N+1 queries (one per log row) while keeping the audit table decoupled from the Users table (no FK). The dictionary lookup is O(1) per row after the single batch query.</p>
+  </div>
+</details>
+
+<!-- ─── AUDIT API ─── -->
+<h2 id="audit-api" class="audit">Audit API Endpoint</h2>
+
+<p>A single endpoint, restricted to the <code>Admin</code> role, supports all query combinations:</p>
+
+<div class="endpoint-block"><span class="method get">GET</span><span class="path">/api/audit?entityType=Patient&amp;action=Updated&amp;changedBy=admin&amp;from=2026-07-01&amp;to=2026-07-04&amp;page=1&amp;pageSize=20</span></div>
+
+<p>All parameters are optional. Unsupported combination of filters simply narrows the result set. Non-admin requests receive <code>403 Forbidden</code> before the handler is ever called, because the controller is decorated with <code>[Authorize(Roles = "Admin")]</code>.</p>
+
+<!-- ─── ANGULAR BELL ─── -->
+<h2 id="ng-bell">Angular — Notification Bell</h2>
+
+<p><code>NotificationBellComponent</code> is a standalone Angular component that renders in the top bar of <code>AppShellComponent</code>. It uses Angular Material's <code>mat-menu</code> as the notification dropdown — no custom overlay needed.</p>
+
+<details>
+  <summary>Component responsibilities</summary>
+  <div class="detail-body">
+    <ul>
+      <li><strong>Badge:</strong> Subscribes to <code>NotificationService.unreadCount</code> (a <code>BehaviorSubject&lt;number&gt;</code>); passes the count to <code>matBadge</code>. The icon switches between <code>notifications_none</code> (no unread) and <code>notifications</code> (has unread) dynamically.</li>
+      <li><strong>Dropdown open:</strong> Fires <code>onMenuOpen()</code> which calls <code>GET /api/notifications</code> and populates the list. The full list is fetched on demand (menu open), not on every poll — polls only check the count.</li>
+      <li><strong>Mark read:</strong> Clicking a notification sends <code>POST /api/notifications/{id}/read</code> and decrements the badge locally for instant feedback. No round-trip needed to update the badge.</li>
+      <li><strong>Mark all read:</strong> Calls <code>POST /api/notifications/read-all</code> and sets all items to read + clears badge in one shot.</li>
+      <li><strong>Unread dot:</strong> A small blue dot appears on the right of each unread notification for visual distinction independent of the badge count.</li>
+    </ul>
+  </div>
+</details>
+
+<div class="analogy">
+  <strong>Real-world analogy — Email preview pane:</strong> You don't download all your emails every minute — your inbox just shows an unread count badge. You only load the content when you open the pane. The bell works the same way: poll count cheaply, fetch details only when the user actually clicks.
+</div>
+
+<!-- ─── POLLING ─── -->
+<h2 id="ng-polling">Polling Strategy</h2>
+
+<p><code>NotificationService.startPolling()</code> is called once in <code>AppShellComponent.ngOnInit()</code> — when the shell mounts after login. It uses RxJS <code>interval(60_000).pipe(startWith(0))</code> to fire immediately on start and then every 60 seconds.</p>
+
+<details>
+  <summary>NotificationService polling implementation</summary>
+  <div class="detail-body">
+<pre><span class="kw">startPolling</span>(): <span class="type">void</span> {
+  <span class="kw">this</span>.stopPolling();
+  <span class="kw">this</span>.pollSub = interval(<span class="num">60_000</span>)
+    .pipe(
+      startWith(<span class="num">0</span>),
+      switchMap(() =&gt; <span class="kw">this</span>.http.get&lt;<span class="type">UnreadCountDto</span>&gt;(<span class="str">`${this.base}/unread-count`</span>))
+    )
+    .subscribe({
+      next: res =&gt; <span class="kw">this</span>.unreadCount$.next(res.count),
+      error: () =&gt; {}   <span class="cmt">// silently ignore network errors during poll</span>
+    });
+}</pre>
+    <p><code>switchMap</code> ensures that if the HTTP call takes longer than 60 seconds (network stall), the previous in-flight request is cancelled before the next interval fires — no concurrent polls.</p>
+  </div>
+</details>
+
+<div class="warn-box">
+  <strong>Phase 8 upgrade path:</strong> Polling works well for the portfolio. In production, this should be replaced with <strong>SignalR</strong> — a WebSocket connection the server pushes to instantly when a new notification is created, eliminating the up-to-60-second delay and unnecessary HTTP round-trips.
+</div>
+
+<!-- ─── AUDIT COMPONENT ─── -->
+<h2 id="ng-audit" class="audit">Angular — Audit Log Component</h2>
+
+<p><code>AuditLogComponent</code> is an Admin-only page accessible at <code>/admin/audit</code>. It presents the audit data as a filterable, paginated Material table with expandable rows for the JSON diff.</p>
+
+<details>
+  <summary>Features of AuditLogComponent</summary>
+  <div class="detail-body">
+    <ul>
+      <li><strong>Filter panel:</strong> Entity Type dropdown (Patient, Case, CaseNote, User, Appointment, Task, Document), Action dropdown (Created, Updated, Deleted, FhirExport, FhirBundleImport), free-text "Changed By" username search, From/To date range pickers.</li>
+      <li><strong>Table columns:</strong> Time (yyyy-MM-dd HH:mm), Entity, Entity ID (monospace), Action (color-coded badge), User.</li>
+      <li><strong>Color-coded action badges:</strong> Created = green, Updated = blue, Deleted = red, FhirExport = purple, FhirBundleImport = orange — instantly readable at a glance.</li>
+      <li><strong>Expandable JSON diff:</strong> Rows with OldValues or NewValues show an expand arrow. Clicking expands an inline panel with "Before" (amber background, amber left border) and "After" (green background, green left border) pre-formatted JSON. Uses <code>JSON.parse → JSON.stringify(…, null, 2)</code> for pretty-printing.</li>
+      <li><strong>Pagination:</strong> Material paginator, page sizes 10/20/50/100; server-side, not client-side — only the current page is fetched.</li>
+      <li><strong>Progress bar:</strong> <code>mat-progress-bar</code> at the top of the table card shows indeterminate loading during each query.</li>
+    </ul>
+  </div>
+</details>
+
+<!-- ─── ADMIN ROUTING ─── -->
+<h2 id="ng-admin">Admin Module Routing</h2>
+
+<p>Previously <code>/admin</code> pointed directly to a single <code>AdminComponent</code> stub. Phase 7 converts it to a lazy-loaded route subtree using <code>ADMIN_ROUTES</code>:</p>
+
+<details>
+  <summary>admin.routes.ts</summary>
+  <div class="detail-body">
+<pre><span class="kw">export const</span> <span class="type">ADMIN_ROUTES</span>: <span class="type">Routes</span> = [
+  { path: <span class="str">''</span>, loadComponent: () =&gt; <span class="kw">import</span>(<span class="str">'./admin.component'</span>) },
+  { path: <span class="str">'audit'</span>, loadComponent: () =&gt; <span class="kw">import</span>(<span class="str">'./audit-log/audit-log.component'</span>) }
+];</pre>
+    <p>The <code>AdminComponent</code> landing page now shows a card grid of admin tools. Clicking "Audit Log" navigates to <code>/admin/audit</code>. Additional admin features (user management, system config) can be added as new routes here without touching <code>app.routes.ts</code>.</p>
+  </div>
+</details>
+
+<!-- ─── ARCHITECTURE DIAGRAM ─── -->
+<h2 id="arch-diagram">Architecture Overview</h2>
+
+<svg viewBox="0 0 860 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;margin-bottom:20px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:8px">
+  <!-- Angular Layer -->
+  <rect x="20" y="20" width="220" height="300" rx="8" fill="#e0f7fa" stroke="#00838f" stroke-width="1.5"/>
+  <text x="130" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#005662">Angular (Frontend)</text>
+
+  <rect x="36" y="56" width="188" height="36" rx="6" fill="#fff" stroke="#00838f" stroke-width="1"/>
+  <text x="130" y="78" text-anchor="middle" font-size="11" fill="#005662">AppShellComponent</text>
+  <text x="130" y="90" text-anchor="middle" font-size="10" fill="#757575">startPolling() on init</text>
+
+  <rect x="36" y="104" width="188" height="36" rx="6" fill="#fff" stroke="#00838f" stroke-width="1"/>
+  <text x="130" y="126" text-anchor="middle" font-size="11" fill="#005662">NotificationBellComponent</text>
+  <text x="130" y="138" text-anchor="middle" font-size="10" fill="#757575">badge · dropdown · mark-read</text>
+
+  <rect x="36" y="152" width="188" height="36" rx="6" fill="#fff" stroke="#00838f" stroke-width="1"/>
+  <text x="130" y="174" text-anchor="middle" font-size="11" fill="#005662">NotificationService</text>
+  <text x="130" y="186" text-anchor="middle" font-size="10" fill="#757575">60s polling · BehaviorSubject</text>
+
+  <rect x="36" y="200" width="188" height="36" rx="6" fill="#f3e5f5" stroke="#4a148c" stroke-width="1"/>
+  <text x="130" y="222" text-anchor="middle" font-size="11" fill="#4a148c">AuditLogComponent</text>
+  <text x="130" y="234" text-anchor="middle" font-size="10" fill="#757575">filter · paginate · JSON diff</text>
+
+  <rect x="36" y="248" width="188" height="36" rx="6" fill="#f3e5f5" stroke="#4a148c" stroke-width="1"/>
+  <text x="130" y="270" text-anchor="middle" font-size="11" fill="#4a148c">AdminComponent + ADMIN_ROUTES</text>
+  <text x="130" y="282" text-anchor="middle" font-size="10" fill="#757575">/admin, /admin/audit</text>
+
+  <!-- API Layer -->
+  <rect x="320" y="20" width="200" height="300" rx="8" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="420" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">API Layer</text>
+
+  <rect x="336" y="56" width="168" height="44" rx="6" fill="#fff" stroke="#388e3c" stroke-width="1"/>
+  <text x="420" y="78" text-anchor="middle" font-size="11" fill="#1b5e20">NotificationsController</text>
+  <text x="420" y="90" text-anchor="middle" font-size="10" fill="#757575">GET · POST /api/notifications</text>
+
+  <rect x="336" y="112" width="168" height="44" rx="6" fill="#fff" stroke="#4a148c" stroke-width="1"/>
+  <text x="420" y="134" text-anchor="middle" font-size="11" fill="#4a148c">AuditController</text>
+  <text x="420" y="146" text-anchor="middle" font-size="10" fill="#757575">GET /api/audit [Admin]</text>
+
+  <!-- App Layer -->
+  <rect x="600" y="20" width="240" height="300" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="720" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#bf360c">Application + Infra</text>
+
+  <rect x="616" y="56" width="208" height="44" rx="6" fill="#fff" stroke="#e65100" stroke-width="1"/>
+  <text x="720" y="78" text-anchor="middle" font-size="11" fill="#bf360c">NotificationDataHandler</text>
+  <text x="720" y="90" text-anchor="middle" font-size="10" fill="#757575">create · list · unread · mark</text>
+
+  <rect x="616" y="112" width="208" height="44" rx="6" fill="#fff" stroke="#e65100" stroke-width="1"/>
+  <text x="720" y="134" text-anchor="middle" font-size="11" fill="#bf360c">CaseDataHandler (modified)</text>
+  <text x="720" y="146" text-anchor="middle" font-size="10" fill="#757575">fires CaseAssigned · CaseEscalated</text>
+
+  <rect x="616" y="168" width="208" height="44" rx="6" fill="#fff" stroke="#e65100" stroke-width="1"/>
+  <text x="720" y="190" text-anchor="middle" font-size="11" fill="#bf360c">TaskDataHandler (modified)</text>
+  <text x="720" y="202" text-anchor="middle" font-size="10" fill="#757575">fires TaskAssigned (create+update)</text>
+
+  <rect x="616" y="224" width="208" height="44" rx="6" fill="#fff" stroke="#e65100" stroke-width="1"/>
+  <text x="720" y="246" text-anchor="middle" font-size="11" fill="#bf360c">NotificationOverdueService</text>
+  <text x="720" y="258" text-anchor="middle" font-size="10" fill="#757575">BackgroundService · 24h · deduped</text>
+
+  <rect x="616" y="280" width="208" height="30" rx="6" fill="#fff" stroke="#4a148c" stroke-width="1"/>
+  <text x="720" y="299" text-anchor="middle" font-size="11" fill="#4a148c">AuditDataHandler (reads AuditLogs)</text>
+
+  <!-- Arrows -->
+  <line x1="224" y1="122" x2="318" y2="100" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="224" y1="218" x2="318" y2="130" stroke="#4a148c" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="520" y1="80" x2="614" y2="78" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="520" y1="130" x2="614" y2="295" stroke="#4a148c" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ─── FLOW DIAGRAM ─── -->
+<h2 id="flow-diagram">Notification Creation Flow</h2>
+
+<svg viewBox="0 0 860 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;margin-bottom:20px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:8px">
+  <!-- Lanes -->
+  <rect x="10" y="10" width="130" height="240" rx="6" fill="#f1f8e9" stroke="#aed581" stroke-width="1"/>
+  <text x="75" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#558b2f">HTTP Request</text>
+
+  <rect x="150" y="10" width="160" height="240" rx="6" fill="#e0f7fa" stroke="#80deea" stroke-width="1"/>
+  <text x="230" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#00838f">Controller</text>
+
+  <rect x="320" y="10" width="200" height="240" rx="6" fill="#fff8e1" stroke="#ffe082" stroke-width="1"/>
+  <text x="420" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#f57f17">DataHandler (Case/Task)</text>
+
+  <rect x="530" y="10" width="160" height="240" rx="6" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="610" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#880e4f">NotificationDataHandler</text>
+
+  <rect x="700" y="10" width="150" height="240" rx="6" fill="#f3e5f5" stroke="#ce93d8" stroke-width="1"/>
+  <text x="775" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="#4a148c">DB (Notifications)</text>
+
+  <!-- Steps -->
+  <rect x="20" y="55" width="110" height="28" rx="4" fill="#c5e1a5" stroke="#558b2f" stroke-width="1"/>
+  <text x="75" y="73" text-anchor="middle" font-size="10" fill="#1b5e20">POST /api/cases</text>
+
+  <rect x="160" y="55" width="140" height="28" rx="4" fill="#b2ebf2" stroke="#00838f" stroke-width="1"/>
+  <text x="230" y="73" text-anchor="middle" font-size="10" fill="#005662">CasesController.Create</text>
+
+  <rect x="330" y="55" width="180" height="28" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1"/>
+  <text x="420" y="73" text-anchor="middle" font-size="10" fill="#f57f17">CreateCaseAsync() saves case</text>
+
+  <rect x="330" y="100" width="180" height="28" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1"/>
+  <text x="420" y="118" text-anchor="middle" font-size="10" fill="#f57f17">assignedTo ≠ createdBy?</text>
+
+  <rect x="540" y="100" width="140" height="28" rx="4" fill="#f8bbd0" stroke="#880e4f" stroke-width="1"/>
+  <text x="610" y="118" text-anchor="middle" font-size="10" fill="#880e4f">CreateAsync(CaseAssigned)</text>
+
+  <rect x="710" y="100" width="130" height="28" rx="4" fill="#e1bee7" stroke="#4a148c" stroke-width="1"/>
+  <text x="775" y="118" text-anchor="middle" font-size="10" fill="#4a148c">INSERT Notifications</text>
+
+  <rect x="540" y="145" width="140" height="28" rx="4" fill="#f8bbd0" stroke="#880e4f" stroke-width="1"/>
+  <text x="610" y="163" text-anchor="middle" font-size="10" fill="#880e4f">BehaviorSubject updated</text>
+
+  <rect x="160" y="190" width="140" height="28" rx="4" fill="#b2ebf2" stroke="#00838f" stroke-width="1"/>
+  <text x="230" y="208" text-anchor="middle" font-size="10" fill="#005662">201 Created returned</text>
+
+  <!-- Arrows -->
+  <line x1="130" y1="69" x2="160" y2="69" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="300" y1="69" x2="330" y2="69" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="420" y1="83" x2="420" y2="100" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="510" y1="114" x2="540" y2="114" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="680" y1="114" x2="710" y2="114" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="775" y1="128" x2="775" y2="145" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="610" y1="128" x2="610" y2="145" stroke="#555" stroke-width="1" marker-end="url(#a2)"/>
+  <line x1="230" y1="83" x2="230" y2="190" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <defs>
+    <marker id="a2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#555"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ─── FILES CHANGED ─── -->
+<h2 id="files-changed">Files Changed</h2>
+
+<div class="file-tree">
+<span class="dir">src/HCM.Domain/Entities/</span>
+  <span class="new">  Notification.cs                           ← NEW — notification entity</span>
+
+<span class="dir">src/HCM.Application/</span>
+<span class="dir">  Notifications/DataHandlers/</span>
+    <span class="new">    INotificationDataHandler.cs              ← NEW</span>
+    <span class="new">    NotificationDataHandler.cs               ← NEW</span>
+<span class="dir">  Notifications/DTOs/</span>
+    <span class="new">    NotificationDto.cs                       ← NEW — NotificationListDto, UnreadCountDto</span>
+<span class="dir">  Audit/DataHandlers/</span>
+    <span class="new">    IAuditDataHandler.cs                     ← NEW</span>
+    <span class="new">    AuditDataHandler.cs                      ← NEW</span>
+<span class="dir">  Audit/DTOs/</span>
+    <span class="new">    AuditLogDto.cs                           ← NEW — AuditLogListDto, AuditLogFilterDto</span>
+  <span class="mod">  DependencyInjection.cs                    ← MOD — register 3 new handlers</span>
+  <span class="mod">  Cases/DataHandlers/CaseDataHandler.cs     ← MOD — inject INotificationDataHandler; trigger CaseAssigned, CaseEscalated</span>
+  <span class="mod">  Tasks/DataHandlers/TaskDataHandler.cs     ← MOD — inject INotificationDataHandler; trigger TaskAssigned</span>
+
+<span class="dir">src/HCM.Infrastructure/</span>
+<span class="dir">  BackgroundServices/</span>
+    <span class="new">    NotificationOverdueService.cs            ← NEW — IHostedService, daily scan</span>
+<span class="dir">  Persistence/Configurations/</span>
+    <span class="new">    NotificationConfiguration.cs             ← NEW — EF entity config + index</span>
+  <span class="mod">  Persistence/ApplicationDbContext.cs       ← MOD — add Notifications DbSet</span>
+  <span class="mod">  DependencyInjection.cs                    ← MOD — register NotificationOverdueService</span>
+<span class="dir">  Migrations/</span>
+    <span class="new">    20260704_AddNotifications.cs             ← NEW — creates Notifications table</span>
+
+<span class="dir">src/HCM.API/Controllers/</span>
+  <span class="new">  NotificationsController.cs               ← NEW — 4 endpoints</span>
+  <span class="new">  AuditController.cs                       ← NEW — Admin-only audit query</span>
+
+<span class="dir">src-ng/hcm-web/src/app/</span>
+<span class="dir">  core/models/</span>
+    <span class="new">    notification.models.ts                   ← NEW — NotificationDto, AuditLogDto</span>
+<span class="dir">  core/services/</span>
+    <span class="new">    notification.service.ts                  ← NEW — polling + BehaviorSubject</span>
+<span class="dir">  core/components/notification-bell/</span>
+    <span class="new">    notification-bell.component.ts/html/scss ← NEW — bell + dropdown</span>
+<span class="dir">  features/admin/</span>
+    <span class="new">    admin.routes.ts                          ← NEW — ADMIN_ROUTES with /audit child</span>
+  <span class="mod">  features/admin/admin.component.ts         ← MOD — landing page with audit card</span>
+<span class="dir">  features/admin/audit-log/</span>
+    <span class="new">    audit-log.component.ts/html/scss         ← NEW — filterable audit table</span>
+  <span class="mod">  app.routes.ts                             ← MOD — admin → loadChildren ADMIN_ROUTES</span>
+  <span class="mod">  shell/app-shell/app-shell.component.ts    ← MOD — add NotificationBellComponent + startPolling</span>
+  <span class="mod">  shell/app-shell/app-shell.component.html  ← MOD — replace bell placeholder with &lt;app-notification-bell&gt;</span>
+</div>
+
+<!-- ─── KEY DECISIONS ─── -->
+<h2 id="key-decisions">Key Decisions &amp; Trade-offs</h2>
+
+<details>
+  <summary>Why polling instead of WebSockets / SignalR?</summary>
+  <div class="detail-body">
+    <p>SignalR (WebSockets) would give instant notifications — the server pushes to the client the moment a case is assigned. Polling with 60-second intervals means a user can wait up to a minute to see a new notification.</p>
+    <p><strong>Decision: polling for now.</strong> SignalR requires server-side hub configuration, Angular client setup, and connection lifecycle management — meaningful added complexity for a portfolio project. Polling at 60s is well within acceptable UX for case management. The <code>NotificationService.startPolling()</code> method is the only call site, so swapping in a SignalR subscription later is a localized change.</p>
+    <p>The separate <code>/unread-count</code> endpoint (vs. polling the full list) keeps each poll cheap — a single integer in the response body.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Why no push subscription from TaskDataHandler → immediate bell update?</summary>
+  <div class="detail-body">
+    <p>When the <em>same user</em> assigns a task to someone else, the assigner's browser doesn't need to update — only the recipient's. The recipient may be on a different browser session entirely. Server-side push (SignalR) is the correct solution for immediate delivery across sessions. Until SignalR is added, the 60-second poll is the mechanism that eventually delivers the new count to the recipient's bell.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Why long id (auto-increment) for Notifications instead of GUID?</summary>
+  <div class="detail-body">
+    <p>The notification table will grow quickly — potentially thousands of rows per user over time. Long integers are:</p>
+    <ul>
+      <li>Smaller on disk (8 bytes vs 16)</li>
+      <li>Cheaper to index</li>
+      <li>Naturally ordered by insertion time without a secondary sort column</li>
+    </ul>
+    <p>Notifications are never exposed as a public URL (no IDOR risk from sequential IDs) — the controller scopes all queries to the authenticated user's ID. GUIDs would add cost with no benefit here.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Why no hard delete on notifications?</summary>
+  <div class="detail-body">
+    <p>The current implementation does not expose a "delete notification" endpoint. The bell shows the latest 20; older notifications are still in the DB. This keeps the history available for support/debugging. A <code>CleanupOldNotificationsService</code> (e.g., purge records older than 90 days) would be a future housekeeping addition — safe to add without any API changes.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Why does AuditDataHandler re-join Users for usernames?</summary>
+  <div class="detail-body">
+    <p><code>AuditLog.ChangedBy</code> stores a raw User ID string, not a navigation property, because audit rows must survive user deletion. This means the username lookup requires a join at query time — but only for the current page (typically 20 rows). The handler collects the distinct User IDs in the page result, does a single <code>WHERE Id IN (...)</code> query, and builds a dictionary. Total round-trips: 2 (one for audit rows, one for usernames). This is O(1) extra queries regardless of page size.</p>
+  </div>
+</details>
+
+<!-- ─── WHAT'S NEXT ─── -->
+<h2 id="whats-next">What's Next — Phase 8</h2>
+
+<p>Phase 8 is <strong>Testing, Security &amp; Polish</strong> — the final quality bar before the portfolio is considered production-ready.</p>
+
+<table>
+  <tr><th>Area</th><th>Planned Work</th></tr>
+  <tr><td>Security audit</td><td>OWASP Top 10 sweep; check all endpoints for missing auth attributes; review input validation coverage</td></tr>
+  <tr><td>Unit tests</td><td>xUnit tests for DataHandlers (NotificationDataHandler, AuditDataHandler, PatientDataHandler MRN logic); mock <code>IApplicationDbContext</code></td></tr>
+  <tr><td>Angular tests</td><td>Jasmine/Karma tests for NotificationService polling logic; AuditLogComponent filter form</td></tr>
+  <tr><td>Performance</td><td>Review N+1 queries; add missing EF indexes; check AuditLog query performance at scale</td></tr>
+  <tr><td>Polish</td><td>Consistent error toasts; loading skeletons; empty state illustrations; mobile responsiveness</td></tr>
+  <tr><td>SignalR upgrade</td><td>Replace 60s polling with WebSocket push for instant notification delivery (Phase 8 stretch)</td></tr>
+  <tr><td>Phase 5 Extension</td><td>FHIR Transaction Bundle import (<code>POST /fhir/R4/</code>) — FR-55 to FR-58</td></tr>
+</table>
+
+<p style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;font-size:12px;color:#9e9e9e;text-align:center">
+  HCMS Phase 7 Report · Generated 2026-07-04 · Portfolio project — no real patient data
+</p>
+
+</main>
+</div>
+
+<script>
+// IntersectionObserver — highlight active section in sidebar
+(function() {
+  const links = document.querySelectorAll('nav.sidebar a');
+  const sections = Array.from(links)
+    .map(l => document.querySelector(l.getAttribute('href')))
+    .filter(Boolean);
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav.sidebar a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+})();
+</script>
+</body>
+</html>

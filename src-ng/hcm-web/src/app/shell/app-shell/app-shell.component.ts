@@ -8,6 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { NotificationBellComponent } from '../../core/components/notification-bell/notification-bell.component';
 import { TaskService } from '../../features/tasks/task.service';
 import { TaskDto } from '../../core/models/case.models';
 
@@ -31,7 +33,8 @@ interface NavItem {
     MatListModule,
     MatIconModule,
     MatButtonModule,
-    MatBadgeModule
+    MatBadgeModule,
+    NotificationBellComponent
   ],
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.scss']
@@ -50,9 +53,15 @@ export class AppShellComponent implements OnInit {
     { label: 'Admin',        icon: 'admin_panel_settings', route: '/admin', roles: ['Admin'] }
   ];
 
-  constructor(public auth: AuthService, private taskSvc: TaskService) {}
+  constructor(
+    public auth: AuthService,
+    private taskSvc: TaskService,
+    private notificationSvc: NotificationService
+  ) {}
 
   ngOnInit(): void {
+    this.notificationSvc.startPolling();
+
     this.taskSvc.getMyTasks().subscribe({
       next: (tasks: TaskDto[]) => {
         const now = new Date();

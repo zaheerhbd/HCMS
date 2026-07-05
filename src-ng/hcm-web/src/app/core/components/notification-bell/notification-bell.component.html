@@ -1,0 +1,45 @@
+<button mat-icon-button
+        title="Notifications"
+        [matMenuTriggerFor]="notifMenu"
+        (menuOpened)="onMenuOpen()">
+  <mat-icon
+    [matBadge]="unreadCount > 0 ? unreadCount : null"
+    matBadgeColor="warn"
+    matBadgeSize="small">
+    {{ unreadCount > 0 ? 'notifications' : 'notifications_none' }}
+  </mat-icon>
+</button>
+
+<mat-menu #notifMenu="matMenu" class="notification-menu">
+  <div class="notif-header" (click)="$event.stopPropagation()">
+    <span class="notif-title">Notifications</span>
+    <button mat-button color="primary" *ngIf="unreadCount > 0" (click)="markAllRead()">
+      Mark all read
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div *ngIf="loading" class="notif-loading" (click)="$event.stopPropagation()">
+    <mat-spinner diameter="24"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && notifications.length === 0" class="notif-empty" (click)="$event.stopPropagation()">
+    No notifications
+  </div>
+
+  <div *ngFor="let n of notifications; trackBy: trackById"
+       class="notif-item"
+       [class.unread]="!n.isRead"
+       (click)="markRead(n, $event)">
+    <div class="notif-type-icon">
+      <mat-icon>{{ n.type === 'TaskOverdue' ? 'warning' : n.type === 'CaseEscalated' ? 'escalator_warning' : 'notifications' }}</mat-icon>
+    </div>
+    <div class="notif-body">
+      <div class="notif-item-title">{{ n.title }}</div>
+      <div class="notif-message">{{ n.message }}</div>
+      <div class="notif-time">{{ n.createdAt | date:'MMM d, h:mm a' }}</div>
+    </div>
+    <div class="unread-dot" *ngIf="!n.isRead"></div>
+  </div>
+</mat-menu>

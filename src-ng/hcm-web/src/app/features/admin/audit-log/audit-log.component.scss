@@ -1,0 +1,127 @@
+.audit-container {
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .subtitle {
+    color: #666;
+    font-size: 13px;
+  }
+}
+
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+
+  mat-form-field {
+    min-width: 160px;
+    flex: 1;
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.table-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.result-count {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  text-align: right;
+}
+
+.audit-table {
+  width: 100%;
+}
+
+.audit-row {
+  cursor: pointer;
+
+  &:hover { background: rgba(0,0,0,0.03); }
+}
+
+.entity-id {
+  font-family: monospace;
+  font-size: 12px;
+  color: #555;
+}
+
+.action-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+
+  &.action-created { background: #e8f5e9; color: #2e7d32; }
+  &.action-updated { background: #e3f2fd; color: #1565c0; }
+  &.action-deleted { background: #ffebee; color: #c62828; }
+  &.action-fhirexport { background: #f3e5f5; color: #6a1b9a; }
+  &.action-fhirbundleimport { background: #fff3e0; color: #e65100; }
+}
+
+.detail-row {
+  height: 0;
+  overflow: hidden;
+
+  &.expanded { height: auto; }
+
+  td { padding: 0; border-bottom: none; }
+}
+
+.diff-panel {
+  display: flex;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.diff-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.diff-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.diff-json {
+  margin: 0;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Consolas', monospace;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+
+  &.old { background: #fff8e1; border-left: 3px solid #ffa000; }
+  &.new { background: #e8f5e9; border-left: 3px solid #43a047; }
+}

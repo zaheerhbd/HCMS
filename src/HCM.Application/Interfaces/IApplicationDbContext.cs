@@ -28,5 +28,7 @@ public interface IApplicationDbContext
 
     DbSet<FhirImportLog> FhirImportLogs { get; }
 
+    DbSet<Notification> Notifications { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

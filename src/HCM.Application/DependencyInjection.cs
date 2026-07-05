@@ -1,10 +1,12 @@
 ﻿using HCM.Application.Appointments.DataHandlers;
+using HCM.Application.Audit.DataHandlers;
 using HCM.Application.Auth.DataHandlers;
 using HCM.Application.CareTeam.DataHandlers;
 using HCM.Application.CaseNotes.DataHandlers;
 using HCM.Application.Cases.DataHandlers;
 using HCM.Application.Documents.DataHandlers;
 using HCM.Application.Fhir.DataHandlers;
+using HCM.Application.Notifications.DataHandlers;
 using HCM.Application.Patients.DataHandlers;
 using HCM.Application.Tasks.DataHandlers;
 using HCM.Application.Users.DataHandlers;
@@ -19,6 +21,7 @@ public static class DependencyInjection
         // Register all DataHandlers (one per feature/aggregate)
         services.AddScoped<IAuthDataHandler, AuthDataHandler>();
         services.AddScoped<IPatientDataHandler, PatientDataHandler>();
+        services.AddScoped<INotificationDataHandler, NotificationDataHandler>();
         services.AddScoped<ICaseDataHandler, CaseDataHandler>();
         services.AddScoped<ICareTeamDataHandler, CareTeamDataHandler>();
         services.AddScoped<ICaseNoteDataHandler, CaseNoteDataHandler>();
@@ -27,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentDataHandler, DocumentDataHandler>();
         services.AddScoped<IAppointmentDataHandler, AppointmentDataHandler>();
         services.AddScoped<IFhirDataHandler, FhirDataHandler>();
+        services.AddScoped<IAuditDataHandler, AuditDataHandler>();
 
         return services;
     }
