@@ -51,4 +51,10 @@ export class FhirService {
   importTransactionBundle(bundleJson: string): Observable<FhirBundleImportResult> {
     return this.http.post<FhirBundleImportResult>(`${this.base}`, bundleJson, { headers: this.fhirHeaders });
   }
+
+  uploadBundleFile(file: File): Observable<FhirBundleImportResult> {
+    const formData = new FormData();
+    formData.append('bundleFile', file);
+    return this.http.post<FhirBundleImportResult>(`${this.base}/$import`, formData);
+  }
 }

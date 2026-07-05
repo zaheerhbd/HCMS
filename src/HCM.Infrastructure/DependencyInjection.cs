@@ -30,7 +30,6 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IBlobStorageService, BlobStorageService>();
         services.AddScoped<IFhirMappingService, FhirMappingService>();
-        services.AddScoped<IHl7MappingService, Hl7MappingService>();
 
         services.AddHostedService<CaseNoteEditLockService>();
         services.AddHostedService<NotificationOverdueService>();

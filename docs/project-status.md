@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-05 (Phase 6 complete — Dashboards & Reports)
+**Last Updated:** 2026-07-05 (Added case assignment via FHIR extension on Encounter entry in Transaction Bundle)
 **Current Phase:** Phase 8 — Testing, Security & Polish (Not Started)
-**Overall Progress:** 139 / 206 tasks complete (~67%)
+**Overall Progress:** 151 / 206 tasks complete (~73%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -22,11 +22,32 @@
 | 6 | Dashboards & Reports | `Complete` | ~20 | 20 | 0 |
 | 7 | Notifications & Audit UI | `Complete` | ~14 | 14 | 0 |
 | 8 | Testing, Security & Polish | `Not Started` | ~22 | 0 | 22 |
-| 9 | Advanced FHIR & Interoperability | `Not Started` | ~12 | 0 | 12 |
+| 9 | Advanced FHIR & Interoperability | `Complete` | ~12 | 12 | 0 |
 
 ---
 
-## Current Phase Detail — Phase 6: Dashboards & Reports
+## Current Phase Detail — Phase 9: Advanced FHIR & Interoperability
+
+**Goal:** Atomic FHIR Transaction Bundle import (Patient + Encounter + Appointment + Task) and HL7 v2.5.1 ADT/ORU ingestion endpoints.
+
+**Status:** Complete — all backend and frontend tasks done, builds clean (0 errors).
+
+### Completed in Phase 9
+- `FhirBundleImportResultDto` + `BundleEntryResultDto` DTOs (Application layer)
+- `ParsedBundleEntry` / `ParsedFhirPatient` / `ParsedFhirEncounter` / `ParsedFhirAppointment` / `ParsedFhirTask` records (Application layer — no Firely SDK types leak out of Infrastructure)
+- `IApplicationDbContext.BeginTransactionAsync` — new interface method for atomic EF Core transactions
+- `ParseTransactionBundle` + `MapTransactionResponse` added to `IFhirMappingService` / `FhirMappingService`
+- `ImportTransactionBundleAsync` in `FhirDataHandler` — open SQL Server transaction → Patient → Encounter → Appointment → Task → FhirImportLogs + AuditLog → commit; rollback on any exception
+- `urn:uuid:` reference resolution via `urnMap` + `ResolveId` helper
+- `POST /fhir/R4/` endpoint in `FhirController` — returns `transaction-response` Bundle on success, `OperationOutcome` on failure
+- `POST /fhir/R4/$import` — multipart/form-data file-upload endpoint; reads `IFormFile bundleFile` server-side, delegates to `ImportTransactionBundleAsync`
+- Angular: `uploadBundleFile(file)` added to `FhirService`; Import Bundle tab rebuilt with drag-and-drop upload zone as primary path; "or paste JSON" textarea as fallback
+- Case assignment in bundles: Encounter extension `http://hcms.local/fhir/StructureDefinition/case-assigned-to` (`valueString`: username) resolved to coordinator `Guid` in `FhirDataHandler`; falls back to importer if username not found
+- `docs/phase-9-advanced-fhir-interoperability.html` completion report generated
+
+---
+
+## Previous Phase Detail — Phase 6: Dashboards & Reports
 
 **Goal:** Role-based dashboards with live data and Chart.js charts; three report types with CSV export.
 

@@ -90,6 +90,39 @@ public class FhirController(IFhirDataHandler handler, IFhirMappingService mappin
         return Content(responseJson, "application/fhir+json");
     }
 
+    /// <summary>POST /fhir/R4/$import — upload a FHIR Transaction Bundle JSON file via multipart/form-data</summary>
+    [HttpPost("$import")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadTransactionBundle(IFormFile bundleFile, CancellationToken ct)
+    {
+        if (bundleFile == null || bundleFile.Length == 0)
+            return BadRequest(FhirOperationOutcome("invalid", "Request must include a bundleFile (.json) in multipart/form-data."));
+
+        if (!bundleFile.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase) &&
+            !bundleFile.ContentType.Contains("json", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(FhirOperationOutcome("invalid", "Uploaded file must be a FHIR Bundle JSON file (.json)."));
+
+        string bundleJson;
+        using (var stream = bundleFile.OpenReadStream())
+        using (var reader = new StreamReader(stream))
+            bundleJson = await reader.ReadToEndAsync(ct);
+
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        var result = await _handler.ImportTransactionBundleAsync(bundleJson, userId, ct);
+
+        if (!result.Success)
+        {
+            return UnprocessableEntity(new
+            {
+                resourceType = "OperationOutcome",
+                issue = result.Errors.Select(e => new { severity = "error", code = "processing", diagnostics = e }).ToArray()
+            });
+        }
+
+        var responseJson = _mapping.MapTransactionResponse(result.Entries);
+        return Content(responseJson, "application/fhir+json");
+    }
+
     /// <summary>POST /fhir/R4/Patient — import a FHIR Patient resource; creates a new patient with MRN</summary>
     [HttpPost("Patient")]
     public async Task<IActionResult> ImportPatient(CancellationToken ct)

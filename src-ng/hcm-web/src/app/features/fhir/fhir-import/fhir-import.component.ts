@@ -12,6 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
 import { FhirService, BundleEntryResult } from '../../../core/services/fhir.service';
 
 const SAMPLE_FHIR_PATIENT = JSON.stringify({
@@ -99,7 +100,8 @@ const SAMPLE_TRANSACTION_BUNDLE = JSON.stringify({
     MatSnackBarModule,
     MatTabsModule,
     MatTableModule,
-    MatChipsModule
+    MatChipsModule,
+    MatDividerModule
   ],
   templateUrl: './fhir-import.component.html',
   styleUrls: ['./fhir-import.component.scss']
@@ -118,6 +120,10 @@ export class FhirImportComponent {
   bundleSuccess = false;
   bundleColumns = ['resourceType', 'assignedId', 'status'];
 
+  // file upload state
+  selectedBundleFile: File | null = null;
+  bundleDragOver = false;
+
   constructor(
     private fb: FormBuilder,
     private fhir: FhirService,
@@ -125,7 +131,7 @@ export class FhirImportComponent {
     private snack: MatSnackBar
   ) {
     this.patientForm = this.fb.group({ fhirJson: ['', Validators.required] });
-    this.bundleForm = this.fb.group({ bundleJson: ['', Validators.required] });
+    this.bundleForm = this.fb.group({ bundleJson: [''] });
   }
 
   // ── Patient tab helpers ───────────────────────────────────────────────────
@@ -165,25 +171,60 @@ export class FhirImportComponent {
   // ── Bundle tab helpers ────────────────────────────────────────────────────
 
   loadBundleSample(): void {
+    this.selectedBundleFile = null;
     this.bundleForm.patchValue({ bundleJson: SAMPLE_TRANSACTION_BUNDLE });
   }
 
-  onBundleFileChange(event: Event): void {
+  onBundleFileSelect(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => this.bundleForm.patchValue({ bundleJson: e.target?.result as string });
-    reader.readAsText(file);
+    if (file) this.setSelectedBundleFile(file);
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.bundleDragOver = true;
+  }
+
+  onDragLeave(): void {
+    this.bundleDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.bundleDragOver = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.setSelectedBundleFile(file);
+  }
+
+  private setSelectedBundleFile(file: File): void {
+    this.selectedBundleFile = file;
+    this.bundleForm.patchValue({ bundleJson: '' });
+  }
+
+  clearBundleFile(): void {
+    this.selectedBundleFile = null;
+  }
+
+  get canSubmitBundle(): boolean {
+    return !!this.selectedBundleFile || !!this.bundleForm.value.bundleJson?.trim();
   }
 
   submitBundle(): void {
-    if (this.bundleForm.invalid) return;
+    if (!this.canSubmitBundle) {
+      this.snack.open('Provide a .json file or paste bundle JSON below.', 'OK', { duration: 3000 });
+      return;
+    }
+
     this.bundleLoading = true;
     this.bundleEntries = [];
     this.bundleErrors = [];
     this.bundleSuccess = false;
 
-    this.fhir.importTransactionBundle(this.bundleForm.value.bundleJson).subscribe({
+    const obs$ = this.selectedBundleFile
+      ? this.fhir.uploadBundleFile(this.selectedBundleFile)
+      : this.fhir.importTransactionBundle(this.bundleForm.value.bundleJson);
+
+    obs$.subscribe({
       next: result => {
         this.bundleLoading = false;
         this.bundleSuccess = result.success;

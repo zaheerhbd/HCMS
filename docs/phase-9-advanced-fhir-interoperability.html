@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 9 — Advanced FHIR &amp; Interoperability | HCMS</title>
+<style>
+  :root {
+    --sidebar-bg: #002733;
+    --sidebar-text: #b2d8e0;
+    --accent: #00bcd4;
+    --accent2: #00897b;
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #1a2632;
+    --muted: #637082;
+    --border: #e0e7ef;
+    --code-bg: #1a2632;
+    --code-text: #b2d8e0;
+    --success: #43a047;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  nav#toc { width: 260px; min-width: 260px; background: var(--sidebar-bg); color: var(--sidebar-text); position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 0; flex-shrink: 0; }
+  nav#toc .brand { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  nav#toc .brand h2 { color: #fff; font-size: 16px; font-weight: 700; }
+  nav#toc .brand span { font-size: 11px; opacity: 0.55; }
+  nav#toc ul { list-style: none; margin-top: 16px; }
+  nav#toc ul li a { display: block; padding: 8px 20px; font-size: 13px; color: var(--sidebar-text); text-decoration: none; border-left: 3px solid transparent; transition: all 0.15s; line-height: 1.4; }
+  nav#toc ul li a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  nav#toc ul li a.active { border-left-color: var(--accent); color: var(--accent); background: rgba(0,188,212,0.08); }
+  nav#toc ul li.section-head { padding: 14px 20px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.45; }
+
+  main { flex: 1; padding: 40px 48px; max-width: 1000px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+
+  .hero { background: linear-gradient(135deg, #002733 0%, #00416a 60%, #006064 100%); color: #fff; border-radius: 12px; padding: 40px 48px; margin-bottom: 48px; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; background: rgba(0,188,212,0.12); border-radius: 50%; }
+  .hero .phase-badge { background: var(--accent); color: #002733; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 14px; }
+  .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+  .hero p { font-size: 16px; opacity: 0.82; max-width: 580px; line-height: 1.6; }
+  .hero .meta { margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; }
+  .hero .meta span { font-size: 13px; opacity: 0.7; }
+  .hero .meta strong { color: var(--accent); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 16px; margin-bottom: 48px; }
+  .stat-card { background: var(--card-bg); border-radius: 10px; padding: 20px; border: 1px solid var(--border); text-align: center; }
+  .stat-card .num { font-size: 32px; font-weight: 800; color: var(--accent); }
+  .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .card { background: var(--card-bg); border-radius: 10px; padding: 28px 32px; margin-bottom: 24px; border: 1px solid var(--border); }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .card h3 { font-size: 15px; font-weight: 700; margin: 20px 0 10px; }
+  .card p { line-height: 1.7; margin-bottom: 12px; }
+  .card ul, .card ol { padding-left: 22px; }
+  .card li { margin-bottom: 6px; line-height: 1.6; }
+
+  .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .icon.teal { background: rgba(0,188,212,0.12); }
+  .icon.green { background: rgba(67,160,71,0.12); }
+  .icon.orange { background: rgba(255,152,0,0.12); }
+  .icon.blue { background: rgba(33,150,243,0.12); }
+
+  pre { background: var(--code-bg); color: var(--code-text); padding: 18px 20px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 12px 0; }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; }
+  .inline-code { background: #e8f4f8; color: #005f6b; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; font-family: monospace; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+  th { background: #f0f6fb; color: var(--muted); font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fbff; }
+
+  .dod { list-style: none; padding: 0; }
+  .dod li { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+  .dod li:last-child { border-bottom: none; }
+  .dod .check { color: var(--success); font-size: 18px; flex-shrink: 0; line-height: 1; }
+
+  details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+  summary { padding: 12px 16px; font-weight: 600; font-size: 14px; cursor: pointer; background: #f8fbff; border-radius: 8px; user-select: none; }
+  details[open] summary { border-radius: 8px 8px 0 0; border-bottom: 1px solid var(--border); }
+  details > div { padding: 16px; }
+
+  .diagram-wrap { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 16px 0; text-align: center; overflow-x: auto; }
+  .diagram-title { font-size: 13px; color: var(--muted); margin-top: 12px; font-style: italic; }
+
+  .analogy { background: linear-gradient(135deg, #e3f6fc 0%, #e8f5e9 100%); border-left: 4px solid var(--accent2); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .analogy strong { color: var(--accent2); font-size: 13px; display: block; margin-bottom: 4px; }
+  .analogy p { font-size: 14px; color: #1a2632; margin: 0; line-height: 1.6; }
+
+  .flow { display: flex; flex-direction: column; margin: 16px 0; }
+  .flow-step { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-num { background: var(--accent); color: #002733; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 2px; }
+  .flow-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .flow-text span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .method { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+  .method.post { background: #e8f5e9; color: #2e7d32; }
+  .path { font-size: 13px; font-family: monospace; }
+
+  @media (max-width: 768px) { nav#toc { display: none; } main { padding: 24px 20px; } .hero { padding: 28px 24px; } }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <div class="brand"><h2>HCMS</h2><span>Phase 9 Report</span></div>
+  <ul>
+    <li class="section-head">Overview</li>
+    <li><a href="#overview">What Was Built</a></li>
+    <li class="section-head">Backend</li>
+    <li><a href="#transaction-bundle">Transaction Bundle</a></li>
+    <li><a href="#file-upload">Bundle File Upload</a></li>
+    <li><a href="#atomicity">Atomicity Deep-Dive</a></li>
+    <li><a href="#reference-resolution">Reference Resolution</a></li>
+    <li class="section-head">Frontend</li>
+    <li><a href="#angular">Import Bundle UI</a></li>
+    <li class="section-head">Architecture</li>
+    <li><a href="#layers">Layer Diagram</a></li>
+    <li><a href="#sequence">Bundle Sequence</a></li>
+    <li class="section-head">Decisions</li>
+    <li><a href="#decisions">Key Decisions</a></li>
+    <li><a href="#files">Files Changed</a></li>
+    <li class="section-head">Completion</li>
+    <li><a href="#dod">Definition of Done</a></li>
+    <li><a href="#next">What's Next</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <div class="phase-badge">PHASE 9 COMPLETE</div>
+    <h1>Advanced FHIR &amp; Interoperability</h1>
+    <p>Atomic Transaction Bundle import, drag-and-drop FHIR bundle file upload, and a redesigned import UI — giving HCMS the multi-resource intake capability real EHR integrations demand.</p>
+    <div class="meta">
+      <span>Completed: <strong>2026-07-05</strong></span>
+      <span>FRs: <strong>FR-53 · FR-54 · FR-55 · FR-56 · FR-57 · FR-58</strong></span>
+      <span>Build: <strong>&#10003; 0 errors</strong></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="num">2</div><div class="label">new FHIR endpoints</div></div>
+    <div class="stat-card"><div class="num">4</div><div class="label">resource types per atomic import</div></div>
+    <div class="stat-card"><div class="num">100%</div><div class="label">rollback on failure</div></div>
+    <div class="stat-card"><div class="num">2</div><div class="label">upload paths (file + JSON)</div></div>
+    <div class="stat-card"><div class="num">12</div><div class="label">files added / changed</div></div>
+  </div>
+
+  <!-- Overview -->
+  <section id="overview">
+    <div class="card">
+      <h2><span class="icon teal">&#127973;</span> What Was Built</h2>
+
+      <h3>1 &middot; FHIR Transaction Bundle Import (POST /fhir/R4/)</h3>
+      <p>A single HTTP request carries a complete patient intake package &mdash; Patient, Encounter (case), Appointments, and Tasks &mdash; as a FHIR Transaction Bundle. The server processes entries in order, resolves internal <span class="inline-code">urn:uuid:</span> references, and either commits everything or rolls back to zero on any failure. The response is a valid FHIR <span class="inline-code">transaction-response</span> Bundle with the assigned ID for each created resource.</p>
+
+      <div class="analogy">
+        <strong>Real-life analogy</strong>
+        <p>A Transaction Bundle is like a multi-item cart checkout: either every item ships or nothing is charged. You never end up with a patient record but no case, or a task pointing at a case that was never created.</p>
+      </div>
+
+      <h3>2 &middot; FHIR Bundle File Upload (POST /fhir/R4/$import)</h3>
+      <p>A dedicated <span class="inline-code">multipart/form-data</span> endpoint accepts a <span class="inline-code">.json</span> bundle file directly. The server reads the file via <span class="inline-code">IFormFile</span>, then delegates to the same <span class="inline-code">ImportTransactionBundleAsync</span> logic &mdash; identical atomicity guarantees, different intake path. This enables users to upload a file they already have on disk without copying JSON into a textarea.</p>
+
+      <h3>3 &middot; Angular Drag-and-Drop Import UI</h3>
+      <p>The "Import Bundle" tab was rebuilt around a drag-and-drop file upload zone as the primary path. A "or paste JSON" textarea fallback remains for programmatic or sample-driven use. Uploading a file calls <span class="inline-code">POST /fhir/R4/$import</span>; pasting JSON calls <span class="inline-code">POST /fhir/R4/</span>. Both paths show the same per-entry result table on success.</p>
+    </div>
+  </section>
+
+  <!-- Transaction Bundle -->
+  <section id="transaction-bundle">
+    <div class="card">
+      <h2><span class="icon teal">&#128230;</span> Transaction Bundle &mdash; Backend Design</h2>
+
+      <p><span class="method post">POST</span> <span class="path">/fhir/R4/</span> &mdash; accepts <span class="inline-code">Content-Type: application/fhir+json</span> with raw Bundle JSON. Returns a <span class="inline-code">transaction-response</span> Bundle on success or <span class="inline-code">OperationOutcome</span> on failure.</p>
+
+      <h3>Processing flow</h3>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Parse &amp; validate</strong><span><span class="inline-code">FhirMappingService.ParseTransactionBundle</span> uses the Firely SDK to deserialize the Bundle and extract each entry into clean <span class="inline-code">ParsedBundleEntry</span> records. No Firely types cross the Application boundary.</span></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Open EF Core transaction</strong><span><span class="inline-code">IApplicationDbContext.BeginTransactionAsync</span> wraps all subsequent writes. All child handlers share the same scoped <span class="inline-code">DbContext</span> and participate automatically.</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Process in order: Patient &rarr; Encounter &rarr; Appointment &rarr; Task</strong><span>Each entry is created via its existing DataHandler. Assigned IDs are captured in <span class="inline-code">urnMap</span> as each resource is created.</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Resolve urn:uuid: references</strong><span>Cross-entry references like <span class="inline-code">urn:uuid:patient-1</span> are resolved to real assigned IDs (e.g. <span class="inline-code">Patient/MRN-2026-00042</span>) via the <span class="inline-code">ResolveId</span> helper.</span></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Write logs and commit</strong><span>One <span class="inline-code">FhirImportLog</span> per resource type + one <span class="inline-code">AuditLog</span> written inside the transaction, then <span class="inline-code">CommitAsync</span>.</span></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Rollback on any exception</strong><span>Any failure triggers <span class="inline-code">tx.RollbackAsync()</span>. Zero rows written. Response: <span class="inline-code">OperationOutcome</span> with the error message.</span></div></div>
+      </div>
+
+      <details>
+        <summary>Sample Transaction Bundle request</summary>
+        <div><pre><code>{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-1",
+      "resource": {
+        "resourceType": "Patient",
+        "name": [{ "family": "Rivera", "given": ["Maria"] }],
+        "gender": "female",
+        "birthDate": "1978-04-12"
+      },
+      "request": { "method": "POST", "url": "Patient" }
+    },
+    {
+      "fullUrl": "urn:uuid:encounter-1",
+      "resource": {
+        "resourceType": "Encounter",
+        "status": "planned",
+        "subject": { "reference": "urn:uuid:patient-1" },
+        "type": [{ "text": "Chronic Disease" }]
+      },
+      "request": { "method": "POST", "url": "Encounter" }
+    },
+    {
+      "fullUrl": "urn:uuid:task-1",
+      "resource": {
+        "resourceType": "Task",
+        "status": "requested",
+        "intent": "order",
+        "description": "Initial care assessment",
+        "for": { "reference": "urn:uuid:patient-1" },
+        "focus": { "reference": "urn:uuid:encounter-1" }
+      },
+      "request": { "method": "POST", "url": "Task" }
+    }
+  ]
+}</code></pre></div>
+      </details>
+
+      <details>
+        <summary>Sample transaction-response Bundle (success)</summary>
+        <div><pre><code>{
+  "resourceType": "Bundle",
+  "type": "transaction-response",
+  "entry": [
+    { "response": { "status": "201 Created", "location": "Patient/MRN-2026-00042" } },
+    { "response": { "status": "201 Created", "location": "Encounter/CASE-2026-00038" } },
+    { "response": { "status": "201 Created", "location": "Task/1a4e..." } }
+  ]
+}</code></pre></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- File Upload -->
+  <section id="file-upload">
+    <div class="card">
+      <h2><span class="icon green">&#128193;</span> FHIR Bundle File Upload</h2>
+
+      <p><span class="method post">POST</span> <span class="path">/fhir/R4/$import</span> &mdash; accepts <span class="inline-code">Content-Type: multipart/form-data</span> with a form field named <span class="inline-code">bundleFile</span> containing a <span class="inline-code">.json</span> file. Reads the file server-side via <span class="inline-code">IFormFile</span>, then delegates to the same <span class="inline-code">ImportTransactionBundleAsync</span> &mdash; identical atomicity, same response format.</p>
+
+      <div class="analogy">
+        <strong>Real-life analogy</strong>
+        <p>Think of the two endpoints like two ways to submit a form: you can type directly into a web portal (JSON body) or upload a pre-filled PDF you already have on disk (file upload). The back-office processing is identical &mdash; only the intake mechanism differs.</p>
+      </div>
+
+      <h3>Validation</h3>
+      <ul>
+        <li>File must have <span class="inline-code">.json</span> extension or <span class="inline-code">Content-Type</span> containing "json" &mdash; returns <span class="inline-code">OperationOutcome</span> otherwise</li>
+        <li>File must not be empty &mdash; returns <span class="inline-code">400</span> if <span class="inline-code">IFormFile.Length == 0</span></li>
+        <li>File content read with <span class="inline-code">StreamReader</span> server-side &mdash; no client memory required for large files</li>
+      </ul>
+
+      <h3>Controller</h3>
+      <pre><code>[HttpPost("$import")]
+[Consumes("multipart/form-data")]
+public async Task&lt;IActionResult&gt; UploadTransactionBundle(IFormFile bundleFile, CancellationToken ct)
+{
+    if (bundleFile == null || bundleFile.Length == 0)
+        return BadRequest(FhirOperationOutcome("invalid", "Request must include a bundleFile (.json)."));
+
+    string bundleJson;
+    using (var stream = bundleFile.OpenReadStream())
+    using (var reader = new StreamReader(stream))
+        bundleJson = await reader.ReadToEndAsync(ct);
+
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+    var result = await _handler.ImportTransactionBundleAsync(bundleJson, userId, ct);
+    // ... identical response logic as POST /fhir/R4/
+}</code></pre>
+
+      <h3>Angular service</h3>
+      <pre><code>uploadBundleFile(file: File): Observable&lt;FhirBundleImportResult&gt; {
+  const formData = new FormData();
+  formData.append('bundleFile', file);
+  // No Content-Type header — browser adds multipart boundary automatically
+  return this.http.post&lt;FhirBundleImportResult&gt;(`${this.base}/$import`, formData);
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- Atomicity -->
+  <section id="atomicity">
+    <div class="card">
+      <h2><span class="icon green">&#128274;</span> Atomicity Deep-Dive</h2>
+
+      <p>A partial write is worse than no write. If a Patient is created but the Case fails, the system has an orphaned record and a coordinator who can't find the patient. The FHIR spec mandates all-or-nothing semantics for Transaction Bundles.</p>
+
+      <p>All DataHandlers are registered as <strong>scoped</strong> services &mdash; they share the same <span class="inline-code">IApplicationDbContext</span> per HTTP request. When <span class="inline-code">FhirDataHandler</span> calls <span class="inline-code">BeginTransactionAsync</span>, all subsequent <span class="inline-code">SaveChangesAsync</span> calls across all child handlers participate in the same uncommitted SQL Server transaction. One <span class="inline-code">CommitAsync</span> or <span class="inline-code">RollbackAsync</span> covers everything.</p>
+
+      <details>
+        <summary>Transaction flow across multiple DataHandlers</summary>
+        <div><pre><code>await using var tx = await _db.BeginTransactionAsync(ct);
+try {
+    var patient = await _patientHandler.CreatePatientAsync(...);        // SaveChanges #1
+    var cas     = await _caseHandler.CreateCaseAsync(...);             // SaveChanges #2
+    var appt    = await _appointmentHandler.CreateAppointmentAsync(...); // #3
+    var task    = await _taskHandler.CreateTaskAsync(...);             // #4
+    _db.FhirImportLogs.Add(...);
+    _db.AuditLogs.Add(...);
+    await _db.SaveChangesAsync(ct);                                    // #5
+    await tx.CommitAsync(ct);    // only this line makes anything permanent
+}
+catch {
+    await tx.RollbackAsync(ct);  // every row from #1-#5 vanishes
+    throw;
+}</code></pre></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Reference Resolution -->
+  <section id="reference-resolution">
+    <div class="card">
+      <h2><span class="icon blue">&#128279;</span> urn:uuid: Reference Resolution</h2>
+
+      <p>Bundle entries reference each other before any are persisted. An Encounter references <span class="inline-code">urn:uuid:patient-1</span> &mdash; a Patient that only exists in the same bundle. After the Patient is created as <span class="inline-code">MRN-2026-00042</span>, that reference must resolve to <span class="inline-code">Patient/MRN-2026-00042</span> for all subsequent entries.</p>
+
+      <pre><code>// After Patient created:
+urnMap["urn:uuid:patient-1"] = "Patient/MRN-2026-00042";
+
+// ResolveId("Patient", "urn:uuid:patient-1", urnMap)
+//   looks up urnMap, splits on "/", returns "MRN-2026-00042"</code></pre>
+
+      <p>The <span class="inline-code">ResolveId</span> helper handles three reference forms: <span class="inline-code">urn:uuid:xxx</span> (via urnMap), <span class="inline-code">ResourceType/Id</span> (direct split), or <span class="inline-code">null</span> (fallback to first created resource of the target type).</p>
+    </div>
+  </section>
+
+  <!-- Angular -->
+  <section id="angular">
+    <div class="card">
+      <h2><span class="icon teal">&#127912;</span> Angular Import Bundle UI</h2>
+
+      <h3>Tab 1 &mdash; Import Patient (unchanged)</h3>
+      <p>Single-resource Patient import via <span class="inline-code">POST /fhir/R4/Patient</span>. Unchanged from Phase 5.</p>
+
+      <h3>Tab 2 &mdash; Import Bundle (rebuilt)</h3>
+      <p><strong>Primary path &mdash; drag-and-drop file upload zone:</strong></p>
+      <ul>
+        <li>Large dashed drop zone: drag a <span class="inline-code">.json</span> file onto it, or click "Choose File"</li>
+        <li>Selected state: zone turns green, shows filename and file size in KB, "Remove" button to clear</li>
+        <li>Selecting a file clears the textarea; entering JSON clears the selected file</li>
+        <li>Submit calls <span class="inline-code">FhirService.uploadBundleFile(file)</span> &rarr; <span class="inline-code">POST /fhir/R4/$import</span></li>
+      </ul>
+      <p><strong>Secondary path &mdash; "or paste JSON" textarea:</strong></p>
+      <ul>
+        <li>"Load Sample Bundle" pre-populates the textarea and clears any selected file</li>
+        <li>Submit calls <span class="inline-code">FhirService.importTransactionBundle(json)</span> &rarr; <span class="inline-code">POST /fhir/R4/</span></li>
+      </ul>
+      <p><strong>Result table (both paths):</strong></p>
+      <ul>
+        <li>Success: per-entry <span class="inline-code">mat-table</span> with resource type, assigned ID, "201 Created" badge, and "View Patient &rarr;" link</li>
+        <li>Failure: "all changes rolled back" message with per-issue error list</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Layer diagram -->
+  <section id="layers">
+    <div class="card">
+      <h2><span class="icon blue">&#127963;</span> Layer Diagram</h2>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 260" width="100%" style="max-width:700px">
+          <rect x="10" y="10" width="700" height="52" rx="8" fill="#002733" opacity="0.92"/>
+          <text x="360" y="28" text-anchor="middle" fill="#00bcd4" font-size="11" font-weight="700" font-family="sans-serif">API LAYER</text>
+          <text x="200" y="46" text-anchor="middle" fill="#b2d8e0" font-size="12" font-family="sans-serif">POST /fhir/R4/ (JSON body)</text>
+          <text x="530" y="46" text-anchor="middle" fill="#b2d8e0" font-size="12" font-family="sans-serif">POST /fhir/R4/$import (IFormFile)</text>
+
+          <rect x="10" y="76" width="700" height="62" rx="8" fill="#003d54" opacity="0.9"/>
+          <text x="360" y="93" text-anchor="middle" fill="#00bcd4" font-size="11" font-weight="700" font-family="sans-serif">APPLICATION LAYER</text>
+          <rect x="22" y="100" width="200" height="28" rx="6" fill="rgba(0,188,212,0.18)"/>
+          <text x="122" y="119" text-anchor="middle" fill="#e0f7fa" font-size="12" font-family="sans-serif">FhirDataHandler</text>
+          <rect x="234" y="100" width="200" height="28" rx="6" fill="rgba(0,188,212,0.18)"/>
+          <text x="334" y="119" text-anchor="middle" fill="#e0f7fa" font-size="12" font-family="sans-serif">ParsedFhirEntries DTOs</text>
+          <rect x="446" y="100" width="254" height="28" rx="6" fill="rgba(0,188,212,0.18)"/>
+          <text x="573" y="119" text-anchor="middle" fill="#e0f7fa" font-size="12" font-family="sans-serif">FhirBundleImportResultDto</text>
+
+          <rect x="10" y="152" width="700" height="52" rx="8" fill="#004d40" opacity="0.9"/>
+          <text x="360" y="169" text-anchor="middle" fill="#a5d6a7" font-size="11" font-weight="700" font-family="sans-serif">INFRASTRUCTURE LAYER</text>
+          <rect x="22" y="178" width="220" height="18" rx="4" fill="rgba(67,160,71,0.2)"/>
+          <text x="132" y="191" text-anchor="middle" fill="#e8f5e9" font-size="11" font-family="sans-serif">FhirMappingService (Firely SDK)</text>
+          <rect x="254" y="178" width="220" height="18" rx="4" fill="rgba(67,160,71,0.2)"/>
+          <text x="364" y="191" text-anchor="middle" fill="#e8f5e9" font-size="11" font-family="sans-serif">ApplicationDbContext + BeginTxAsync</text>
+          <rect x="486" y="178" width="214" height="18" rx="4" fill="rgba(67,160,71,0.2)"/>
+          <text x="593" y="191" text-anchor="middle" fill="#e8f5e9" font-size="11" font-family="sans-serif">Child DataHandlers (shared scope)</text>
+
+          <rect x="10" y="218" width="700" height="32" rx="8" fill="#37474f" opacity="0.85"/>
+          <text x="360" y="232" text-anchor="middle" fill="#cfd8dc" font-size="11" font-weight="700" font-family="sans-serif">DOMAIN LAYER</text>
+          <text x="360" y="244" text-anchor="middle" fill="#90a4ae" font-size="11" font-family="sans-serif">FhirImportLog &middot; AuditLog &middot; Patient &middot; Case &middot; Appointment &middot; CaseTask</text>
+
+          <defs><marker id="a" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#78909c"/></marker></defs>
+          <line x1="360" y1="62" x2="360" y2="76" stroke="#00bcd4" stroke-width="1.5" marker-end="url(#a)"/>
+          <line x1="360" y1="138" x2="360" y2="152" stroke="#00bcd4" stroke-width="1.5" marker-end="url(#a)"/>
+          <line x1="360" y1="204" x2="360" y2="218" stroke="#a5d6a7" stroke-width="1.5" marker-end="url(#a)"/>
+        </svg>
+        <div class="diagram-title">Both FHIR endpoints share the same Application/Infrastructure pipeline &mdash; only the intake path differs.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sequence -->
+  <section id="sequence">
+    <div class="card">
+      <h2><span class="icon blue">&#9201;</span> Bundle Import &mdash; Sequence Diagram</h2>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 760 400" width="100%" style="max-width:760px">
+          <defs><marker id="arr" markerWidth="7" markerHeight="7" refX="3" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#546e7a"/></marker></defs>
+
+          <text x="60"  y="20" text-anchor="middle" fill="#002733" font-size="11" font-weight="700" font-family="sans-serif">Client</text>
+          <text x="185" y="20" text-anchor="middle" fill="#002733" font-size="11" font-weight="700" font-family="sans-serif">FhirController</text>
+          <text x="325" y="20" text-anchor="middle" fill="#002733" font-size="11" font-weight="700" font-family="sans-serif">FhirDataHandler</text>
+          <text x="475" y="20" text-anchor="middle" fill="#002733" font-size="11" font-weight="700" font-family="sans-serif">ChildHandlers</text>
+          <text x="625" y="20" text-anchor="middle" fill="#002733" font-size="11" font-weight="700" font-family="sans-serif">SQL Server</text>
+
+          <line x1="60"  y1="26" x2="60"  y2="400" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="185" y1="26" x2="185" y2="400" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="325" y1="26" x2="325" y2="400" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="475" y1="26" x2="475" y2="400" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="625" y1="26" x2="625" y2="400" stroke="#cfd8dc" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <line x1="60" y1="50" x2="179" y2="50" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="118" y="44" text-anchor="middle" fill="#002733" font-size="10" font-family="sans-serif">POST /fhir/R4/ or POST /$import</text>
+          <line x1="185" y1="72" x2="319" y2="72" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="252" y="66" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">ImportTransactionBundleAsync</text>
+          <line x1="325" y1="94" x2="605" y2="94" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="462" y="88" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">BeginTransactionAsync</text>
+          <line x1="325" y1="118" x2="459" y2="118" stroke="#00897b" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="390" y="112" text-anchor="middle" fill="#00695c" font-size="11" font-family="sans-serif">CreatePatientAsync</text>
+          <line x1="475" y1="132" x2="609" y2="132" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="540" y="126" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">INSERT Patient (in TX)</text>
+          <line x1="325" y1="156" x2="459" y2="156" stroke="#00897b" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="390" y="150" text-anchor="middle" fill="#00695c" font-size="11" font-family="sans-serif">CreateCaseAsync</text>
+          <line x1="475" y1="170" x2="609" y2="170" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="540" y="164" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">INSERT Case (in TX)</text>
+          <line x1="325" y1="194" x2="459" y2="194" stroke="#00897b" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="390" y="188" text-anchor="middle" fill="#00695c" font-size="11" font-family="sans-serif">CreateAppointmentAsync + CreateTaskAsync</text>
+          <line x1="325" y1="222" x2="605" y2="222" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="462" y="216" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">INSERT FhirImportLogs + AuditLog</text>
+          <line x1="325" y1="248" x2="605" y2="248" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr)"/>
+          <text x="462" y="242" text-anchor="middle" fill="#1b5e20" font-size="11" font-weight="700" font-family="sans-serif">COMMIT TRANSACTION</text>
+          <line x1="325" y1="272" x2="191" y2="272" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+          <text x="258" y="266" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">transaction-response Bundle</text>
+          <line x1="185" y1="294" x2="66" y2="294" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+          <text x="118" y="288" text-anchor="middle" fill="#002733" font-size="11" font-family="sans-serif">HTTP 200 + FHIR JSON</text>
+          <rect x="296" y="316" width="220" height="34" rx="6" fill="#fce4ec" stroke="#ef9a9a" stroke-width="1"/>
+          <text x="406" y="332" text-anchor="middle" fill="#c62828" font-size="11" font-weight="700" font-family="sans-serif">On ANY exception:</text>
+          <text x="406" y="346" text-anchor="middle" fill="#b71c1c" font-size="11" font-family="sans-serif">tx.RollbackAsync() &rarr; 422 OperationOutcome</text>
+        </svg>
+        <div class="diagram-title">Both POST /fhir/R4/ and POST /fhir/R4/$import share this sequence &mdash; the controller reads bundle JSON from the body or file before calling ImportTransactionBundleAsync.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Decisions -->
+  <section id="decisions">
+    <div class="card">
+      <h2><span class="icon orange">&#9878;</span> Key Decisions &amp; Trade-offs</h2>
+
+      <h3>1 &middot; Two endpoints, one handler</h3>
+      <p><strong>Decision:</strong> Both intake paths delegate to the same <span class="inline-code">ImportTransactionBundleAsync</span>. The controller reads a plain string from either body or file, then calls the handler.</p>
+      <p><strong>Why:</strong> Avoids duplicating business logic. The handler has no concept of how the JSON arrived &mdash; atomicity, validation, and logging are guaranteed identically for both paths.</p>
+
+      <h3>2 &middot; No Content-Type header on FormData upload from Angular</h3>
+      <p><strong>Decision:</strong> <span class="inline-code">uploadBundleFile</span> does not set a <span class="inline-code">Content-Type</span> header manually when posting <span class="inline-code">FormData</span>.</p>
+      <p><strong>Why:</strong> The browser auto-generates <span class="inline-code">multipart/form-data; boundary=...</span> including the boundary token. Setting it manually would omit the boundary, breaking multipart parsing on the server.</p>
+
+      <h3>3 &middot; Firely SDK stays in Infrastructure</h3>
+      <p><strong>Decision:</strong> <span class="inline-code">ParseTransactionBundle</span> returns plain <span class="inline-code">ParsedBundleEntry</span> records with no Firely types.</p>
+      <p><strong>Why:</strong> Application layer stays SDK-independent. Handlers are unit-testable without Firely; the parsing library can be swapped without touching business logic.</p>
+
+      <h3>4 &middot; Child handlers invoked (not direct DbContext writes)</h3>
+      <p><strong>Decision:</strong> <span class="inline-code">FhirDataHandler</span> calls existing child handlers rather than writing directly to <span class="inline-code">_db</span>.</p>
+      <p><strong>Why:</strong> Child handlers contain all validation (MRN generation, duplicate detection). Since all share the same scoped <span class="inline-code">DbContext</span>, they participate in the parent transaction automatically.</p>
+
+      <h3>5 &middot; Default provider fallback for Appointments</h3>
+      <p><strong>Decision:</strong> When an Appointment entry has no recognized practitioner reference, the system uses the first active Provider rather than failing.</p>
+      <p><strong>Why:</strong> External bundles often omit provider IDs. A soft fallback lets intake succeed; the coordinator updates the assignment later. Failing hard would reject too many real-world bundles.</p>
+    </div>
+  </section>
+
+  <!-- Files -->
+  <section id="files">
+    <div class="card">
+      <h2><span class="icon blue">&#128193;</span> Files Added &amp; Changed</h2>
+
+      <h3>New files</h3>
+      <table>
+        <tr><th>File</th><th>What it does</th></tr>
+        <tr><td><span class="inline-code">Application/Fhir/DTOs/FhirBundleImportResultDto.cs</span></td><td>Result records: <span class="inline-code">FhirBundleImportResultDto</span> and <span class="inline-code">BundleEntryResultDto</span></td></tr>
+        <tr><td><span class="inline-code">Application/Fhir/DTOs/ParsedFhirEntries.cs</span></td><td>Plain C# records for parsed FHIR entry data &mdash; no Firely SDK types in Application layer</td></tr>
+      </table>
+
+      <h3>Modified files</h3>
+      <table>
+        <tr><th>File</th><th>Change</th></tr>
+        <tr><td><span class="inline-code">Application/Interfaces/IApplicationDbContext.cs</span></td><td>Added <span class="inline-code">BeginTransactionAsync</span></td></tr>
+        <tr><td><span class="inline-code">Application/Interfaces/IFhirMappingService.cs</span></td><td>Added <span class="inline-code">ParseTransactionBundle</span>, <span class="inline-code">MapTransactionResponse</span></td></tr>
+        <tr><td><span class="inline-code">Application/Fhir/DataHandlers/FhirDataHandler.cs</span></td><td>Full <span class="inline-code">ImportTransactionBundleAsync</span> with EF Core transaction, urnMap, child handler calls, log writes</td></tr>
+        <tr><td><span class="inline-code">Infrastructure/Services/FhirMappingService.cs</span></td><td>Added bundle parsing and response mapping via Firely SDK</td></tr>
+        <tr><td><span class="inline-code">Infrastructure/Persistence/ApplicationDbContext.cs</span></td><td>Implemented <span class="inline-code">BeginTransactionAsync</span></td></tr>
+        <tr><td><span class="inline-code">API/Controllers/FhirController.cs</span></td><td>Added <span class="inline-code">POST /fhir/R4/</span> (JSON body) and <span class="inline-code">POST /fhir/R4/$import</span> (IFormFile)</td></tr>
+        <tr><td><span class="inline-code">Angular: fhir.service.ts</span></td><td>Added <span class="inline-code">importTransactionBundle</span> and <span class="inline-code">uploadBundleFile</span></td></tr>
+        <tr><td><span class="inline-code">Angular: fhir-import.component.ts/html/scss</span></td><td>Rebuilt bundle tab with drag-and-drop zone, dual-path submit, result table</td></tr>
+      </table>
+
+      <h3>Deleted (HL7 v2 removed)</h3>
+      <table>
+        <tr><th>File</th><th>Reason</th></tr>
+        <tr><td><span class="inline-code">API/Controllers/Hl7Controller.cs</span></td><td rowspan="6">HL7 v2 is outside the FHIR project scope. NHapi packages also removed from Infrastructure.csproj.</td></tr>
+        <tr><td><span class="inline-code">Application/Hl7/DataHandlers/IHl7DataHandler.cs</span></td></tr>
+        <tr><td><span class="inline-code">Application/Hl7/DataHandlers/Hl7DataHandler.cs</span></td></tr>
+        <tr><td><span class="inline-code">Application/Hl7/DTOs/Hl7ResultDtos.cs</span></td></tr>
+        <tr><td><span class="inline-code">Application/Interfaces/IHl7MappingService.cs</span></td></tr>
+        <tr><td><span class="inline-code">Infrastructure/Services/Hl7MappingService.cs</span></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- DoD -->
+  <section id="dod">
+    <div class="card">
+      <h2><span class="icon green">&#9989;</span> Definition of Done</h2>
+      <ul class="dod">
+        <li><span class="check">&#10003;</span><span><strong>Atomic bundle import (JSON body):</strong> <span class="inline-code">POST /fhir/R4/</span> creates Patient + Case + Appointment + Task in a single SQL Server transaction.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Atomic bundle import (file upload):</strong> <span class="inline-code">POST /fhir/R4/$import</span> accepts a <span class="inline-code">.json</span> file and delegates to the same handler with identical atomicity.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Rollback on failure:</strong> Any exception triggers <span class="inline-code">tx.RollbackAsync()</span> &mdash; zero rows written to any table.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>FHIR transaction-response:</strong> Successful response is a valid <span class="inline-code">Bundle.type = transaction-response</span> with <span class="inline-code">response.status</span> and <span class="inline-code">response.location</span> per entry.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Audit trail:</strong> <span class="inline-code">FhirImportLogs</span> + <span class="inline-code">AuditLogs</span> written inside the transaction for every bundle import.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>urn:uuid: resolution:</strong> Bundle entries reference each other &mdash; resolved to actual assigned IDs as each resource is created.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Drag-and-drop upload UI:</strong> Drop zone accepts <span class="inline-code">.json</span> files, shows filename/size, calls <span class="inline-code">$import</span> endpoint.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>JSON textarea fallback:</strong> "Load Sample Bundle" + paste path uses <span class="inline-code">POST /fhir/R4/</span>; both paths show identical result table.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>HL7 v2 fully removed:</strong> All 6 HL7 files deleted; NHapi packages removed; no orphaned DI registrations.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Clean build:</strong> <span class="inline-code">dotnet build</span> &mdash; 0 CS errors. <span class="inline-code">ng build</span> &mdash; 0 errors.</span></li>
+        <li><span class="check">&#10003;</span><span><strong>Clean Architecture:</strong> No Firely SDK types in Application layer; no Infrastructure types in Domain.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Next -->
+  <section id="next">
+    <div class="card">
+      <h2><span class="icon orange">&#128640;</span> What's Next &mdash; Phase 8: Testing, Security &amp; Polish</h2>
+      <ul>
+        <li><strong>Unit tests</strong> for DataHandlers and mapping services (xUnit + Moq)</li>
+        <li><strong>Integration tests</strong> for API endpoints with in-memory SQL Server</li>
+        <li><strong>Security hardening:</strong> rate limiting, input sanitisation, HTTPS/HSTS headers</li>
+        <li><strong>Performance:</strong> EF Core query profiling, N+1 fixes, response caching for FHIR read endpoints</li>
+        <li><strong>Angular polish:</strong> loading skeletons, error boundary components, ARIA accessibility review</li>
+        <li><strong>Azure deployment:</strong> App Service + SQL Azure + Key Vault + Application Insights wiring</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const links = document.querySelectorAll('#toc a[href^="#"]');
+  const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+  sections.forEach(s => obs.observe(s));
+  links.forEach(l => l.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(l.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  }));
+</script>
+</body>
+</html>

@@ -1,14 +1,14 @@
 <div class="page-container">
   <nav class="breadcrumb">
-    <a routerLink="/patients">Patients</a> / <span>Import from FHIR / HL7</span>
+    <a routerLink="/patients">Patients</a> / <span>Import from FHIR</span>
   </nav>
 
-  <h1>FHIR &amp; HL7 Import</h1>
-  <p class="subtitle">Import patient records from FHIR R4 or HL7 v2 sources.</p>
+  <h1>FHIR Import</h1>
+  <p class="subtitle">Import patient records from FHIR R4 resources or Transaction Bundles.</p>
 
   <mat-tab-group animationDuration="200ms">
 
-    <!-- ── Tab 1: Single Patient ──────────────────────────────────────── -->
+    <!-- ── Tab 1: Single Patient ──────────────────────────────────────────── -->
     <mat-tab label="Import Patient (FHIR R4)">
       <div class="tab-content">
         <p class="tab-desc">Paste a FHIR R4 Patient JSON resource (or upload a <code>.json</code> file) to create a new patient. A unique MRN is generated automatically.</p>
@@ -73,38 +73,68 @@
       </div>
     </mat-tab>
 
-    <!-- ── Tab 2: Transaction Bundle ─────────────────────────────────── -->
+    <!-- ── Tab 2: Transaction Bundle ─────────────────────────────────────── -->
     <mat-tab label="Import Bundle (Transaction)">
       <div class="tab-content">
         <p class="tab-desc">
-          Submit a FHIR Transaction Bundle containing <strong>Patient + Encounter + Appointment + Task</strong> entries.
+          Upload a FHIR Transaction Bundle containing <strong>Patient + Encounter + Appointment + Task</strong> entries.
           All resources are created atomically — if any entry fails, nothing is written.
         </p>
 
         <mat-card>
           <mat-card-content>
+
+            <!-- ── File upload zone ──────────────────────────────────────── -->
+            <div
+              class="drop-zone"
+              [class.drag-over]="bundleDragOver"
+              [class.has-file]="selectedBundleFile"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave()"
+              (drop)="onDrop($event)">
+
+              @if (!selectedBundleFile) {
+                <mat-icon class="drop-icon">upload_file</mat-icon>
+                <p class="drop-label">Drag &amp; drop a <strong>.json</strong> bundle file here</p>
+                <p class="drop-sub">or</p>
+                <label mat-flat-button color="primary" class="file-pick-label">
+                  <mat-icon>folder_open</mat-icon> Choose File
+                  <input type="file" accept=".json" (change)="onBundleFileSelect($event)" hidden />
+                </label>
+              } @else {
+                <mat-icon class="drop-icon file-ready">check_circle</mat-icon>
+                <p class="drop-label file-name">{{ selectedBundleFile.name }}</p>
+                <p class="drop-sub">{{ (selectedBundleFile.size / 1024).toFixed(1) }} KB</p>
+                <button mat-stroked-button type="button" (click)="clearBundleFile()">
+                  <mat-icon>close</mat-icon> Remove
+                </button>
+              }
+            </div>
+
+            <!-- ── Divider ────────────────────────────────────────────────── -->
+            <div class="or-divider">
+              <mat-divider></mat-divider>
+              <span>or paste JSON</span>
+              <mat-divider></mat-divider>
+            </div>
+
+            <!-- ── Toolbar ────────────────────────────────────────────────── -->
             <div class="toolbar-row">
               <button mat-stroked-button type="button" (click)="loadBundleSample()">
                 <mat-icon>science</mat-icon> Load Sample Bundle
               </button>
-              <label mat-stroked-button class="file-label">
-                <mat-icon>upload_file</mat-icon> Upload JSON
-                <input type="file" accept=".json" (change)="onBundleFileChange($event)" hidden />
-              </label>
             </div>
 
             <form [formGroup]="bundleForm" (ngSubmit)="submitBundle()">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>FHIR Transaction Bundle JSON</mat-label>
-                <textarea matInput formControlName="bundleJson" rows="20"
-                  placeholder='{ "resourceType": "Bundle", "type": "transaction", "entry": [...] }'></textarea>
-                @if (bundleForm.get('bundleJson')?.hasError('required')) {
-                  <mat-error>Bundle JSON payload is required.</mat-error>
-                }
+                <textarea matInput formControlName="bundleJson" rows="16"
+                  placeholder='{ "resourceType": "Bundle", "type": "transaction", "entry": [...] }'
+                  [disabled]="!!selectedBundleFile"></textarea>
               </mat-form-field>
 
               <div class="actions">
-                <button mat-flat-button color="primary" type="submit" [disabled]="bundleForm.invalid || bundleLoading">
+                <button mat-flat-button color="primary" type="submit" [disabled]="!canSubmitBundle || bundleLoading">
                   @if (bundleLoading) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
                   @if (!bundleLoading) { <mat-icon>mediation</mat-icon> }
                   {{ bundleLoading ? 'Importing…' : 'Import Bundle' }}

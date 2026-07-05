@@ -410,10 +410,20 @@ public class FhirDataHandler : IFhirDataHandler
                             if (matched != null) caseTypeId = matched.Id;
                         }
 
+                        // Resolve case-assigned-to extension to a user ID, falling back to the importer.
+                        var assignedToGuid = createdByGuid;
+                        if (!string.IsNullOrEmpty(enc.AssignedToUsername))
+                        {
+                            var assignee = await _db.Users.FirstOrDefaultAsync(
+                                u => u.Username == enc.AssignedToUsername, ct);
+                            if (assignee != null)
+                                assignedToGuid = assignee.Id;
+                        }
+
                         var createdCase = await _caseHandler.CreateCaseAsync(
                             patientMrn,
                             new CreateCaseDto { CaseTypeId = caseTypeId },
-                            createdByGuid, createdByGuid, ct);
+                            createdByGuid, assignedToGuid, ct);
 
                         results.Add(new BundleEntryResultDto("Encounter", createdCase.CaseNumber, "201 Created"));
                         if (!string.IsNullOrEmpty(entry.FullUrl))

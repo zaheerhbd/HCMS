@@ -556,13 +556,16 @@ public class FhirMappingService : IFhirMappingService
                     break;
 
                 case Encounter fhirEncounter:
+                    var assignedToExt = fhirEncounter.GetExtensionValue<FhirString>(
+                        "http://hcms.local/fhir/StructureDefinition/case-assigned-to");
                     entries.Add(new ParsedBundleEntry
                     {
                         ResourceType = "Encounter",
                         FullUrl = fullUrl,
                         Encounter = new ParsedFhirEncounter(
                             fhirEncounter.Subject?.Reference,
-                            fhirEncounter.Type?.FirstOrDefault()?.Text)
+                            fhirEncounter.Type?.FirstOrDefault()?.Text,
+                            assignedToExt?.Value)
                     });
                     break;
 

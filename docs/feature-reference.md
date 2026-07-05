@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-07-05 (Phase 6 complete — Module 9 Dashboard & Reports now Complete; all 3 dashboards + 3 reports with CSV export)
+**Last Updated:** 2026-07-05 (Module 13: removed HL7 v2; added FHIR Bundle file-upload endpoint `POST /fhir/R4/$import` with drag-and-drop Angular UI)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -23,7 +23,7 @@
 | 10 | Audit & Compliance | 7 | Complete | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Complete | FR-43 – FR-45 |
 | 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
-| 13 | FHIR / HL7 Integration | 5 + 9 | In Progress | FR-46 – FR-58 |
+| 13 | FHIR / HL7 Integration | 5 + 9 | Complete | FR-46 – FR-58 |
 
 ---
 
@@ -440,15 +440,16 @@ Cancelled → (terminal)
 - Logs one `FhirImportLogs` record per resource type and a single `AuditLogs` entry (`FhirBundleImport`).
 - Real-world use case: external EHR system sends a complete patient intake packet in a single API call.
 
-#### HL7 v2 (Phase 9 / Stretch)
-- `POST /api/hl7/adt` — HL7 v2 ADT^A01; parsed by NHapi; upsert Patient.
-- `POST /api/hl7/oru` — HL7 v2 ORU^R01; attach as read-only CaseNote.
+#### FHIR Bundle File Upload
+- `POST /fhir/R4/$import` — accepts `multipart/form-data` with `bundleFile` (.json); reads file server-side and delegates to `ImportTransactionBundleAsync` for the same atomic processing as the JSON body endpoint.
+- Angular drag-and-drop upload zone is the primary UI path; "or paste JSON" textarea is the fallback.
 
 ### API Endpoints
 | Method | Route | Description |
 |---|---|---|
 | GET | `/fhir/R4/metadata` | CapabilityStatement |
-| POST | `/fhir/R4/` | Import FHIR Transaction Bundle (atomic multi-resource) |
+| POST | `/fhir/R4/` | Import FHIR Transaction Bundle (JSON body, atomic multi-resource) |
+| POST | `/fhir/R4/$import` | Upload FHIR Transaction Bundle as .json file (multipart/form-data) |
 | GET | `/fhir/R4/Patient` | Search patients (`_id`, `name`, `birthdate`, `identifier`) |
 | GET | `/fhir/R4/Patient/{id}` | Read patient |
 | POST | `/fhir/R4/Patient` | Import single patient from FHIR JSON |
@@ -463,8 +464,8 @@ Cancelled → (terminal)
 
 ### Angular Components
 - `FhirExplorerComponent` — raw FHIR JSON viewer (`ngx-json-viewer`) for any resource.
-- `FhirImportComponent` — two-step import modal (paste + preview → confirm).
-- `FhirService` — typed HTTP calls to `/fhir/R4/` endpoints.
+- `FhirImportComponent` — two-tab import: (1) single Patient JSON, (2) Transaction Bundle with drag-and-drop file upload zone or paste JSON textarea.
+- `FhirService` — typed HTTP calls to `/fhir/R4/` endpoints; `uploadBundleFile(file)` posts to `$import`.
 - **"Export as FHIR Bundle"** button on `PatientDetailComponent` — downloads `patient-{mrn}-fhir-bundle.json`.
 
 ### DB Tables
@@ -473,7 +474,6 @@ Cancelled → (terminal)
 ### Libraries
 - `Hl7.Fhir.R4` NuGet (Firely .NET SDK) — FHIR serialization + validation.
 - `ngx-json-viewer` npm package — collapsible JSON tree in Angular.
-- `NHapi` NuGet (stretch) — HL7 v2 parsing.
 
 ---
 

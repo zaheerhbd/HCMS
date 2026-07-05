@@ -19,7 +19,8 @@ public record ParsedFhirPatient(
 
 public record ParsedFhirEncounter(
     string? SubjectRef,
-    string? TypeText);
+    string? TypeText,
+    string? AssignedToUsername);
 
 public record ParsedFhirAppointment(
     string? PatientRef,
