@@ -1,0 +1,43 @@
+<div class="dashboard-wrap">
+  <div *ngIf="loading" class="center-spin"><mat-spinner diameter="48"></mat-spinner></div>
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+  <ng-container *ngIf="data && !loading">
+    <h2 class="dash-title">Admin Dashboard</h2>
+
+    <div class="stat-grid">
+      <div class="stat-card blue">
+        <mat-icon>people</mat-icon>
+        <div><div class="stat-num">{{ data.totalActiveUsers }}</div><div class="stat-label">Active Users</div></div>
+      </div>
+      <div class="stat-card green">
+        <mat-icon>personal_injury</mat-icon>
+        <div><div class="stat-num">{{ data.totalPatients }}</div><div class="stat-label">Total Patients</div></div>
+      </div>
+      <div class="stat-card purple">
+        <mat-icon>folder_open</mat-icon>
+        <div><div class="stat-num">{{ data.openCases }} / {{ data.totalCases }}</div><div class="stat-label">Open / Total Cases</div></div>
+      </div>
+      <div class="stat-card orange">
+        <mat-icon>login</mat-icon>
+        <div><div class="stat-num">{{ data.loginsLast7Days }}</div><div class="stat-label">Unique Logins (7d)</div></div>
+      </div>
+      <div class="stat-card teal">
+        <mat-icon>hub</mat-icon>
+        <div><div class="stat-num">{{ data.fhirImportsLast30Days }}</div><div class="stat-label">FHIR Imports (30d)</div></div>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <mat-card>
+        <mat-card-header><mat-card-title>Login Trend (Last 7 Days)</mat-card-title></mat-card-header>
+        <mat-card-content><canvas #lineCanvas height="200"></canvas></mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header><mat-card-title>Users by Role</mat-card-title></mat-card-header>
+        <mat-card-content><canvas #roleCanvas height="200"></canvas></mat-card-content>
+      </mat-card>
+    </div>
+  </ng-container>
+</div>

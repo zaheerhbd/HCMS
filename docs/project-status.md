@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-04 (Phase 7 complete — Notifications bell + audit log; skipping Phase 6 Dashboards for now)
+**Last Updated:** 2026-07-05 (Phase 6 complete — Dashboards & Reports)
 **Current Phase:** Phase 8 — Testing, Security & Polish (Not Started)
-**Overall Progress:** 119 / 206 tasks complete (~58%)
+**Overall Progress:** 139 / 206 tasks complete (~67%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -19,14 +19,39 @@
 | 3 | Documents, Tasks & Notes | `Complete` | ~22 | 22 | 0 |
 | 4 | Appointments & Scheduling | `Complete` | ~16 | 16 | 0 |
 | 5 | FHIR/HL7 Integration | `In Progress` | ~33 | 26 | 7 |
-| 6 | Dashboards & Reports | `Deferred` | ~20 | 0 | 20 |
+| 6 | Dashboards & Reports | `Complete` | ~20 | 20 | 0 |
 | 7 | Notifications & Audit UI | `Complete` | ~14 | 14 | 0 |
 | 8 | Testing, Security & Polish | `Not Started` | ~22 | 0 | 22 |
 | 9 | Advanced FHIR & Interoperability | `Not Started` | ~12 | 0 | 12 |
 
 ---
 
-## Current Phase Detail — Phase 7: Notifications & Audit UI
+## Current Phase Detail — Phase 6: Dashboards & Reports
+
+**Goal:** Role-based dashboards with live data and Chart.js charts; three report types with CSV export.
+
+**Status:** Complete — all backend and frontend tasks done, builds clean (0 errors).
+
+### Completed in Phase 6
+- `DashboardDataHandler` — coordinator (open cases, overdue tasks, today's appointments, inactive cases); supervisor (team caseloads, escalated, inactive); admin (user/patient/case totals, login trend, FHIR imports)
+- `ReportDataHandler` — cases-by-status, case-duration (client-side computation avoids SQL Server-specific EF), tasks-by-assignee; all three CSV exports (RFC 4180 via `StringBuilder`)
+- `DashboardController` at `/api/dashboard/{coordinator|supervisor|admin}` with RBAC
+- `ReportsController` at `/api/reports/{cases-by-status|case-duration|tasks-by-assignee}?format=csv`
+- Registered `IDashboardDataHandler` and `IReportDataHandler` in `DependencyInjection.cs`
+- Angular `DashboardService` + `ReportService`
+- Role-based dashboard hub (`DashboardComponent`) — picks correct sub-dashboard by role
+- `CoordinatorDashboardComponent` — doughnut chart (Chart.js) + overdue tasks table + today's appointments table
+- `SupervisorDashboardComponent` — grouped bar chart + escalated/inactive case tables
+- `AdminDashboardComponent` — line chart (login trend) + bar chart (users by role) + stat cards
+- Three report components (each lazy-loaded): `CasesByStatusComponent`, `CaseDurationComponent`, `TasksByAssigneeComponent`; each has a Chart.js chart + data table + CSV download button
+- Chart.js 4.5.1 installed directly (no ng2-charts wrapper)
+- Reports feature uses `REPORTS_ROUTES` with `mat-tab-nav-bar` hub
+- Fixed `ApplicationDbContext.BeginTransactionAsync` missing implementation
+- Fixed NHapi package version (downgraded to 3.x — 4.x does not exist on NuGet)
+
+---
+
+## Previous Phase Detail — Phase 7: Notifications & Audit UI
 
 **Goal:** In-app notification bell + audit log viewer for admins.
 

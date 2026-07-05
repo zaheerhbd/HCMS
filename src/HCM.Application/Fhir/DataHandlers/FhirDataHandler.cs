@@ -1,7 +1,13 @@
+using HCM.Application.Appointments.DataHandlers;
+using HCM.Application.Appointments.DTOs;
+using HCM.Application.Cases.DataHandlers;
+using HCM.Application.Cases.DTOs;
 using HCM.Application.Fhir.DTOs;
 using HCM.Application.Interfaces;
 using HCM.Application.Patients.DataHandlers;
 using HCM.Application.Patients.DTOs;
+using HCM.Application.Tasks.DataHandlers;
+using HCM.Application.Tasks.DTOs;
 using HCM.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,17 +19,26 @@ public class FhirDataHandler : IFhirDataHandler
     private readonly IApplicationDbContext _db;
     private readonly IFhirMappingService _mapping;
     private readonly IPatientDataHandler _patientHandler;
+    private readonly ICaseDataHandler _caseHandler;
+    private readonly IAppointmentDataHandler _appointmentHandler;
+    private readonly ITaskDataHandler _taskHandler;
     private readonly ILogger<FhirDataHandler> _logger;
 
     public FhirDataHandler(
         IApplicationDbContext db,
         IFhirMappingService mapping,
         IPatientDataHandler patientHandler,
+        ICaseDataHandler caseHandler,
+        IAppointmentDataHandler appointmentHandler,
+        ITaskDataHandler taskHandler,
         ILogger<FhirDataHandler> logger)
     {
         _db = db;
         _mapping = mapping;
         _patientHandler = patientHandler;
+        _caseHandler = caseHandler;
+        _appointmentHandler = appointmentHandler;
+        _taskHandler = taskHandler;
         _logger = logger;
     }
 
@@ -335,5 +350,194 @@ public class FhirDataHandler : IFhirDataHandler
             ?? throw new KeyNotFoundException($"DocumentReference '{id}' not found.");
 
         return _mapping.MapDocumentReferenceToJson(doc);
+    }
+
+    public async Task<FhirBundleImportResultDto> ImportTransactionBundleAsync(
+        string bundleJson, string importedBy, CancellationToken ct = default)
+    {
+        var (isValid, parseError, parsedEntries) = _mapping.ParseTransactionBundle(bundleJson);
+        if (!isValid)
+            return new FhirBundleImportResultDto(false, [], [parseError!]);
+
+        var createdByGuid = Guid.TryParse(importedBy, out var g) ? g : Guid.Empty;
+        var results = new List<BundleEntryResultDto>();
+
+        // urn:uuid: fullUrl → "ResourceType/AssignedId" for intra-bundle reference resolution
+        var urnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        var defaultCaseType = await _db.CaseTypes.OrderBy(t => t.Id).FirstOrDefaultAsync(ct);
+        var defaultProvider = await _db.Providers.Where(p => p.IsActive).FirstOrDefaultAsync(ct);
+
+        await using var tx = await _db.BeginTransactionAsync(ct);
+        try
+        {
+            foreach (var entry in parsedEntries)
+            {
+                switch (entry.ResourceType)
+                {
+                    case "Patient":
+                    {
+                        var p = entry.Patient!;
+                        var patient = await _patientHandler.CreatePatientAsync(new CreatePatientDto
+                        {
+                            FirstName = p.FirstName,
+                            LastName = p.LastName,
+                            DateOfBirth = p.DateOfBirth,
+                            Gender = p.Gender,
+                            Phone = p.Phone,
+                            Email = p.Email,
+                            Address = p.Address,
+                            City = p.City,
+                            State = p.State,
+                            ZipCode = p.ZipCode
+                        }, createdByGuid, ct);
+
+                        results.Add(new BundleEntryResultDto("Patient", patient.MRN, "201 Created"));
+                        if (!string.IsNullOrEmpty(entry.FullUrl))
+                            urnMap[entry.FullUrl] = $"Patient/{patient.MRN}";
+                        break;
+                    }
+
+                    case "Encounter":
+                    {
+                        var enc = entry.Encounter!;
+                        var patientMrn = ResolveId("Patient", enc.SubjectRef, urnMap, results);
+
+                        var caseTypeId = defaultCaseType?.Id ?? 1;
+                        if (!string.IsNullOrEmpty(enc.TypeText))
+                        {
+                            var matched = await _db.CaseTypes.FirstOrDefaultAsync(t => t.Name == enc.TypeText, ct);
+                            if (matched != null) caseTypeId = matched.Id;
+                        }
+
+                        var createdCase = await _caseHandler.CreateCaseAsync(
+                            patientMrn,
+                            new CreateCaseDto { CaseTypeId = caseTypeId },
+                            createdByGuid, createdByGuid, ct);
+
+                        results.Add(new BundleEntryResultDto("Encounter", createdCase.CaseNumber, "201 Created"));
+                        if (!string.IsNullOrEmpty(entry.FullUrl))
+                            urnMap[entry.FullUrl] = $"Encounter/{createdCase.CaseNumber}";
+                        break;
+                    }
+
+                    case "Appointment":
+                    {
+                        var appt = entry.Appointment!;
+                        var patientMrn = ResolveId("Patient", appt.PatientRef, urnMap, results);
+                        var caseNumber = results.FirstOrDefault(r => r.ResourceType == "Encounter")?.AssignedId;
+
+                        var providerId = defaultProvider?.Id ?? Guid.Empty;
+                        if (!string.IsNullOrEmpty(appt.PractitionerRef))
+                        {
+                            var practId = appt.PractitionerRef.Contains('/') ? appt.PractitionerRef.Split('/').Last() : appt.PractitionerRef;
+                            if (Guid.TryParse(practId, out var pGuid))
+                            {
+                                var p = await _db.Providers.FirstOrDefaultAsync(pr => pr.Id == pGuid, ct);
+                                if (p != null) providerId = p.Id;
+                            }
+                        }
+
+                        var createdAppt = await _appointmentHandler.CreateAppointmentAsync(new CreateAppointmentDto
+                        {
+                            PatientMrn = patientMrn,
+                            CaseNumber = caseNumber,
+                            ProviderId = providerId,
+                            AppointmentType = appt.ServiceType ?? "General",
+                            ScheduledStart = appt.Start ?? DateTime.UtcNow.AddDays(1),
+                            ScheduledEnd = appt.End ?? DateTime.UtcNow.AddDays(1).AddHours(1)
+                        }, createdByGuid, ct);
+
+                        results.Add(new BundleEntryResultDto("Appointment", createdAppt.Id.ToString(), "201 Created"));
+                        if (!string.IsNullOrEmpty(entry.FullUrl))
+                            urnMap[entry.FullUrl] = $"Appointment/{createdAppt.Id}";
+                        break;
+                    }
+
+                    case "Task":
+                    {
+                        var task = entry.Task!;
+                        var caseNumber = results.FirstOrDefault(r => r.ResourceType == "Encounter")?.AssignedId
+                            ?? throw new InvalidOperationException("A Task entry requires an Encounter entry in the same bundle.");
+
+                        var priority = task.Priority?.ToLower() switch
+                        {
+                            "urgent" or "asap" => "High",
+                            "routine" or "stat" => "Low",
+                            _ => "Medium"
+                        };
+
+                        var createdTask = await _taskHandler.CreateTaskAsync(caseNumber, new CreateTaskDto
+                        {
+                            Title = task.Description ?? "FHIR imported task",
+                            Priority = priority,
+                            DueDate = task.DueDate
+                        }, createdByGuid, ct);
+
+                        results.Add(new BundleEntryResultDto("Task", createdTask.Id.ToString(), "201 Created"));
+                        if (!string.IsNullOrEmpty(entry.FullUrl))
+                            urnMap[entry.FullUrl] = $"Task/{createdTask.Id}";
+                        break;
+                    }
+                }
+            }
+
+            // Write FhirImportLogs and AuditLog inside the transaction so the entire batch is atomic.
+            var patientEntry = results.FirstOrDefault(r => r.ResourceType == "Patient");
+            foreach (var r in results)
+            {
+                _db.FhirImportLogs.Add(new FhirImportLog
+                {
+                    ResourceType = r.ResourceType,
+                    SourceSystem = "FHIR-Transaction",
+                    ImportedBy = importedBy,
+                    ImportedAt = DateTime.UtcNow,
+                    Status = "Success",
+                    InternalId = r.AssignedId
+                });
+            }
+
+            if (patientEntry != null)
+            {
+                _db.AuditLogs.Add(new AuditLog
+                {
+                    EntityType = "Patient",
+                    EntityId = patientEntry.AssignedId,
+                    Action = "FhirBundleImport",
+                    ChangedBy = importedBy,
+                    ChangedAt = DateTime.UtcNow
+                });
+            }
+
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+
+            return new FhirBundleImportResultDto(true, results, []);
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync(ct);
+            _logger.LogError(ex, "FHIR Transaction Bundle import failed");
+            return new FhirBundleImportResultDto(false, results, [ex.Message]);
+        }
+    }
+
+    // Resolves a FHIR reference (urn:uuid: or ResourceType/Id) to the target resource's assigned ID.
+    private static string ResolveId(
+        string resourceType, string? reference,
+        Dictionary<string, string> urnMap,
+        List<BundleEntryResultDto> results)
+    {
+        if (!string.IsNullOrEmpty(reference))
+        {
+            if (urnMap.TryGetValue(reference, out var resolved))
+                return resolved.Split('/').Last();
+
+            if (reference.Contains('/'))
+                return reference.Split('/').Last();
+        }
+
+        return results.FirstOrDefault(r => r.ResourceType == resourceType)?.AssignedId
+            ?? throw new InvalidOperationException($"Cannot resolve {resourceType} reference '{reference}' — no matching entry found in bundle.");
     }
 }

@@ -1,59 +1,169 @@
 <div class="page-container">
   <nav class="breadcrumb">
-    <a routerLink="/patients">Patients</a> / <span>Import from FHIR</span>
+    <a routerLink="/patients">Patients</a> / <span>Import from FHIR / HL7</span>
   </nav>
 
-  <h1>Import Patient from FHIR</h1>
-  <p class="subtitle">Paste a FHIR R4 Patient JSON resource (or upload a <code>.json</code> file) to create a new patient record. A unique MRN is generated automatically.</p>
+  <h1>FHIR &amp; HL7 Import</h1>
+  <p class="subtitle">Import patient records from FHIR R4 or HL7 v2 sources.</p>
 
-  <mat-card>
-    <mat-card-content>
-      <div class="toolbar-row">
-        <button mat-stroked-button type="button" (click)="loadSample()">
-          <mat-icon>science</mat-icon> Load Sample
-        </button>
-        <label mat-stroked-button class="file-label">
-          <mat-icon>upload_file</mat-icon> Upload JSON
-          <input type="file" accept=".json" (change)="onFileChange($event)" hidden />
-        </label>
+  <mat-tab-group animationDuration="200ms">
+
+    <!-- ── Tab 1: Single Patient ──────────────────────────────────────── -->
+    <mat-tab label="Import Patient (FHIR R4)">
+      <div class="tab-content">
+        <p class="tab-desc">Paste a FHIR R4 Patient JSON resource (or upload a <code>.json</code> file) to create a new patient. A unique MRN is generated automatically.</p>
+
+        <mat-card>
+          <mat-card-content>
+            <div class="toolbar-row">
+              <button mat-stroked-button type="button" (click)="loadPatientSample()">
+                <mat-icon>science</mat-icon> Load Sample
+              </button>
+              <label mat-stroked-button class="file-label">
+                <mat-icon>upload_file</mat-icon> Upload JSON
+                <input type="file" accept=".json" (change)="onPatientFileChange($event)" hidden />
+              </label>
+            </div>
+
+            <form [formGroup]="patientForm" (ngSubmit)="submitPatient()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>FHIR Patient JSON</mat-label>
+                <textarea matInput formControlName="fhirJson" rows="18"
+                  placeholder='{ "resourceType": "Patient", ... }'></textarea>
+                @if (patientForm.get('fhirJson')?.hasError('required')) {
+                  <mat-error>JSON payload is required.</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="patientForm.invalid || patientLoading">
+                  @if (patientLoading) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
+                  @if (!patientLoading) { <mat-icon>cloud_upload</mat-icon> }
+                  {{ patientLoading ? 'Importing…' : 'Import Patient' }}
+                </button>
+                <button mat-stroked-button type="button" routerLink="/patients">Cancel</button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        @if (patientResult) {
+          <mat-card class="result-card" [class.success]="patientResult.success" [class.error]="!patientResult.success">
+            <mat-card-content>
+              @if (patientResult.success) {
+                <div class="result-success">
+                  <mat-icon color="primary">check_circle</mat-icon>
+                  <span>Patient imported. MRN: <strong>{{ patientResult.mrn }}</strong></span>
+                  <a mat-button color="primary" [routerLink]="['/patients', patientResult.mrn]">View Patient →</a>
+                </div>
+              } @else {
+                <div class="result-error">
+                  <mat-icon color="warn">error</mat-icon>
+                  <div>
+                    <strong>Import failed:</strong>
+                    <ul>
+                      @for (e of patientResult.errors; track e) { <li>{{ e }}</li> }
+                    </ul>
+                  </div>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
       </div>
+    </mat-tab>
 
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>FHIR Patient JSON</mat-label>
-          <textarea matInput formControlName="fhirJson" rows="18" placeholder='{ "resourceType": "Patient", ... }'></textarea>
-          <mat-error *ngIf="form.get('fhirJson')?.hasError('required')">JSON payload is required.</mat-error>
-        </mat-form-field>
+    <!-- ── Tab 2: Transaction Bundle ─────────────────────────────────── -->
+    <mat-tab label="Import Bundle (Transaction)">
+      <div class="tab-content">
+        <p class="tab-desc">
+          Submit a FHIR Transaction Bundle containing <strong>Patient + Encounter + Appointment + Task</strong> entries.
+          All resources are created atomically — if any entry fails, nothing is written.
+        </p>
 
-        <div class="actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading">
-            <mat-spinner *ngIf="loading" diameter="18" class="inline-spinner"></mat-spinner>
-            <mat-icon *ngIf="!loading">cloud_upload</mat-icon>
-            {{ loading ? 'Importing…' : 'Import Patient' }}
-          </button>
-          <button mat-stroked-button type="button" routerLink="/patients">Cancel</button>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+        <mat-card>
+          <mat-card-content>
+            <div class="toolbar-row">
+              <button mat-stroked-button type="button" (click)="loadBundleSample()">
+                <mat-icon>science</mat-icon> Load Sample Bundle
+              </button>
+              <label mat-stroked-button class="file-label">
+                <mat-icon>upload_file</mat-icon> Upload JSON
+                <input type="file" accept=".json" (change)="onBundleFileChange($event)" hidden />
+              </label>
+            </div>
 
-  <!-- Result panel -->
-  <mat-card *ngIf="importResult" class="result-card" [class.success]="importResult.success" [class.error]="!importResult.success">
-    <mat-card-content>
-      <div *ngIf="importResult.success" class="result-success">
-        <mat-icon color="primary">check_circle</mat-icon>
-        <span>Patient imported successfully. MRN: <strong>{{ importResult.mrn }}</strong></span>
-        <a mat-button color="primary" [routerLink]="['/patients', importResult.mrn]">View Patient →</a>
+            <form [formGroup]="bundleForm" (ngSubmit)="submitBundle()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>FHIR Transaction Bundle JSON</mat-label>
+                <textarea matInput formControlName="bundleJson" rows="20"
+                  placeholder='{ "resourceType": "Bundle", "type": "transaction", "entry": [...] }'></textarea>
+                @if (bundleForm.get('bundleJson')?.hasError('required')) {
+                  <mat-error>Bundle JSON payload is required.</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="bundleForm.invalid || bundleLoading">
+                  @if (bundleLoading) { <mat-spinner diameter="18" class="inline-spinner"></mat-spinner> }
+                  @if (!bundleLoading) { <mat-icon>mediation</mat-icon> }
+                  {{ bundleLoading ? 'Importing…' : 'Import Bundle' }}
+                </button>
+                <button mat-stroked-button type="button" routerLink="/patients">Cancel</button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Bundle result table -->
+        @if (bundleEntries.length > 0 || bundleErrors.length > 0) {
+          <mat-card class="result-card" [class.success]="bundleSuccess" [class.error]="!bundleSuccess">
+            <mat-card-content>
+              @if (bundleSuccess) {
+                <div class="result-success bundle-success-row">
+                  <mat-icon color="primary">check_circle</mat-icon>
+                  <span><strong>{{ bundleEntries.length }} resource(s) created atomically.</strong></span>
+                  @if (createdPatientMrn()) {
+                    <a mat-button color="primary" [routerLink]="['/patients', createdPatientMrn()]">View Patient →</a>
+                  }
+                </div>
+
+                <table mat-table [dataSource]="bundleEntries" class="bundle-table">
+                  <ng-container matColumnDef="resourceType">
+                    <th mat-header-cell *matHeaderCellDef>Resource Type</th>
+                    <td mat-cell *matCellDef="let row">
+                      <mat-chip>{{ row.resourceType }}</mat-chip>
+                    </td>
+                  </ng-container>
+                  <ng-container matColumnDef="assignedId">
+                    <th mat-header-cell *matHeaderCellDef>Assigned ID</th>
+                    <td mat-cell *matCellDef="let row" class="mono">{{ row.assignedId }}</td>
+                  </ng-container>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let row">
+                      <span class="status-badge status-created">{{ row.status }}</span>
+                    </td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="bundleColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: bundleColumns;"></tr>
+                </table>
+              } @else {
+                <div class="result-error">
+                  <mat-icon color="warn">error</mat-icon>
+                  <div>
+                    <strong>Bundle import failed — all changes rolled back:</strong>
+                    <ul>
+                      @for (e of bundleErrors; track e) { <li>{{ e }}</li> }
+                    </ul>
+                  </div>
+                </div>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
       </div>
-      <div *ngIf="!importResult.success" class="result-error">
-        <mat-icon color="warn">error</mat-icon>
-        <div>
-          <strong>Import failed:</strong>
-          <ul>
-            <li *ngFor="let e of importResult.errors">{{ e }}</li>
-          </ul>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    </mat-tab>
+
+  </mat-tab-group>
 </div>

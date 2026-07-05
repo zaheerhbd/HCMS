@@ -43,6 +43,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<FhirImportLog> FhirImportLogs => Set<FhirImportLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
+        => Database.BeginTransactionAsync(ct);
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

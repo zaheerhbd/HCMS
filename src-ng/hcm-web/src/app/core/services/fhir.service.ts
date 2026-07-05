@@ -9,6 +9,18 @@ export interface FhirImportResult {
   errors?: string[];
 }
 
+export interface BundleEntryResult {
+  resourceType: string;
+  assignedId: string;
+  status: string;
+}
+
+export interface FhirBundleImportResult {
+  success: boolean;
+  entries: BundleEntryResult[];
+  errors: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class FhirService {
   private readonly base = `${environment.apiUrl.replace('/api', '')}/fhir/R4`;
@@ -34,5 +46,9 @@ export class FhirService {
 
   importPatient(fhirJson: string): Observable<FhirImportResult> {
     return this.http.post<FhirImportResult>(`${this.base}/Patient`, fhirJson, { headers: this.fhirHeaders });
+  }
+
+  importTransactionBundle(bundleJson: string): Observable<FhirBundleImportResult> {
+    return this.http.post<FhirBundleImportResult>(`${this.base}`, bundleJson, { headers: this.fhirHeaders });
   }
 }

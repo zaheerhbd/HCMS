@@ -1,3 +1,4 @@
+using HCM.Application.Fhir.DTOs;
 using HCM.Domain.Entities;
 
 namespace HCM.Application.Interfaces;
@@ -31,4 +32,11 @@ public interface IFhirMappingService
     // Parses an incoming FHIR Patient JSON into a domain Patient shell for import.
     // Returns (null, errorMessage) when the payload cannot be parsed.
     (Patient? patient, string? error) ParsePatientFromFhir(string fhirJson);
+
+    // Parses a FHIR Transaction Bundle and extracts each entry as a plain DTO list.
+    // Returns (false, errorMessage, []) when the bundle is invalid or not of type transaction.
+    (bool isValid, string? error, List<ParsedBundleEntry> entries) ParseTransactionBundle(string bundleJson);
+
+    // Builds a FHIR Bundle of type transaction-response from the list of created resource results.
+    string MapTransactionResponse(List<BundleEntryResultDto> results);
 }

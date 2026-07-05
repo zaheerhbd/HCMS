@@ -1,5 +1,6 @@
 using HCM.Application.Fhir.DTOs;
 
+
 namespace HCM.Application.Fhir.DataHandlers;
 
 public interface IFhirDataHandler
@@ -19,4 +20,7 @@ public interface IFhirDataHandler
     Task<string> SearchTasksAsync(string? id, string? patientMrn, string? focus, string? status, string baseUrl, CancellationToken ct = default);
     Task<string> GetTaskAsync(string id, string baseUrl, CancellationToken ct = default);
     Task<string> GetDocumentReferenceAsync(string id, string baseUrl, CancellationToken ct = default);
+
+    // Imports a FHIR Transaction Bundle atomically: Patient + Encounter + Appointments + Tasks in one request.
+    Task<FhirBundleImportResultDto> ImportTransactionBundleAsync(string bundleJson, string importedBy, CancellationToken ct = default);
 }

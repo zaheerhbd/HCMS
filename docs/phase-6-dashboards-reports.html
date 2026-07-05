@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 6 — Dashboards &amp; Reports | HCMS</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c8cff;
+    --accent2: #4fc3f7;
+    --green: #4caf50;
+    --orange: #ff9800;
+    --red: #ef5350;
+    --purple: #ce93d8;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --code-bg: #141720;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0;
+    height: 100vh; overflow-y: auto; background: var(--surface);
+    border-right: 1px solid var(--border); padding: 24px 0;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .sidebar h2 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 0 20px 10px; }
+  .sidebar nav a {
+    display: block; padding: 7px 20px; font-size: 13px; color: var(--muted);
+    border-left: 3px solid transparent; transition: all .15s;
+  }
+  .sidebar nav a:hover { color: var(--text); background: var(--surface2); text-decoration: none; }
+  .sidebar nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(108,140,255,.07); }
+  .sidebar nav a.sub { padding-left: 34px; font-size: 12px; }
+  .sidebar .brand { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar .brand .title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .sidebar .brand .sub { font-size: 12px; color: var(--muted); }
+
+  main { flex: 1; max-width: 860px; padding: 48px 56px 100px; min-width: 0; }
+  @media (max-width: 900px) { main { padding: 24px 20px 80px; } .sidebar { display: none; } }
+
+  /* ── Typography ── */
+  h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; color: #fff; }
+  h2 { font-size: 1.35rem; font-weight: 700; margin: 48px 0 16px; padding-top: 16px; color: #fff; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 28px 0 12px; color: var(--accent2); }
+  h4 { font-size: .95rem; font-weight: 600; margin: 20px 0 8px; color: var(--purple); }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 24px; }
+  li { margin-bottom: 5px; }
+  strong { color: #fff; }
+  code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: 'Cascadia Code','Consolas',monospace; font-size: .85em; color: #a5d6ff; }
+
+  /* ── Hero ── */
+  .hero { background: linear-gradient(135deg, #1a1d27 0%, #1e2340 100%); border: 1px solid var(--border); border-radius: 12px; padding: 32px 36px; margin-bottom: 40px; }
+  .hero .phase-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .hero h1 { font-size: 1.8rem; }
+  .hero .meta { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+  .hero .meta-item { font-size: 13px; color: var(--muted); }
+  .hero .meta-item strong { color: var(--text); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+  .badge-green { background: rgba(76,175,80,.15); color: var(--green); border: 1px solid rgba(76,175,80,.3); }
+  .badge-blue { background: rgba(108,140,255,.15); color: var(--accent); border: 1px solid rgba(108,140,255,.3); }
+  .badge-orange { background: rgba(255,152,0,.15); color: var(--orange); border: 1px solid rgba(255,152,0,.3); }
+
+  /* ── Code block ── */
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; overflow-x: auto; font-family: 'Cascadia Code','Consolas',monospace; font-size: .82em; line-height: 1.6; margin-bottom: 20px; }
+  pre code { background: none; border: none; padding: 0; color: var(--text); }
+  .kw { color: #c792ea; }
+  .str { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .type { color: #82aaff; }
+  .num { color: #f78c6c; }
+  .attr { color: #ffcb6b; }
+
+  /* ── Callout ── */
+  .callout { border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; border-left: 4px solid; }
+  .callout-blue { background: rgba(108,140,255,.08); border-color: var(--accent); }
+  .callout-green { background: rgba(76,175,80,.08); border-color: var(--green); }
+  .callout-orange { background: rgba(255,152,0,.08); border-color: var(--orange); }
+  .callout-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .callout-blue .callout-title { color: var(--accent); }
+  .callout-green .callout-title { color: var(--green); }
+  .callout-orange .callout-title { color: var(--orange); }
+
+  /* ── Details / collapsible ── */
+  details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; }
+  summary { padding: 12px 18px; cursor: pointer; font-weight: 600; font-size: .92em; color: var(--text); list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::before { content: '▶'; font-size: .7em; color: var(--muted); transition: transform .2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > *:not(summary) { padding: 0 18px 16px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: .88em; }
+  th { background: var(--surface2); color: var(--muted); font-size: .75em; text-transform: uppercase; letter-spacing: .06em; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(46,51,80,.5); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* ── SVG diagrams ── */
+  .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 28px; overflow: hidden; }
+  .diagram-title { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 16px; }
+
+  /* ── Section divider ── */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* ── File list ── */
+  .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .file-card { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 12px 14px; font-size: .82em; }
+  .file-card .path { color: var(--accent2); font-family: monospace; font-size: .9em; word-break: break-all; }
+  .file-card .desc { color: var(--muted); margin-top: 4px; }
+  .file-card .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: .75em; margin-top: 6px; }
+  .tag-new { background: rgba(76,175,80,.15); color: var(--green); }
+  .tag-updated { background: rgba(108,140,255,.15); color: var(--accent); }
+  .tag-fixed { background: rgba(255,152,0,.15); color: var(--orange); }
+
+  /* ── Stat cards ── */
+  .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; flex: 1; min-width: 120px; }
+  .stat .num { font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* Chart mock */
+  .chart-mock { background: var(--surface2); border-radius: 8px; padding: 12px; display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .bar { border-radius: 4px 4px 0 0; flex: 1; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="title">HCMS</div>
+    <div class="sub">Phase 6 Report</div>
+  </div>
+  <h2>Contents</h2>
+  <nav id="toc">
+    <a href="#overview">Overview</a>
+    <a href="#goals">Goals &amp; Scope</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#backend">Backend Implementation</a>
+    <a href="#backend" class="sub">Dashboard DataHandler</a>
+    <a href="#reports-backend" class="sub">Report DataHandler</a>
+    <a href="#controllers" class="sub">Controllers</a>
+    <a href="#angular">Angular Frontend</a>
+    <a href="#dashboard-hub" class="sub">Dashboard Hub</a>
+    <a href="#coordinator-dash" class="sub">Coordinator Dashboard</a>
+    <a href="#supervisor-dash" class="sub">Supervisor Dashboard</a>
+    <a href="#admin-dash" class="sub">Admin Dashboard</a>
+    <a href="#reports-angular" class="sub">Reports Module</a>
+    <a href="#charts">Chart.js Integration</a>
+    <a href="#csv">CSV Export</a>
+    <a href="#decisions">Key Decisions</a>
+    <a href="#bugs">Bug Fixes</a>
+    <a href="#files">Files Changed</a>
+    <a href="#whats-next">What's Next</a>
+  </nav>
+</aside>
+
+<!-- ── Main ── -->
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="phase-label">Phase 6 · Completion Report</div>
+    <h1>Dashboards &amp; Reports</h1>
+    <p style="color:var(--muted);margin-top:10px;margin-bottom:0;">Role-based live dashboards with Chart.js charts and three downloadable CSV report types.</p>
+    <div class="meta">
+      <div class="meta-item"><strong>Status</strong> &nbsp;<span class="badge badge-green">Complete</span></div>
+      <div class="meta-item"><strong>Date</strong> 2026-07-05</div>
+      <div class="meta-item"><strong>Build</strong> <span class="badge badge-green">.NET 0 errors</span> &nbsp;<span class="badge badge-green">Angular 0 errors</span></div>
+      <div class="meta-item"><strong>Tasks</strong> 20 / 20 complete</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row">
+    <div class="stat"><div class="num">3</div><div class="label">Role dashboards</div></div>
+    <div class="stat"><div class="num">3</div><div class="label">Report types</div></div>
+    <div class="stat"><div class="num">6</div><div class="label">Chart.js charts</div></div>
+    <div class="stat"><div class="num">3</div><div class="label">CSV exports</div></div>
+    <div class="stat"><div class="num">30+</div><div class="label">Files added/changed</div></div>
+  </div>
+
+  <!-- ── Overview ── -->
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>Phase 6 adds the data-visibility layer of HCMS: every role now has a purpose-built dashboard showing the metrics most relevant to their work, and administrators can download structured reports for offline analysis.</p>
+
+    <div class="callout callout-blue">
+      <div class="callout-title">Real-world analogy</div>
+      Think of the dashboards as the instrument cluster in a car — the coordinator sees their lane (their own cases and overdue tasks), the supervisor sees the whole convoy (team caseloads across coordinators), and the admin sees the fleet management system (system-wide stats, login trends, imports). Each view is tailored so drivers only see dials relevant to their seat.
+    </div>
+
+    <p>Three report types give managers a printable or spreadsheet-ready snapshot: case distribution by status, average open-to-close duration grouped by case type, and task completion rates by assignee.</p>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Goals ── -->
+  <section id="goals">
+    <h2>Goals &amp; Scope</h2>
+    <table>
+      <thead><tr><th>Goal</th><th>Delivered</th></tr></thead>
+      <tbody>
+        <tr><td>Coordinator dashboard — my cases, overdue tasks, today's appointments</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Supervisor dashboard — team caseloads, escalated &amp; inactive cases</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Admin dashboard — system-wide stats, login trend, users by role</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Cases-by-status report + CSV download</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Case-duration report (avg days open→closed by type) + CSV</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Tasks-by-assignee report (completion breakdown per user) + CSV</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>Chart.js charts on every dashboard and report screen</td><td><span class="badge badge-green">Done</span></td></tr>
+        <tr><td>RFC 4180-compliant CSV export without a third-party library</td><td><span class="badge badge-green">Done</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Architecture ── -->
+  <section id="architecture">
+    <h2>Architecture</h2>
+    <p>Phase 6 follows the same Clean Architecture layers as every other phase: the Application layer owns DataHandlers and DTOs; the Infrastructure layer owns the DB context; the API layer owns controllers; Angular owns the presentation.</p>
+
+    <!-- Architecture SVG -->
+    <div class="diagram">
+      <div class="diagram-title">Layer diagram — Phase 6 data flow</div>
+      <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;">
+        <!-- Angular box -->
+        <rect x="10" y="20" width="160" height="270" rx="10" fill="#1e2340" stroke="#6c8cff" stroke-width="1.5"/>
+        <text x="90" y="45" text-anchor="middle" fill="#6c8cff" font-size="11" font-weight="700">ANGULAR</text>
+        <rect x="22" y="55" width="136" height="28" rx="5" fill="#2a2e4a"/>
+        <text x="90" y="74" text-anchor="middle" fill="#e2e8f0" font-size="10">DashboardComponent (hub)</text>
+        <rect x="22" y="90" width="136" height="24" rx="5" fill="#2a2e4a"/>
+        <text x="90" y="107" text-anchor="middle" fill="#e2e8f0" font-size="10">CoordinatorDashboard</text>
+        <rect x="22" y="120" width="136" height="24" rx="5" fill="#2a2e4a"/>
+        <text x="90" y="137" text-anchor="middle" fill="#e2e8f0" font-size="10">SupervisorDashboard</text>
+        <rect x="22" y="150" width="136" height="24" rx="5" fill="#2a2e4a"/>
+        <text x="90" y="167" text-anchor="middle" fill="#e2e8f0" font-size="10">AdminDashboard</text>
+        <rect x="22" y="186" width="136" height="24" rx="5" fill="#1a3a2a"/>
+        <text x="90" y="203" text-anchor="middle" fill="#81c995" font-size="10">ReportsComponent (hub)</text>
+        <rect x="22" y="216" width="136" height="24" rx="5" fill="#1a3a2a"/>
+        <text x="90" y="233" text-anchor="middle" fill="#81c995" font-size="10">CasesByStatus/Duration/</text>
+        <text x="90" y="247" text-anchor="middle" fill="#81c995" font-size="9">TasksByAssignee</text>
+        <rect x="22" y="256" width="136" height="24" rx="5" fill="#2a2e4a"/>
+        <text x="90" y="273" text-anchor="middle" fill="#e2e8f0" font-size="10">DashboardService</text>
+
+        <!-- Arrow Angular → API -->
+        <line x1="170" y1="155" x2="230" y2="155" stroke="#6c8cff" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="200" y="148" text-anchor="middle" fill="#8892a4" font-size="9">HTTP</text>
+
+        <!-- API box -->
+        <rect x="230" y="60" width="150" height="190" rx="10" fill="#1e2340" stroke="#4fc3f7" stroke-width="1.5"/>
+        <text x="305" y="83" text-anchor="middle" fill="#4fc3f7" font-size="11" font-weight="700">API LAYER</text>
+        <rect x="244" y="93" width="122" height="28" rx="5" fill="#2a2e4a"/>
+        <text x="305" y="112" text-anchor="middle" fill="#e2e8f0" font-size="10">DashboardController</text>
+        <text x="305" y="128" text-anchor="middle" fill="#8892a4" font-size="9">/api/dashboard/*</text>
+        <rect x="244" y="140" width="122" height="28" rx="5" fill="#1a3a2a"/>
+        <text x="305" y="159" text-anchor="middle" fill="#81c995" font-size="10">ReportsController</text>
+        <text x="305" y="175" text-anchor="middle" fill="#8892a4" font-size="9">/api/reports/*</text>
+        <rect x="244" y="200" width="122" height="40" rx="5" fill="#2a2e4a"/>
+        <text x="305" y="219" text-anchor="middle" fill="#e2e8f0" font-size="9">[Authorize] + RBAC</text>
+        <text x="305" y="233" text-anchor="middle" fill="#8892a4" font-size="9">Thin — calls DataHandler</text>
+
+        <!-- Arrow API → App -->
+        <line x1="380" y1="155" x2="440" y2="155" stroke="#4fc3f7" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+        <!-- Application box -->
+        <rect x="440" y="60" width="150" height="190" rx="10" fill="#1e2340" stroke="#ce93d8" stroke-width="1.5"/>
+        <text x="515" y="83" text-anchor="middle" fill="#ce93d8" font-size="11" font-weight="700">APPLICATION</text>
+        <rect x="454" y="93" width="122" height="40" rx="5" fill="#2a2e4a"/>
+        <text x="515" y="112" text-anchor="middle" fill="#e2e8f0" font-size="10">DashboardDataHandler</text>
+        <text x="515" y="128" text-anchor="middle" fill="#8892a4" font-size="9">3 dashboard methods</text>
+        <rect x="454" y="144" width="122" height="40" rx="5" fill="#1a3a2a"/>
+        <text x="515" y="163" text-anchor="middle" fill="#81c995" font-size="10">ReportDataHandler</text>
+        <text x="515" y="179" text-anchor="middle" fill="#8892a4" font-size="9">3 JSON + 3 CSV methods</text>
+        <rect x="454" y="200" width="122" height="40" rx="5" fill="#2a2e4a"/>
+        <text x="515" y="219" text-anchor="middle" fill="#e2e8f0" font-size="9">DTOs</text>
+        <text x="515" y="233" text-anchor="middle" fill="#8892a4" font-size="9">Dashboard/* Reports/*</text>
+
+        <!-- Arrow App → DB -->
+        <line x1="590" y1="155" x2="640" y2="155" stroke="#ce93d8" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+        <!-- DB box -->
+        <rect x="640" y="100" width="50" height="110" rx="8" fill="#1e2340" stroke="#ff9800" stroke-width="1.5"/>
+        <text x="665" y="122" text-anchor="middle" fill="#ff9800" font-size="9" font-weight="700">DB</text>
+        <text x="665" y="140" text-anchor="middle" fill="#8892a4" font-size="8">Cases</text>
+        <text x="665" y="155" text-anchor="middle" fill="#8892a4" font-size="8">Tasks</text>
+        <text x="665" y="170" text-anchor="middle" fill="#8892a4" font-size="8">Appts</text>
+        <text x="665" y="185" text-anchor="middle" fill="#8892a4" font-size="8">Users</text>
+        <text x="665" y="200" text-anchor="middle" fill="#8892a4" font-size="8">Tokens</text>
+
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6c8cff"/></marker>
+          <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#4fc3f7"/></marker>
+          <marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ce93d8"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <p>Dashboard and report data flows top-to-bottom through layers. The Angular service makes one HTTP call; the controller authenticates the request, checks the role, and forwards to the DataHandler; the DataHandler runs EF Core queries against <code>IApplicationDbContext</code> and returns typed DTOs. No business logic leaks into controllers or Angular services.</p>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Backend ── -->
+  <section id="backend">
+    <h2>Backend Implementation</h2>
+
+    <h3>Dashboard DataHandler</h3>
+    <p><code>DashboardDataHandler</code> implements <code>IDashboardDataHandler</code> with three methods, each scoped to a role's information needs.</p>
+
+    <div class="callout callout-blue">
+      <div class="callout-title">Why three separate methods instead of one big method with a role parameter?</div>
+      Each role genuinely needs different entities. Merging them into one method would load unnecessary data for two of three callers on every request — wasteful and harder to reason about. Separation also means the access-control boundary is at the controller level, not buried in a conditional inside the handler.
+    </div>
+
+    <details>
+      <summary>GetCoordinatorDashboardAsync — implementation detail</summary>
+      <p>Queries run concurrently (conceptually) against five DbSets:</p>
+      <ul>
+        <li><strong>Open case count</strong> — <code>Cases WHERE IsActive AND AssignedToUserId == userId</code></li>
+        <li><strong>Cases by status</strong> — <code>GroupBy(CurrentStatus)</code> → <code>CaseStatusCountDto</code> list</li>
+        <li><strong>Overdue tasks</strong> — <code>CaseTasks WHERE AssignedTo == userId AND DueDate &lt; now AND Status != Done</code>, top 10</li>
+        <li><strong>Today's appointments</strong> — <code>Appointments WHERE ScheduledStart &gt;= today AND ScheduledStart &lt; tomorrow</code>, top 10</li>
+        <li><strong>Inactive case count</strong> — open cases where <code>UpdatedAt &lt; now - 7 days</code></li>
+      </ul>
+      <p>Entity field names: <code>Case.AssignedToUserId</code> (Guid?), <code>Appointment.ScheduledStart</code> (DateTime), <code>CaseTask.AssignedTo</code> (Guid?).</p>
+    </details>
+
+    <details>
+      <summary>GetSupervisorDashboardAsync — implementation detail</summary>
+      <p>Because <code>Case</code> has no EF navigation to <code>User</code> (only the FK <code>AssignedToUserId</code>), the supervisor method loads assignee names via a separate dictionary lookup:</p>
+      <ol>
+        <li>Load all active open cases → collect distinct <code>AssignedToUserId</code> values</li>
+        <li>Query <code>Users WHERE Id IN (assigneeIds)</code> → build <code>Dictionary&lt;Guid, string&gt;</code></li>
+        <li>Group cases client-side to build <code>UserCaseloadDto</code> rows</li>
+        <li>Separately load escalated cases and inactive cases (those not updated in 7+ days)</li>
+      </ol>
+      <p>This avoids a cross-table join that EF would need to translate without a navigation property, keeping queries simple and observable.</p>
+    </details>
+
+    <details>
+      <summary>GetAdminDashboardAsync — implementation detail</summary>
+      <p>Seven scalar queries plus one grouped query for login trend:</p>
+      <ul>
+        <li>Active users, total patients, total cases, open cases — four <code>CountAsync</code> calls</li>
+        <li>Logins last 7 days — <code>RefreshTokens WHERE CreatedAt &gt;= 7DaysAgo</code>, distinct userId count</li>
+        <li>FHIR imports last 30 days — <code>FhirImportLogs WHERE ImportedAt &gt;= 30DaysAgo</code> count</li>
+        <li>Daily login trend — one query per day (7 iterations), each counting distinct user logins per 24-hour window</li>
+        <li>Users by role — <code>UserRoles.GroupBy(ur => ur.Role.Name)</code></li>
+      </ul>
+      <p>The one-query-per-day loop is intentional for a dashboard endpoint (called rarely, result easily cached if needed). Replacing it with a single raw-SQL GROUP BY would break the no-raw-SQL policy.</p>
+    </details>
+
+    <h3 id="reports-backend">Report DataHandler</h3>
+    <p><code>ReportDataHandler</code> provides six methods: three returning typed DTOs (for JSON responses) and three returning RFC 4180 CSV strings.</p>
+
+    <div class="callout callout-orange">
+      <div class="callout-title">Design decision: client-side duration calculation</div>
+      The case-duration report needs <code>DATEDIFF(day, CreatedAt, ClosedAt)</code>. <code>EF.Functions.DateDiffDay</code> is SQL Server-specific and lives in the Infrastructure layer — using it directly in Application would violate the Clean Architecture dependency rule (Application must not depend on SQL Server). Solution: project <code>CreatedAt</code> and <code>ClosedAt</code> as raw <code>DateTime</code> values via LINQ, call <code>ToListAsync()</code>, then compute <code>(ClosedAt - CreatedAt).TotalDays</code> in C# memory. For report volumes (&lt;10k rows) this is perfectly acceptable.
+    </div>
+
+    <details>
+      <summary>CSV generation — EscapeCsv helper</summary>
+      <pre><code><span class="kw">private static</span> <span class="type">string</span> EscapeCsv(<span class="type">string</span> value)
+{
+    <span class="kw">if</span> (value.Contains(<span class="str">','</span>) || value.Contains(<span class="str">'"'</span>) || value.Contains(<span class="str">'\n'</span>))
+        <span class="kw">return</span> <span class="str">$"\"{value.Replace("\"", "\"\"")}\""</span>;
+    <span class="kw">return</span> value;
+}</code></pre>
+      <p>RFC 4180 requires fields containing commas, double-quotes, or newlines to be wrapped in double-quotes, with embedded double-quotes doubled. No third-party library needed for the three simple report shapes in this phase.</p>
+    </details>
+
+    <h3 id="controllers">Controllers</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Auth</th><th>Returns</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/dashboard/coordinator</code></td><td>Any authenticated user</td><td>JSON — scoped to their <code>userId</code> from JWT claims</td></tr>
+        <tr><td><code>GET /api/dashboard/supervisor</code></td><td>Supervisor, Admin</td><td>JSON — team-wide data</td></tr>
+        <tr><td><code>GET /api/dashboard/admin</code></td><td>Admin only</td><td>JSON — system-wide metrics</td></tr>
+        <tr><td><code>GET /api/reports/cases-by-status</code></td><td>Supervisor, Admin</td><td>JSON or <code>text/csv</code> file (<code>?format=csv</code>)</td></tr>
+        <tr><td><code>GET /api/reports/case-duration</code></td><td>Supervisor, Admin</td><td>JSON or CSV</td></tr>
+        <tr><td><code>GET /api/reports/tasks-by-assignee</code></td><td>Supervisor, Admin</td><td>JSON or CSV</td></tr>
+      </tbody>
+    </table>
+
+    <p>CSV responses use <code>Content-Disposition: attachment; filename="..."</code> so browsers trigger a file download automatically.</p>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Angular ── -->
+  <section id="angular">
+    <h2>Angular Frontend</h2>
+
+    <h3 id="dashboard-hub">Dashboard Hub Component</h3>
+    <p><code>DashboardComponent</code> acts as a role-based dispatcher. On init it iterates a priority list (<code>Admin → Supervisor → CareCoordinator → Clinician → ReadOnly</code>) and renders the first matching role's sub-component using Angular's <code>@if</code> control flow. This keeps routing simple (one <code>/dashboard</code> route) while delivering a fully tailored experience per role.</p>
+
+    <!-- Role routing SVG -->
+    <div class="diagram">
+      <div class="diagram-title">Dashboard role dispatch</div>
+      <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;">
+        <rect x="10" y="60" width="120" height="50" rx="8" fill="#2a2e4a" stroke="#6c8cff" stroke-width="1.5"/>
+        <text x="70" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">/dashboard</text>
+        <text x="70" y="96" text-anchor="middle" fill="#8892a4" font-size="9">DashboardComponent</text>
+        <text x="70" y="110" text-anchor="middle" fill="#6c8cff" font-size="8">checks role priority</text>
+
+        <line x1="130" y1="85" x2="165" y2="45" stroke="#6c8cff" stroke-width="1" marker-end="url(#a4)"/>
+        <line x1="130" y1="85" x2="165" y2="85" stroke="#4fc3f7" stroke-width="1" marker-end="url(#a5)"/>
+        <line x1="130" y1="85" x2="165" y2="125" stroke="#ce93d8" stroke-width="1" marker-end="url(#a6)"/>
+
+        <rect x="165" y="20" width="130" height="50" rx="6" fill="#1a3a2a" stroke="#4caf50" stroke-width="1"/>
+        <text x="230" y="40" text-anchor="middle" fill="#4caf50" font-size="9" font-weight="600">Admin role</text>
+        <text x="230" y="56" text-anchor="middle" fill="#81c995" font-size="9">AdminDashboardComponent</text>
+        <text x="230" y="66" text-anchor="middle" fill="#546e7a" font-size="8">line chart + bar chart</text>
+
+        <rect x="165" y="60" width="130" height="50" rx="6" fill="#1a2a3a" stroke="#4fc3f7" stroke-width="1"/>
+        <text x="230" y="80" text-anchor="middle" fill="#4fc3f7" font-size="9" font-weight="600">Supervisor role</text>
+        <text x="230" y="96" text-anchor="middle" fill="#81d4fa" font-size="9">SupervisorDashboardComponent</text>
+        <text x="230" y="106" text-anchor="middle" fill="#546e7a" font-size="8">grouped bar chart</text>
+
+        <rect x="165" y="100" width="130" height="50" rx="6" fill="#2a1a3a" stroke="#ce93d8" stroke-width="1"/>
+        <text x="230" y="120" text-anchor="middle" fill="#ce93d8" font-size="9" font-weight="600">CareCoordinator/Clinician</text>
+        <text x="230" y="136" text-anchor="middle" fill="#e1bee7" font-size="9">CoordinatorDashboardComponent</text>
+        <text x="230" y="146" text-anchor="middle" fill="#546e7a" font-size="8">doughnut chart</text>
+
+        <defs>
+          <marker id="a4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#6c8cff"/></marker>
+          <marker id="a5" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#4fc3f7"/></marker>
+          <marker id="a6" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#ce93d8"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <h3 id="coordinator-dash">Coordinator Dashboard</h3>
+    <p>Four stat cards (open cases, overdue tasks, today's appointments, inactive-7-days cases) at the top provide an at-a-glance summary. Below is a two-column row: a Chart.js <strong>doughnut chart</strong> rendering cases by status, and a Material table listing overdue tasks with priority chips. A full-width table of today's appointments appears at the bottom.</p>
+
+    <h3 id="supervisor-dash">Supervisor Dashboard</h3>
+    <p>Three stat cards (total active, escalated count, inactive count) head the page. The main chart is a Chart.js <strong>grouped bar chart</strong> — one group per assignee with two bars: open case count (blue) and overdue task count (orange). Below are two expandable tables: escalated cases (with escalation date) and cases inactive for 7+ days (with days-since-activity).</p>
+
+    <div class="callout callout-blue">
+      <div class="callout-title">Real-world analogy</div>
+      The supervisor's grouped bar chart is like a coach's substitution board — you can instantly see which players (coordinators) are overloaded (tall open-cases bar) and which are falling behind on tasks (tall overdue bar), so you know who needs support and who's clear to take on more.
+    </div>
+
+    <h3 id="admin-dash">Admin Dashboard</h3>
+    <p>Six stat cards cover system-wide metrics. Two Chart.js charts occupy the lower half of the page:</p>
+    <ul>
+      <li><strong>Line chart</strong> — daily distinct login count for the past 7 days (login-trend data from RefreshTokens)</li>
+      <li><strong>Bar chart</strong> — user count per role (Admin, Supervisor, CareCoordinator, Clinician, ReadOnly)</li>
+    </ul>
+    <p>Both charts are registered with minimal Chart.js tree-shaking: only the controllers and elements actually used are imported, keeping bundle impact low.</p>
+
+    <h3 id="reports-angular">Reports Module</h3>
+    <p>The reports feature area uses a <code>mat-tab-nav-bar</code> hub component (<code>ReportsComponent</code>) with three lazy-loaded child routes:</p>
+
+    <table>
+      <thead><tr><th>Route</th><th>Component</th><th>Chart type</th><th>CSV?</th></tr></thead>
+      <tbody>
+        <tr><td><code>/reports/cases-by-status</code></td><td>CasesByStatusComponent</td><td>Doughnut</td><td>Yes</td></tr>
+        <tr><td><code>/reports/case-duration</code></td><td>CaseDurationComponent</td><td>Horizontal bar</td><td>Yes</td></tr>
+        <tr><td><code>/reports/tasks-by-assignee</code></td><td>TasksByAssigneeComponent</td><td>Stacked bar</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+
+    <p>Each report component follows the same pattern: load data on init → render Chart.js canvas → render Material table below → expose a "Download CSV" button that calls <code>ReportService.downloadCsv()</code>.</p>
+
+    <details>
+      <summary>CSV download implementation in Angular</summary>
+      <pre><code><span class="cm">// ReportService.downloadCsv()</span>
+downloadCsv(endpoint: <span class="type">string</span>, filename: <span class="type">string</span>): <span class="type">void</span> {
+  <span class="kw">this</span>.http.get(<span class="str">`${this.base}/${endpoint}?format=csv`</span>, {
+    responseType: <span class="str">'blob'</span>,
+    headers: { Accept: <span class="str">'text/csv'</span> }
+  }).subscribe(blob => {
+    <span class="kw">const</span> url = URL.createObjectURL(blob);
+    <span class="kw">const</span> a = document.createElement(<span class="str">'a'</span>);
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  });
+}</code></pre>
+      <p>No <code>FileSaver.js</code> or other third-party library. The <code>blob</code> response type bypasses Angular's default JSON parsing; the anchor-click trick triggers a native browser download dialog.</p>
+    </details>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Charts ── -->
+  <section id="charts">
+    <h2>Chart.js Integration</h2>
+    <p>Chart.js 4.5.1 was installed directly via npm. The decision <em>not</em> to use ng2-charts (the popular Angular wrapper) was deliberate:</p>
+
+    <table>
+      <thead><tr><th>Consideration</th><th>ng2-charts wrapper</th><th>Direct Chart.js</th></tr></thead>
+      <tbody>
+        <tr><td>Bundle overhead</td><td>Wrapper adds ~15 kB</td><td>Zero wrapper overhead</td></tr>
+        <tr><td>Angular version support</td><td>Lagged behind Angular 19 at time of build</td><td>No Angular dependency at all</td></tr>
+        <tr><td>Chart update pattern</td><td>Input-driven, change-detection coupled</td><td>Imperative <code>chart.update()</code> — full control</td></tr>
+        <tr><td>Tree-shaking</td><td>Full Chart.js bundle</td><td>Only import used controllers/elements</td></tr>
+        <tr><td>Learning value (portfolio)</td><td>Hides Chart.js API</td><td>Demonstrates raw Chart.js competence</td></tr>
+      </tbody>
+    </table>
+
+    <p>Each chart component follows this lifecycle pattern:</p>
+    <ol>
+      <li><code>@ViewChild('myCanvas') canvasRef!: ElementRef&lt;HTMLCanvasElement&gt;</code></li>
+      <li>Load data in <code>ngOnInit()</code></li>
+      <li>Build chart in <code>ngAfterViewInit()</code> after data arrives (or destroy + recreate on data change)</li>
+      <li>Destroy the chart instance in <code>ngOnDestroy()</code> to avoid canvas re-use errors</li>
+    </ol>
+
+    <div class="callout callout-orange">
+      <div class="callout-title">Common Chart.js pitfall avoided</div>
+      If you navigate away and back to a route, Angular destroys and re-creates the component. Without calling <code>chart.destroy()</code> in <code>ngOnDestroy()</code>, Chart.js caches the old canvas context and throws "Canvas is already in use." All six chart components in this phase include proper destroy logic.
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── CSV ── -->
+  <section id="csv">
+    <h2>CSV Export Design</h2>
+    <p>All three CSV reports are built server-side in <code>ReportDataHandler</code> using a <code>StringBuilder</code> and the <code>EscapeCsv</code> helper. This avoids any dependency on <code>CsvHelper</code> or similar libraries — the report shapes are simple, static schemas that don't need reflection-driven serialization.</p>
+
+    <details>
+      <summary>Example CSV output — Tasks by Assignee</summary>
+      <pre><code>User,Total Tasks,Done,Overdue,Open,In Progress
+Alice Coordinator,12,8,1,2,1
+Bob Clinician,7,4,0,3,0
+Carol Supervisor,5,5,0,0,0</code></pre>
+    </details>
+
+    <p>The <code>Content-Disposition: attachment</code> header on the API response ensures browsers don't try to render the CSV inline — they trigger a file-save dialog directly.</p>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Decisions ── -->
+  <section id="decisions">
+    <h2>Key Decisions &amp; Trade-offs</h2>
+
+    <table>
+      <thead><tr><th>Decision</th><th>Chosen approach</th><th>Alternative considered</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Duration computation</td>
+          <td>C# in-memory after <code>ToListAsync()</code></td>
+          <td><code>EF.Functions.DateDiffDay</code></td>
+          <td>DateDiffDay is SQL Server-specific; using it in Application layer violates Clean Architecture — Infrastructure must not leak into Application</td>
+        </tr>
+        <tr>
+          <td>Chart library</td>
+          <td>Direct Chart.js 4.5.1</td>
+          <td>ng2-charts wrapper</td>
+          <td>Full control, smaller bundle, no Angular version lag, demonstrates raw Chart.js skill</td>
+        </tr>
+        <tr>
+          <td>CSV generation</td>
+          <td>Manual <code>StringBuilder</code> + <code>EscapeCsv</code></td>
+          <td>CsvHelper NuGet package</td>
+          <td>Three simple schemas don't justify adding a dependency; RFC 4180 compliance is straightforward to implement manually</td>
+        </tr>
+        <tr>
+          <td>Supervisor assignee names</td>
+          <td>Separate dictionary query then in-memory join</td>
+          <td>EF navigation property from Case to User</td>
+          <td>Case entity has only AssignedToUserId (Guid?) — no direct nav to User. Adding a nav property would require a schema migration and tighter coupling between Case and User domains</td>
+        </tr>
+        <tr>
+          <td>Dashboard routing</td>
+          <td>Single <code>/dashboard</code> route with role-dispatch hub</td>
+          <td>Separate <code>/dashboard/coordinator</code>, <code>/dashboard/admin</code> routes</td>
+          <td>Users shouldn't need to know the URL changes by role; the URL stays consistent regardless of who logs in</td>
+        </tr>
+        <tr>
+          <td>Reports routing</td>
+          <td>Lazy-loaded child routes under <code>/reports</code></td>
+          <td>Tab components all loaded eagerly</td>
+          <td>Reports are less frequently visited; lazy loading keeps initial bundle lean</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Bug fixes ── -->
+  <section id="bugs">
+    <h2>Bug Fixes in This Phase</h2>
+
+    <h3>1. <code>ApplicationDbContext.BeginTransactionAsync</code> not implemented</h3>
+    <p><strong>Error:</strong> <code>CS0535: 'ApplicationDbContext' does not implement interface member 'IApplicationDbContext.BeginTransactionAsync'</code></p>
+    <p><strong>Root cause:</strong> The interface declaration was added during Phase 7 (for the notification transactional write), but the concrete class in Infrastructure never received the implementation.</p>
+    <p><strong>Fix:</strong> Added to <code>ApplicationDbContext.cs</code>:</p>
+    <pre><code><span class="kw">public</span> Task&lt;<span class="type">IDbContextTransaction</span>&gt; BeginTransactionAsync(<span class="type">CancellationToken</span> ct = <span class="kw">default</span>)
+    =&gt; Database.BeginTransactionAsync(ct);</code></pre>
+
+    <h3>2. NHapi package version <code>4.*</code> does not exist on NuGet</h3>
+    <p><strong>Error:</strong> <code>NU1102: Unable to find package NHapi.Base with version (&gt;= 4.0.0)</code></p>
+    <p><strong>Root cause:</strong> Phase 7 added <code>NHapi.Base</code> and <code>NHapi.Model.V251</code> with <code>Version="4.*"</code>. NHapi's latest published version on NuGet is 3.x; version 4 does not exist.</p>
+    <p><strong>Fix:</strong> Changed to <code>Version="3.*"</code> in <code>HCM.Infrastructure.csproj</code>. No C# code references NHapi directly yet (the HL7 parsing service is interface-only in Application; the implementation is deferred to Phase 9), so no code changes were needed.</p>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Files ── -->
+  <section id="files">
+    <h2>Files Added / Changed</h2>
+
+    <h3>Backend — Application Layer</h3>
+    <div class="file-grid">
+      <div class="file-card"><div class="path">Application/Dashboard/DTOs/CoordinatorDashboardDto.cs</div><div class="desc">CoordinatorDashboardDto + CaseStatusCountDto + OverdueTaskSummaryDto + TodayAppointmentDto</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Dashboard/DTOs/SupervisorDashboardDto.cs</div><div class="desc">SupervisorDashboardDto + UserCaseloadDto + EscalatedCaseDto + InactiveCaseDto</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Dashboard/DTOs/AdminDashboardDto.cs</div><div class="desc">AdminDashboardDto + DailyLoginCountDto + RoleUserCountDto</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Dashboard/DataHandlers/IDashboardDataHandler.cs</div><div class="desc">Interface — 3 async methods</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Dashboard/DataHandlers/DashboardDataHandler.cs</div><div class="desc">Full implementation for all 3 role dashboards</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Reports/DTOs/CasesByStatusDto.cs</div><div class="desc">CasesByStatusReportDto + row DTO</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Reports/DTOs/CaseDurationDto.cs</div><div class="desc">CaseDurationReportDto + CaseDurationRowDto</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Reports/DTOs/TasksByAssigneeDto.cs</div><div class="desc">TasksByAssigneeReportDto + TasksByAssigneeRowDto</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Reports/DataHandlers/IReportDataHandler.cs</div><div class="desc">6 interface methods (3 JSON + 3 CSV)</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/Reports/DataHandlers/ReportDataHandler.cs</div><div class="desc">Full implementation with EscapeCsv helper</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">Application/DependencyInjection.cs</div><div class="desc">Registered IDashboardDataHandler + IReportDataHandler</div><span class="tag tag-updated">Updated</span></div>
+    </div>
+
+    <h3>Backend — API Layer</h3>
+    <div class="file-grid">
+      <div class="file-card"><div class="path">API/Controllers/DashboardController.cs</div><div class="desc">3 endpoints with RBAC guards</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">API/Controllers/ReportsController.cs</div><div class="desc">3 endpoints with JSON/CSV format switching</div><span class="tag tag-new">New</span></div>
+    </div>
+
+    <h3>Backend — Infrastructure Layer</h3>
+    <div class="file-grid">
+      <div class="file-card"><div class="path">Infrastructure/Persistence/ApplicationDbContext.cs</div><div class="desc">Added BeginTransactionAsync implementation</div><span class="tag tag-fixed">Fixed</span></div>
+      <div class="file-card"><div class="path">Infrastructure/HCM.Infrastructure.csproj</div><div class="desc">Downgraded NHapi.Base + NHapi.Model.V251 to 3.*</div><span class="tag tag-fixed">Fixed</span></div>
+    </div>
+
+    <h3>Angular Frontend</h3>
+    <div class="file-grid">
+      <div class="file-card"><div class="path">src-ng/.../dashboard/dashboard.service.ts</div><div class="desc">DashboardService + all 3 response interfaces</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../reports/report.service.ts</div><div class="desc">ReportService with downloadCsv helper</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../dashboard/dashboard.component.ts</div><div class="desc">Role-dispatch hub</div><span class="tag tag-updated">Updated</span></div>
+      <div class="file-card"><div class="path">src-ng/.../coordinator/coordinator-dashboard.component.ts/html/scss</div><div class="desc">Doughnut chart + stat cards + tables</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../supervisor/supervisor-dashboard.component.ts/html/scss</div><div class="desc">Grouped bar chart + team tables</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../admin/admin-dashboard.component.ts/html/scss</div><div class="desc">Line + bar charts + stat cards</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../reports/reports.component.ts/html/scss</div><div class="desc">Tab nav hub</div><span class="tag tag-updated">Updated</span></div>
+      <div class="file-card"><div class="path">src-ng/.../reports/reports.routes.ts</div><div class="desc">Lazy child routes for 3 report components</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../cases-by-status/*.component.*</div><div class="desc">Doughnut + table + CSV button</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../case-duration/*.component.*</div><div class="desc">Horizontal bar + table + CSV button</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../tasks-by-assignee/*.component.*</div><div class="desc">Stacked bar + table + CSV button</div><span class="tag tag-new">New</span></div>
+      <div class="file-card"><div class="path">src-ng/.../app.routes.ts</div><div class="desc">/reports now uses loadChildren → REPORTS_ROUTES</div><span class="tag tag-updated">Updated</span></div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── What's next ── -->
+  <section id="whats-next">
+    <h2>What's Next</h2>
+
+    <h3>Phase 8 — Testing, Security &amp; Polish</h3>
+    <p>Phase 8 is the quality-bar phase before any production handover. Key items:</p>
+    <ul>
+      <li><strong>Unit tests</strong> — xUnit tests for all DataHandlers; mock <code>IApplicationDbContext</code> with in-memory EF providers</li>
+      <li><strong>Integration tests</strong> — API endpoint smoke tests using <code>WebApplicationFactory&lt;Program&gt;</code></li>
+      <li><strong>Angular tests</strong> — Karma/Jasmine component tests for auth flow, form validation, role guards</li>
+      <li><strong>Security audit</strong> — Review all endpoints for missing <code>[Authorize]</code>, ensure no PHI in logs, verify SAS URL expiry, check CORS policy</li>
+      <li><strong>Polish</strong> — Error boundaries, loading skeletons, empty-state messages, accessibility (WCAG 2.1 AA keyboard nav + ARIA labels)</li>
+      <li><strong>Bundle optimisation</strong> — Angular budget now at ~509 kB; lazy-split any remaining large feature modules</li>
+    </ul>
+
+    <h3>Phase 9 — Advanced FHIR &amp; Interoperability</h3>
+    <ul>
+      <li><code>POST /fhir/R4/</code> — Transaction Bundle import (Patient + Encounter + Appointment + Task in one atomic call)</li>
+      <li>HL7 v2.5.1 receiver using NHapi 3.x (now correctly referenced)</li>
+      <li>Frontend: Transaction Bundle import tab in <code>FhirImportComponent</code></li>
+    </ul>
+
+    <div class="callout callout-green">
+      <div class="callout-title">Overall progress after Phase 6</div>
+      139 / 206 tasks complete (~67%). Phases 1–4, 6, and 7 are all complete. Phase 5 (FHIR) is 79% complete. Phases 8 and 9 remain.
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+(function () {
+  // IntersectionObserver for active TOC link highlighting
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('#toc a');
+
+  function getHref(a) { return a.getAttribute('href').slice(1); }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const active = [...links].filter(a => getHref(a) === entry.target.id);
+        active.forEach(a => a.classList.add('active'));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+})();
+</script>
+</body>
+</html>

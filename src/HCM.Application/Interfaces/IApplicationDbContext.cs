@@ -31,4 +31,7 @@ public interface IApplicationDbContext
     DbSet<Notification> Notifications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    // Begins a database transaction so bundle processing is atomic.
+    Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default);
 }

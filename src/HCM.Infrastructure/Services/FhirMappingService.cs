@@ -1,5 +1,6 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using HCM.Application.Fhir.DTOs;
 using HCM.Application.Interfaces;
 using DomainPatient = HCM.Domain.Entities.Patient;
 using DomainCase = HCM.Domain.Entities.Case;
@@ -520,4 +521,138 @@ public class FhirMappingService : IFhirMappingService
         AdministrativeGender.Other => "NonBinary",
         _ => "Prefer Not to Say"
     };
+
+    // ── Transaction Bundle import ────��───────────────────────────────────────────
+
+    public (bool isValid, string? error, List<ParsedBundleEntry> entries) ParseTransactionBundle(string bundleJson)
+    {
+        Bundle bundle;
+        try
+        {
+            bundle = Deserializer.Deserialize<Bundle>(bundleJson);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Bundle parse error: {ex.Message}", []);
+        }
+
+        if (bundle.Type != Bundle.BundleType.Transaction)
+            return (false, "Bundle.type must be 'transaction'.", []);
+
+        var entries = new List<ParsedBundleEntry>();
+
+        foreach (var entry in bundle.Entry ?? [])
+        {
+            if (entry.Resource == null) continue;
+            var fullUrl = entry.FullUrl;
+
+            switch (entry.Resource)
+            {
+                case Patient fhirPatient:
+                    var (parsed, patientError) = ExtractPatientFields(fhirPatient);
+                    if (parsed == null)
+                        return (false, $"Patient entry: {patientError}", []);
+                    entries.Add(new ParsedBundleEntry { ResourceType = "Patient", FullUrl = fullUrl, Patient = parsed });
+                    break;
+
+                case Encounter fhirEncounter:
+                    entries.Add(new ParsedBundleEntry
+                    {
+                        ResourceType = "Encounter",
+                        FullUrl = fullUrl,
+                        Encounter = new ParsedFhirEncounter(
+                            fhirEncounter.Subject?.Reference,
+                            fhirEncounter.Type?.FirstOrDefault()?.Text)
+                    });
+                    break;
+
+                case FhirAppointment fhirAppt:
+                    // Identify patient participant: first actor that is not a Practitioner reference.
+                    var patientParticipant = fhirAppt.Participant
+                        .FirstOrDefault(p => p.Actor?.Reference != null &&
+                                             !p.Actor.Reference.StartsWith("Practitioner/", StringComparison.OrdinalIgnoreCase));
+                    var practitionerParticipant = fhirAppt.Participant
+                        .FirstOrDefault(p => p.Actor?.Reference?.StartsWith("Practitioner/", StringComparison.OrdinalIgnoreCase) == true);
+                    var dueDateStr = fhirAppt.End?.ToString();
+                    entries.Add(new ParsedBundleEntry
+                    {
+                        ResourceType = "Appointment",
+                        FullUrl = fullUrl,
+                        Appointment = new ParsedFhirAppointment(
+                            patientParticipant?.Actor?.Reference,
+                            fhirAppt.Start?.UtcDateTime,
+                            fhirAppt.End?.UtcDateTime,
+                            fhirAppt.ServiceType?.FirstOrDefault()?.Text,
+                            practitionerParticipant?.Actor?.Reference)
+                    });
+                    break;
+
+                case FhirTask fhirTask:
+                    var restrictionEnd = fhirTask.Restriction?.Period?.End;
+                    var executionEnd = fhirTask.ExecutionPeriod?.End;
+                    var taskDueDateStr = restrictionEnd ?? executionEnd;
+                    DateTime? taskDueDate = taskDueDateStr != null && DateTime.TryParse(taskDueDateStr, out var td) ? td : null;
+                    entries.Add(new ParsedBundleEntry
+                    {
+                        ResourceType = "Task",
+                        FullUrl = fullUrl,
+                        Task = new ParsedFhirTask(
+                            fhirTask.Description,
+                            fhirTask.For?.Reference,
+                            fhirTask.Focus?.Reference,
+                            taskDueDate,
+                            fhirTask.Priority?.ToString()?.ToLower())
+                    });
+                    break;
+            }
+        }
+
+        return (true, null, entries);
+    }
+
+    public string MapTransactionResponse(List<BundleEntryResultDto> results)
+    {
+        var bundle = new Bundle
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Type = Bundle.BundleType.TransactionResponse,
+            Timestamp = DateTimeOffset.UtcNow,
+            Entry = results.Select(r => new Bundle.EntryComponent
+            {
+                Response = new Bundle.ResponseComponent
+                {
+                    Status = r.Status,
+                    Location = $"{r.ResourceType}/{r.AssignedId}"
+                }
+            }).ToList()
+        };
+        return Serializer.SerializeToString(bundle);
+    }
+
+    // Extracts plain patient data from a Firely Patient object — reused by ParseTransactionBundle.
+    private static (ParsedFhirPatient? patient, string? error) ExtractPatientFields(Patient fhirPatient)
+    {
+        var officialName = fhirPatient.Name.FirstOrDefault(n => n.Use == HumanName.NameUse.Official)
+            ?? fhirPatient.Name.FirstOrDefault();
+        if (officialName == null) return (null, "Patient must include at least one name.");
+
+        var firstName = officialName.Given.FirstOrDefault()?.Trim();
+        var lastName = officialName.Family?.Trim();
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+            return (null, "Patient name must include both given and family name.");
+
+        if (string.IsNullOrWhiteSpace(fhirPatient.BirthDate) ||
+            !DateTime.TryParse(fhirPatient.BirthDate, out var dob))
+            return (null, "Patient must include a valid birthDate.");
+
+        var phone = fhirPatient.Telecom?.FirstOrDefault(t => t.System == ContactPoint.ContactPointSystem.Phone)?.Value;
+        var email = fhirPatient.Telecom?.FirstOrDefault(t => t.System == ContactPoint.ContactPointSystem.Email)?.Value;
+        var addr = fhirPatient.Address?.FirstOrDefault();
+
+        return (new ParsedFhirPatient(
+            firstName, lastName, dob,
+            MapFhirGender(fhirPatient.Gender),
+            phone, email,
+            addr?.Line?.FirstOrDefault(), addr?.City, addr?.State, addr?.PostalCode), null);
+    }
 }

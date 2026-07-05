@@ -1,0 +1,9 @@
+.report-wrap { padding: 24px; }
+.report-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; h2 { font-size: 20px; font-weight: 700; } }
+.meta { color: #6c757d; font-size: 13px; margin-bottom: 20px; }
+.report-col { display: flex; flex-direction: column; gap: 20px; }
+.center-spin { display: flex; justify-content: center; padding: 60px; }
+.error-msg { color: #c62828; padding: 24px; }
+.empty { padding: 40px; color: #6c757d; font-style: italic; text-align: center; }
+.done    { color: #2e7d32; font-weight: 700; }
+.overdue { color: #c62828; font-weight: 700; }

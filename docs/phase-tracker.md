@@ -15,10 +15,10 @@
 | 3 | Documents, Tasks & Notes | 2 weeks | `[x]` | Blob upload + task management | [View Phase 3](phases/phase-3.md) |
 | 4 | Appointments & Scheduling | 2 weeks | `[~]` | Calendar and booking | [View Phase 4](phases/phase-4.md) |
 | 5 | FHIR/HL7 Integration | 2 weeks | `[~]` | FHIR R4 API, resource mapping, Bundle export/import | [View Phase 5](phases/phase-5.md) |
-| 6 | Dashboard & Reports | 2 weeks | `[ ]` | All dashboards + CSV export | [View Phase 6](phases/phase-6.md) |
+| 6 | Dashboard & Reports | 2 weeks | `[x]` | All dashboards + CSV export | [View Phase 6](phases/phase-6.md) |
 | 7 | Notifications & Audit UI | 1 week | `[x]` | Notification bell + audit log viewer | [View Phase 7](phases/phase-7.md) |
 | 8 | Testing, Security & Polish | 2 weeks | `[ ]` | Production-ready quality bar | [View Phase 8](phases/phase-8.md) |
-| 9 | Advanced FHIR & Interoperability | 1 week | `[ ]` | Transaction Bundle import + HL7 v2 receiver | [View Phase 9](phases/phase-9.md) |
+| 9 | Advanced FHIR & Interoperability | 1 week | `[x]` | Transaction Bundle import + HL7 v2 receiver | [View Phase 9](phases/phase-9.md) |
 
 **Total estimated duration:** ~16 weeks (part-time) / ~8 weeks (full-time)
 
@@ -33,11 +33,11 @@
 | Phase 3 — Documents & Tasks | ~22 | 22 | 0 | 100% |
 | Phase 4 — Appointments | ~16 | 12 | 4 | 75% |
 | Phase 5 — FHIR/HL7 Integration | ~33 | 26 | 7 | 79% |
-| Phase 6 — Dashboards & Reports | ~20 | 0 | 20 | 0% |
+| Phase 6 — Dashboards & Reports | ~20 | 20 | 0 | 100% |
 | Phase 7 — Notifications & Audit UI | ~14 | 14 | 0 | 100% |
 | Phase 8 — Testing & Polish | ~22 | 0 | 22 | 0% |
-| Phase 9 — Advanced FHIR & Interop | ~12 | 0 | 12 | 0% |
-| **Total** | **~206** | **119** | **87** | **58%** |
+| Phase 9 — Advanced FHIR & Interop | ~12 | 12 | 0 | 100% |
+| **Total** | **~206** | **151** | **55** | **73%** |
 
 _Update task counts as tasks are added or split during development._
 

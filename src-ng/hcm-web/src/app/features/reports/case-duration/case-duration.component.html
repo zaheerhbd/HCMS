@@ -1,0 +1,32 @@
+<div class="report-wrap">
+  <div class="report-header">
+    <h2>Average Case Duration by Type</h2>
+    <button mat-stroked-button (click)="exportCsv()" [disabled]="!report">
+      <mat-icon>download</mat-icon> Export CSV
+    </button>
+  </div>
+  <div *ngIf="loading" class="center-spin"><mat-spinner diameter="40"></mat-spinner></div>
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
+  <ng-container *ngIf="report && !loading">
+    <p class="meta">Closed cases only · Generated {{ report.generatedAt | date:'medium' }}</p>
+    <div *ngIf="!report.rows.length" class="empty">No closed cases with duration data yet.</div>
+    <div class="report-col" *ngIf="report.rows.length">
+      <mat-card>
+        <mat-card-content><canvas #barCanvas height="240"></canvas></mat-card-content>
+      </mat-card>
+      <mat-card>
+        <mat-card-content>
+          <table mat-table [dataSource]="report.rows">
+            <ng-container matColumnDef="caseType"><th mat-header-cell *matHeaderCellDef>Case Type</th><td mat-cell *matCellDef="let r"><strong>{{ r.caseType }}</strong></td></ng-container>
+            <ng-container matColumnDef="caseCount"><th mat-header-cell *matHeaderCellDef>Cases</th><td mat-cell *matCellDef="let r">{{ r.caseCount }}</td></ng-container>
+            <ng-container matColumnDef="averageDays"><th mat-header-cell *matHeaderCellDef>Avg Days</th><td mat-cell *matCellDef="let r" class="avg">{{ r.averageDays }}d</td></ng-container>
+            <ng-container matColumnDef="minDays"><th mat-header-cell *matHeaderCellDef>Min</th><td mat-cell *matCellDef="let r">{{ r.minDays }}d</td></ng-container>
+            <ng-container matColumnDef="maxDays"><th mat-header-cell *matHeaderCellDef>Max</th><td mat-cell *matCellDef="let r">{{ r.maxDays }}d</td></ng-container>
+            <tr mat-header-row *matHeaderRowDef="columns"></tr>
+            <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </ng-container>
+</div>

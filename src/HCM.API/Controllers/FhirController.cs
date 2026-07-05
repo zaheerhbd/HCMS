@@ -1,4 +1,5 @@
 using HCM.Application.Fhir.DataHandlers;
+using HCM.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,9 +12,10 @@ namespace HCM.API.Controllers;
 [Route("fhir/R4")]
 [Authorize]
 [Produces("application/fhir+json")]
-public class FhirController(IFhirDataHandler handler) : ControllerBase
+public class FhirController(IFhirDataHandler handler, IFhirMappingService mapping) : ControllerBase
 {
     private readonly IFhirDataHandler _handler = handler;
+    private readonly IFhirMappingService _mapping = mapping;
 
     private string BaseUrl =>
         $"{Request.Scheme}://{Request.Host}";
@@ -58,6 +60,34 @@ public class FhirController(IFhirDataHandler handler) : ControllerBase
     {
         var json = await _handler.GetEverythingAsync(mrn, BaseUrl, ct);
         return Content(json, "application/fhir+json");
+    }
+
+    /// <summary>POST /fhir/R4/ — import a FHIR Transaction Bundle atomically (Patient + Encounter + Appointments + Tasks)</summary>
+    [HttpPost("")]
+    public async Task<IActionResult> ImportTransactionBundle(CancellationToken ct)
+    {
+        string bundleJson;
+        using (var reader = new StreamReader(Request.Body))
+            bundleJson = await reader.ReadToEndAsync(ct);
+
+        if (string.IsNullOrWhiteSpace(bundleJson))
+            return BadRequest(FhirOperationOutcome("invalid", "Request body must contain a FHIR Bundle JSON resource."));
+
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        var result = await _handler.ImportTransactionBundleAsync(bundleJson, userId, ct);
+
+        if (!result.Success)
+        {
+            return UnprocessableEntity(new
+            {
+                resourceType = "OperationOutcome",
+                issue = result.Errors.Select(e => new { severity = "error", code = "processing", diagnostics = e }).ToArray()
+            });
+        }
+
+        // Return a FHIR transaction-response Bundle
+        var responseJson = _mapping.MapTransactionResponse(result.Entries);
+        return Content(responseJson, "application/fhir+json");
     }
 
     /// <summary>POST /fhir/R4/Patient — import a FHIR Patient resource; creates a new patient with MRN</summary>
