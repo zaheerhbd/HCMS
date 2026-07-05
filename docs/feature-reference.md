@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-07-04 (Phase 7 complete — Modules 10 Audit and 11 Notifications now Complete; NotificationBellComponent, AuditLogComponent, admin routing, NotificationOverdueService)
+**Last Updated:** 2026-07-05 (Phase 6 complete — Module 9 Dashboard & Reports now Complete; all 3 dashboards + 3 reports with CSV export)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -19,7 +19,7 @@
 | 6 | Document Management | 3 | Hidden (UI disabled) | FR-23 – FR-27 |
 | 7 | Appointments & Scheduling | 4 | Complete | FR-28 – FR-32 |
 | 8 | Care Team | 2 | Complete | FR-33 – FR-35 |
-| 9 | Dashboard & Reports | 6 | Not Started | FR-36 – FR-39 |
+| 9 | Dashboard & Reports | 6 | Complete | FR-36 – FR-39 |
 | 10 | Audit & Compliance | 7 | Complete | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Complete | FR-43 – FR-45 |
 | 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
@@ -293,7 +293,7 @@ Cancelled → (terminal)
 
 ## 9. Dashboard & Reports
 
-**Phase:** 6 | **Status:** Not Started
+**Phase:** 6 | **Status:** Complete
 
 ### Dashboards
 
