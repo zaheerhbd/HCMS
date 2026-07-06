@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-05 (Added case assignment via FHIR extension on Encounter entry in Transaction Bundle)
-**Current Phase:** Phase 8 — Testing, Security & Polish (Not Started)
-**Overall Progress:** 151 / 206 tasks complete (~73%)
+**Last Updated:** 2026-07-06 (Phase 8 frontend testing — Angular unit tests verified, 32 tests passing)
+**Current Phase:** Phase 8 — Testing, Security & Polish (In Progress)
+**Overall Progress:** 156 / 206 tasks complete (~76%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -21,8 +21,31 @@
 | 5 | FHIR/HL7 Integration | `In Progress` | ~33 | 26 | 7 |
 | 6 | Dashboards & Reports | `Complete` | ~20 | 20 | 0 |
 | 7 | Notifications & Audit UI | `Complete` | ~14 | 14 | 0 |
-| 8 | Testing, Security & Polish | `Not Started` | ~22 | 0 | 22 |
+| 8 | Testing, Security & Polish | `In Progress` | ~22 | 5 | 17 |
 | 9 | Advanced FHIR & Interoperability | `Complete` | ~12 | 12 | 0 |
+
+---
+
+## Current Phase Detail — Phase 8: Testing, Security & Polish
+
+**Goal:** Production-quality bar — automated test coverage on key backend flows, security hardening, and deploy polish.
+
+**Status:** In Progress — backend unit + integration testing done; frontend testing, security hardening, and production polish remaining.
+
+### Completed in Phase 8 (this session)
+- `src/HCM.Application.Tests` — 43 xUnit unit tests covering `AuthDataHandler` (login, lockout after 5 attempts, validation), `PatientDataHandler` (MRN generation, soft delete, search), `CaseDataHandler` (full status state-machine, table-driven valid/invalid transitions), `DocumentDataHandler` (upload validation, SAS URL expiry, soft delete), `NotificationDataHandler` (create/read/mark-read/mark-all-read). Runs against EF Core's InMemory provider through the real `ApplicationDbContext` rather than hand-mocking `DbSet<T>`, so production entity configs/keys/relationships are exercised as-is.
+- `src/HCM.API.Tests` — 26 xUnit integration tests booting the real HCM.API pipeline via `WebApplicationFactory<Program>`: auth flow (login, bad password, protected-route access, 5-failed-attempt lockout), patient CRUD + RBAC, case creation + status transitions + RBAC, and a dedicated RBAC verification suite across `ReadOnly`/`CareCoordinator`/`Admin`.
+- Docker's daemon wasn't running in this dev environment, so the integration suite substitutes EF Core InMemory for Testcontainers SQL Server and a fake `IBlobStorageService` for Azurite — DI overrides only; the controllers/middleware/JWT auth under test are unchanged production code. `DataSeeder.SeedAsync` now branches on `Database.IsInMemory()`.
+- Found a real product gap while testing: `AuthController.Refresh` and `Logout` are unimplemented `// TODO` stubs — filed as [GitHub issue #5](https://github.com/zaheerhbd/HCMS/issues/5).
+- `docs/testing-and-audit/` — one markdown doc per Phase 8 test section (unit, integration, coverage/CI, Angular unit, E2E, Lighthouse, security headers, PHI audit, ZAP, RBAC, Azure/CI-CD, README/demo, definition of done), a navigable `test-results.html` report, and plain-language `unit-and-integration-testing-explained.html` (backend) / `angular-testing-explained.html` (frontend) guides.
+- Angular unit tests (Jasmine/Karma) — 32 tests across `src-ng/hcm-web/src/app/**/*.spec.ts`: `AuthService` (login/logout/token storage), `JwtInterceptor` (Bearer header attach + 401 refresh-and-retry + infinite-loop guard), `NotificationService` (60s polling via `fakeAsync`), `CaseFormComponent`/`PatientFormComponent` (Reactive Form validation), `HasRoleDirective` (role-gated rendering). Verified via `ng test --code-coverage`; coverage confirms each spec exercises its real source file.
+
+### Remaining in Phase 8
+- Code coverage report (target ≥ 70% on Application layer) + OWASP dependency-check in CI
+- Playwright E2E flows (login, create patient, create case, upload document)
+- Lighthouse accessibility audit + bundle size analysis
+- Security headers, PHI/SAS-URL log audit, OWASP ZAP scan
+- Production deploy polish: manual approval gate, App Insights alerts, budget alert, README + demo video
 
 ---
 

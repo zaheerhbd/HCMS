@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phase 8 — Testing, Security & Polish · Plan</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: #2e3148;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #38bdf8;
+    --purple: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+  }
+  #sidebar .logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  #sidebar .logo .badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: inline-block;
+  }
+  #sidebar .logo h1 { font-size: 15px; font-weight: 700; color: var(--text); }
+  #sidebar .logo p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+  }
+  nav a:hover, nav a.active {
+    color: var(--text);
+    background: rgba(99,102,241,.1);
+    border-left-color: var(--accent);
+  }
+  nav .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 20px 4px;
+  }
+  nav .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  nav .dot-blue { background: var(--blue); }
+  nav .dot-green { background: var(--green); }
+  nav .dot-yellow { background: var(--yellow); }
+  nav .dot-purple { background: var(--purple); }
+  nav .dot-red { background: var(--red); }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: calc(100vw - var(--sidebar-w));
+    padding: 48px 56px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #1a1d27 0%, #1e2035 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,.18) 0%, transparent 70%);
+  }
+  .hero .tag { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 10px; }
+  .hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+  .hero p { color: var(--muted); max-width: 620px; font-size: 15px; }
+  .hero .meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .hero .meta-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .hero .meta-item strong { color: var(--text); }
+
+  /* ── SECTION ── */
+  section { margin-bottom: 56px; scroll-margin-top: 32px; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header .icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .icon-blue { background: rgba(56,189,248,.15); }
+  .icon-green { background: rgba(34,197,94,.15); }
+  .icon-yellow { background: rgba(245,158,11,.15); }
+  .icon-purple { background: rgba(167,139,250,.15); }
+  .icon-red { background: rgba(239,68,68,.15); }
+  .section-header h2 { font-size: 22px; font-weight: 700; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+
+  /* ── TASK LIST ── */
+  .task-group { margin-bottom: 8px; }
+  .task-group-title { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+  .task {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+  }
+  .task:hover { border-color: var(--accent); }
+  .task .check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); flex-shrink: 0; margin-top: 2px; }
+  .task .info { flex: 1; }
+  .task .info .title { font-size: 14px; font-weight: 500; }
+  .task .info .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .task .effort {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 99px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .effort-low { background: rgba(34,197,94,.15); color: var(--green); }
+  .effort-med { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .effort-high { background: rgba(239,68,68,.15); color: var(--red); }
+
+  /* ── CODE ── */
+  pre {
+    background: #0d0f18;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c9d1e0;
+    margin: 12px 0;
+  }
+  .kw { color: #818cf8; }
+  .str { color: #86efac; }
+  .cm { color: #64748b; font-style: italic; }
+  .cls { color: #f0abfc; }
+  .num { color: #fbbf24; }
+
+  /* ── DIAGRAMS ── */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .diagram-wrap svg { display: block; margin: 0 auto; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── STAT CARDS ── */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .value { font-size: 36px; font-weight: 800; line-height: 1; }
+  .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-item { position: relative; margin-bottom: 24px; }
+  .tl-dot {
+    position: absolute;
+    left: -26px; top: 4px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--surface);
+  }
+  .tl-dot-blue { border-color: var(--blue); }
+  .tl-dot-green { border-color: var(--green); }
+  .tl-dot-yellow { border-color: var(--yellow); }
+  .tl-dot-purple { border-color: var(--purple); }
+  .tl-item .tl-week { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .tl-item .tl-title { font-size: 15px; font-weight: 700; }
+  .tl-item .tl-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .tl-item .tl-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .tl-tag {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 99px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ── DETAILS ── */
+  details {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  summary {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  summary::before { content: '▶'; font-size: 10px; color: var(--muted); transition: transform .2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  details .details-body { padding: 0 16px 16px; }
+
+  /* ── ALERT ── */
+  .alert {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 13px;
+  }
+  .alert-blue { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); color: var(--blue); }
+  .alert-yellow { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); color: var(--yellow); }
+  .alert-green { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: var(--green); }
+  .alert-red { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--red); }
+  .alert-icon { font-size: 16px; flex-shrink: 0; }
+  .alert-body { color: var(--text); }
+  .alert-body strong { color: inherit; }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--surface2); }
+
+  /* ── STATUS PILL ── */
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .pill-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .pill-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-blue { background: rgba(56,189,248,.15); color: var(--blue); }
+
+  /* ── DOD ── */
+  .dod-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .dod-item:last-child { border-bottom: none; }
+  .dod-cb { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+  .dod-text { font-size: 14px; }
+  .dod-text span { color: var(--muted); font-size: 12px; display: block; margin-top: 2px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside id="sidebar">
+  <div class="logo">
+    <div class="badge">HCMS</div>
+    <h1>Phase 8 Plan</h1>
+    <p>Testing, Security &amp; Polish</p>
+  </div>
+  <nav id="nav">
+    <div class="section-label">Overview</div>
+    <a href="#overview"><span class="dot" style="background:#6366f1"></span> Summary &amp; Goals</a>
+    <a href="#timeline"><span class="dot" style="background:#818cf8"></span> 2-Week Timeline</a>
+    <a href="#scope"><span class="dot" style="background:#64748b"></span> What's In / Out</a>
+
+    <div class="section-label">Backend Testing</div>
+    <a href="#unit"><span class="dot dot-blue"></span> Unit Tests</a>
+    <a href="#integration"><span class="dot dot-blue"></span> Integration Tests</a>
+    <a href="#coverage"><span class="dot dot-blue"></span> Coverage &amp; CI</a>
+
+    <div class="section-label">Frontend Testing</div>
+    <a href="#ng-unit"><span class="dot dot-green"></span> Angular Unit Tests</a>
+    <a href="#e2e"><span class="dot dot-green"></span> E2E (Playwright)</a>
+    <a href="#lighthouse"><span class="dot dot-green"></span> Bundle &amp; Accessibility</a>
+
+    <div class="section-label">Security</div>
+    <a href="#headers"><span class="dot dot-yellow"></span> Security Headers</a>
+    <a href="#phi"><span class="dot dot-yellow"></span> PHI Audit</a>
+    <a href="#zap"><span class="dot dot-yellow"></span> OWASP ZAP Scan</a>
+    <a href="#rbac-check"><span class="dot dot-yellow"></span> RBAC Verification</a>
+
+    <div class="section-label">Production</div>
+    <a href="#azure"><span class="dot dot-purple"></span> Azure &amp; CI/CD</a>
+    <a href="#readme"><span class="dot dot-purple"></span> README &amp; Demo</a>
+
+    <div class="section-label">Completion</div>
+    <a href="#dod"><span class="dot dot-red"></span> Definition of Done</a>
+    <a href="#report"><span class="dot dot-red"></span> Phase HTML Report</a>
+  </nav>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main id="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="tag">Phase 8 of 9 · 2 Weeks</div>
+    <h2>Testing, Security &amp; Polish</h2>
+    <p>Everything needed to cross the quality bar for a production-grade portfolio submission. Covers backend unit &amp; integration tests, Angular E2E, security hardening, Lighthouse audits, OWASP scans, and the final prod deploy setup.</p>
+    <div class="meta">
+      <div class="meta-item">📋 <strong>22 tasks</strong> remaining</div>
+      <div class="meta-item">⏱ <strong>~2 weeks</strong> part-time</div>
+      <div class="meta-item">🎯 <strong>Prerequisite:</strong> Phase 5 gaps closed</div>
+      <div class="meta-item">🏁 <strong>Output:</strong> Production-ready quality bar</div>
+    </div>
+  </div>
+
+  <!-- ─── OVERVIEW ─── -->
+  <section id="overview">
+    <div class="section-header">
+      <div class="icon icon-purple">🗺️</div>
+      <h2>Summary &amp; Goals</h2>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="value" style="color:var(--blue)">22</div>
+        <div class="label">Total Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:var(--yellow)">0%</div>
+        <div class="label">Currently Complete</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:var(--green)">4</div>
+        <div class="label">Major Workstreams</div>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg width="720" height="180" viewBox="0 0 720 180">
+        <!-- Four pillars -->
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#6366f1" opacity=".6"/>
+          </marker>
+        </defs>
+        <!-- Boxes -->
+        <rect x="10" y="30" width="155" height="100" rx="10" fill="#1e2238" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="88" y="70" text-anchor="middle" fill="#38bdf8" font-size="13" font-weight="700">Backend</text>
+        <text x="88" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Testing</text>
+        <text x="88" y="106" text-anchor="middle" fill="#94a3b8" font-size="10">xUnit · Moq · Testcontainers</text>
+
+        <rect x="190" y="30" width="155" height="100" rx="10" fill="#1e2238" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="268" y="70" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">Frontend</text>
+        <text x="268" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Testing</text>
+        <text x="268" y="106" text-anchor="middle" fill="#94a3b8" font-size="10">Karma · Playwright · Lighthouse</text>
+
+        <rect x="370" y="30" width="155" height="100" rx="10" fill="#1e2238" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="448" y="70" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">Security</text>
+        <text x="448" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Hardening</text>
+        <text x="448" y="106" text-anchor="middle" fill="#94a3b8" font-size="10">Headers · PHI · OWASP ZAP</text>
+
+        <rect x="550" y="30" width="155" height="100" rx="10" fill="#1e2238" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="628" y="70" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700">Production</text>
+        <text x="628" y="88" text-anchor="middle" fill="#94a3b8" font-size="11">Polish</text>
+        <text x="628" y="106" text-anchor="middle" fill="#94a3b8" font-size="10">Azure · CI/CD · README</text>
+
+        <!-- Arrow row -->
+        <path d="M165,80 L188,80" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+        <path d="M345,80 L368,80" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+        <path d="M525,80 L548,80" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- All → DoD -->
+        <path d="M88,130 L88,162 L628,162 L628,130" stroke="#6366f1" stroke-width="1" stroke-dasharray="4,3" fill="none"/>
+        <rect x="295" y="150" width="130" height="28" rx="6" fill="#1a1d27" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="360" y="169" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="700">Definition of Done</text>
+      </svg>
+    </div>
+
+    <div class="alert alert-yellow">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-body"><strong>Prerequisite:</strong> Phase 5 still has 7 open tasks (Transaction Bundle E2E tests + frontend import tab). These are now done via Phase 9. Verify <code>POST /fhir/R4/</code> and <code>POST /fhir/R4/$import</code> work before starting Phase 8 integration tests.</div>
+    </div>
+  </section>
+
+  <!-- ─── TIMELINE ─── -->
+  <section id="timeline">
+    <div class="section-header">
+      <div class="icon icon-purple">📅</div>
+      <h2>2-Week Timeline</h2>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg width="680" height="270" viewBox="0 0 680 270">
+        <defs>
+          <linearGradient id="w1" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity=".9"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity=".9"/>
+          </linearGradient>
+          <linearGradient id="w2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#22c55e" stop-opacity=".9"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity=".9"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Day headers -->
+        <text x="140" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 1</text>
+        <text x="220" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 2</text>
+        <text x="300" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 3</text>
+        <text x="380" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 4</text>
+        <text x="460" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 5</text>
+        <text x="540" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 6–7</text>
+        <text x="620" y="18" text-anchor="middle" fill="#64748b" font-size="10">Day 8–10</text>
+
+        <!-- Grid lines -->
+        <line x1="100" y1="22" x2="680" y2="22" stroke="#1e2238" stroke-width="1"/>
+        <line x1="100" y1="248" x2="680" y2="248" stroke="#1e2238" stroke-width="1"/>
+        <line x1="100" y1="22" x2="100" y2="248" stroke="#1e2238" stroke-width="1"/>
+
+        <!-- Row labels -->
+        <text x="94" y="57" text-anchor="end" fill="#94a3b8" font-size="11">Unit Tests</text>
+        <text x="94" y="97" text-anchor="end" fill="#94a3b8" font-size="11">Integration</text>
+        <text x="94" y="137" text-anchor="end" fill="#94a3b8" font-size="11">Frontend</text>
+        <text x="94" y="177" text-anchor="end" fill="#94a3b8" font-size="11">Security</text>
+        <text x="94" y="217" text-anchor="end" fill="#94a3b8" font-size="11">Polish</text>
+
+        <!-- Unit Tests: D1-D3 -->
+        <rect x="102" y="40" width="198" height="26" rx="5" fill="url(#w1)" opacity=".85"/>
+        <text x="201" y="58" text-anchor="middle" fill="white" font-size="11" font-weight="600">DataHandler unit tests</text>
+
+        <!-- Integration: D2-D4 -->
+        <rect x="182" y="80" width="198" height="26" rx="5" fill="#4f6ef7" opacity=".85"/>
+        <text x="281" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="600">API integration tests</text>
+
+        <!-- Frontend: D3-D5 -->
+        <rect x="262" y="120" width="198" height="26" rx="5" fill="url(#w2)" opacity=".85"/>
+        <text x="361" y="138" text-anchor="middle" fill="white" font-size="11" font-weight="600">Angular unit + E2E</text>
+
+        <!-- Security: D4-D6 -->
+        <rect x="342" y="160" width="218" height="26" rx="5" fill="#f59e0b" opacity=".85"/>
+        <text x="451" y="178" text-anchor="middle" fill="white" font-size="11" font-weight="600">Security headers + ZAP scan</text>
+
+        <!-- Polish: D6-D10 -->
+        <rect x="502" y="200" width="178" height="26" rx="5" fill="#a78bfa" opacity=".85"/>
+        <text x="591" y="218" text-anchor="middle" fill="white" font-size="11" font-weight="600">Azure + README + Demo</text>
+
+        <!-- Coverage + CI bar spanning D3-D7 -->
+        <rect x="262" y="40" width="178" height="6" rx="3" fill="#64748b" opacity=".5"/>
+        <text x="351" y="37" text-anchor="middle" fill="#64748b" font-size="9">Coverage CI (runs alongside)</text>
+
+        <text x="100" y="264" fill="#64748b" font-size="10" text-anchor="start">← Week 1 (Backend focus)</text>
+        <text x="500" y="264" fill="#64748b" font-size="10" text-anchor="middle">Week 2 (Frontend / Security / Polish) →</text>
+      </svg>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-blue"></div>
+        <div class="tl-week">Week 1 · Days 1–2</div>
+        <div class="tl-title">Backend Unit Tests — Application Layer</div>
+        <div class="tl-desc">Write xUnit tests for all DataHandlers using Moq for repository/context interfaces. Target: 70% Application layer coverage.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">xUnit</span><span class="tl-tag">Moq</span><span class="tl-tag">DataHandlers</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-blue"></div>
+        <div class="tl-week">Week 1 · Days 3–4</div>
+        <div class="tl-title">Backend Integration Tests</div>
+        <div class="tl-desc">WebApplicationFactory + Testcontainers SQL Server. Auth flow, Patient CRUD, Case state machine, mock Blob for document tests.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">WebApplicationFactory</span><span class="tl-tag">Testcontainers</span><span class="tl-tag">SQL Server</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-green"></div>
+        <div class="tl-week">Week 1 · Day 5</div>
+        <div class="tl-title">Coverage Report + CI Integration</div>
+        <div class="tl-desc">Add Coverlet + ReportGenerator. Gate GitHub Actions build on ≥ 70% coverage. Add OWASP dependency-check step.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">Coverlet</span><span class="tl-tag">GitHub Actions</span><span class="tl-tag">OWASP NVD</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-green"></div>
+        <div class="tl-week">Week 2 · Days 6–7</div>
+        <div class="tl-title">Angular Unit Tests + E2E (Playwright)</div>
+        <div class="tl-desc">Karma tests for AuthService, JwtInterceptor, reactive form validators. Playwright E2E for login, create patient, create case, upload document.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">Jasmine/Karma</span><span class="tl-tag">Playwright</span><span class="tl-tag">E2E</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-yellow"></div>
+        <div class="tl-week">Week 2 · Day 7</div>
+        <div class="tl-title">Lighthouse + Bundle Analysis</div>
+        <div class="tl-desc">Run Lighthouse CI on Login, Case List, Case Detail. Target ≥ 90 accessibility. Analyse bundle with webpack-bundle-analyzer.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">Lighthouse CI</span><span class="tl-tag">Accessibility</span><span class="tl-tag">Bundle Size</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-yellow"></div>
+        <div class="tl-week">Week 2 · Days 8–9</div>
+        <div class="tl-title">Security Hardening</div>
+        <div class="tl-desc">Add CSP + security headers middleware. PHI log audit. SAS URL leak check. OWASP ZAP quick scan. RBAC endpoint verification.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">CSP</span><span class="tl-tag">OWASP ZAP</span><span class="tl-tag">PHI</span>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot tl-dot-purple"></div>
+        <div class="tl-week">Week 2 · Day 10</div>
+        <div class="tl-title">Production Polish &amp; Phase Report</div>
+        <div class="tl-desc">AppInsights alerts, budget alerts, README update, demo video script. Generate phase-8 HTML completion report.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">Azure Monitor</span><span class="tl-tag">README</span><span class="tl-tag">Phase Report</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SCOPE ─── -->
+  <section id="scope">
+    <div class="section-header">
+      <div class="icon icon-purple">🎯</div>
+      <h2>What's In / Out of Scope</h2>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="border-color:rgba(34,197,94,.3)">
+        <h3 style="color:var(--green)">✅ In Scope (Must Do)</h3>
+        <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+          <li>xUnit unit tests for all DataHandlers</li>
+          <li>Integration tests with real SQL (Testcontainers)</li>
+          <li>Coverlet code coverage ≥ 70% on Application layer</li>
+          <li>Angular Karma unit tests (AuthService, interceptors)</li>
+          <li>Playwright E2E for 4 key flows</li>
+          <li>Lighthouse ≥ 90 on 3 pages</li>
+          <li>CSP + X-Frame-Options + X-Content-Type-Options headers</li>
+          <li>OWASP ZAP quick scan</li>
+          <li>PHI / SAS URL log audit</li>
+          <li>AppInsights alerts (error rate, latency, availability)</li>
+          <li>README with setup + screenshots</li>
+          <li>Phase 8 HTML completion report</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(239,68,68,.3)">
+        <h3 style="color:var(--red)">❌ Out of Scope (Backlog)</h3>
+        <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+          <li>Full E2E test suite (all 50+ flows)</li>
+          <li>Load / performance testing</li>
+          <li>Penetration testing (full engagement)</li>
+          <li>Multi-tenancy security testing</li>
+          <li>SMART on FHIR auth</li>
+          <li>2FA (TOTP/SMS)</li>
+          <li>Mobile PWA testing</li>
+          <li>Azure Key Vault rotation (KV skipped)</li>
+          <li>SignalR real-time notifications</li>
+          <li>Physical blob deletion job</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ BACKEND TESTING ══════════════ -->
+  <section id="unit">
+    <div class="section-header">
+      <div class="icon icon-blue">🧪</div>
+      <h2>Backend — Unit Tests</h2>
+    </div>
+
+    <div class="alert alert-blue">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Pattern:</strong> Unit tests verify DataHandler logic in isolation — Moq the <code>IApplicationDbContext</code> interface (or individual <code>DbSet</code>s). No DB, no HTTP, fast feedback. Think of it like testing a recipe without a real kitchen — you swap real ingredients with predictable fakes.</div>
+    </div>
+
+    <div class="card">
+      <h3>📁 Project Structure to Create</h3>
+      <pre><span class="cm">// Add to solution</span>
+src/
+  HCM.Application.Tests/         <span class="cm">← new xUnit project</span>
+    Auth/
+      AuthDataHandlerTests.cs
+    Patients/
+      PatientDataHandlerTests.cs
+    Cases/
+      CaseDataHandlerTests.cs
+      CaseStatusMachineTests.cs
+    Documents/
+      DocumentDataHandlerTests.cs
+    Notifications/
+      NotificationDataHandlerTests.cs
+    Helpers/
+      MockDbContext.cs           <span class="cm">← shared Moq setup</span></pre>
+      <pre><span class="cm"># Create project</span>
+dotnet new xunit -n HCM.Application.Tests -o src/HCM.Application.Tests
+dotnet add src/HCM.Application.Tests package Moq
+dotnet add src/HCM.Application.Tests package FluentAssertions
+dotnet sln add src/HCM.Application.Tests</pre>
+    </div>
+
+    <div class="task-group-title">DataHandlers to Cover</div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">AuthDataHandler — LoginAsync, RefreshAsync, LogoutAsync</div>
+        <div class="sub">Mock: IApplicationDbContext, IPasswordHasher, IJwtService · Verify: account lockout increments, JWT issued on valid creds, locked account returns error</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">PatientDataHandler — CreateAsync, UpdateAsync, SearchAsync, SoftDeleteAsync</div>
+        <div class="sub">Mock: DbContext · Verify: MRN format MRN-{YYYY}-{NNNNN}, duplicate name search works, soft delete sets IsActive=false</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">CaseDataHandler — status state machine transitions (valid + invalid)</div>
+        <div class="sub">Table-driven tests: Draft→Open (valid), Open→Closed (invalid, throws), Draft→Escalated (invalid). Case number format CASE-{YYYY}-{NNNNN}.</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">DocumentDataHandler — metadata write, SAS URL 1-hour expiry</div>
+        <div class="sub">Mock IBlobStorageService · Verify SAS expiry ≤ 1h, blob URLs not logged, soft delete sets IsDeleted=true</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">NotificationDataHandler — create, markRead, markAllRead, unreadCount</div>
+        <div class="sub">Verify count decrements, duplicate-day dedup logic in overdue service</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">FhirDataHandler — ParseAndPreview, ConfirmImport, ImportTransactionBundle</div>
+        <div class="sub">Mock Firely Serializer, verify OperationOutcome returned for invalid JSON, urn:uuid: resolution, FhirImportLog written</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+
+    <details>
+      <summary>📄 Example: CaseDataHandler state machine test</summary>
+      <div class="details-body">
+        <pre><span class="kw">public class</span> <span class="cls">CaseStatusMachineTests</span>
+{
+    <span class="kw">private readonly</span> Mock&lt;<span class="cls">IApplicationDbContext</span>&gt; _ctx;
+    <span class="kw">private readonly</span> <span class="cls">CaseDataHandler</span> _sut;
+
+    <span class="kw">public</span> CaseStatusMachineTests()
+    {
+        _ctx = <span class="kw">new</span> Mock&lt;<span class="cls">IApplicationDbContext</span>&gt;();
+        _sut = <span class="kw">new</span> <span class="cls">CaseDataHandler</span>(_ctx.Object);
+    }
+
+    [<span class="cls">Theory</span>]
+    [<span class="cls">InlineData</span>(<span class="str">"Draft"</span>,     <span class="str">"Open"</span>,          <span class="kw">true</span>)]
+    [<span class="cls">InlineData</span>(<span class="str">"Open"</span>,      <span class="str">"InProgress"</span>,    <span class="kw">true</span>)]
+    [<span class="cls">InlineData</span>(<span class="str">"InProgress"</span>, <span class="str">"PendingReview"</span>, <span class="kw">true</span>)]
+    [<span class="cls">InlineData</span>(<span class="str">"Draft"</span>,     <span class="str">"Closed"</span>,        <span class="kw">false</span>)]  <span class="cm">// invalid</span>
+    [<span class="cls">InlineData</span>(<span class="str">"Closed"</span>,    <span class="str">"Open"</span>,          <span class="kw">false</span>)]  <span class="cm">// invalid</span>
+    <span class="kw">public async</span> Task ValidateTransition(
+        <span class="kw">string</span> from, <span class="kw">string</span> to, <span class="kw">bool</span> isValid)
+    {
+        <span class="kw">var</span> @case = <span class="cls">CaseFixture</span>.Build(status: from);
+        _ctx.SetupDbSet(@case);
+
+        <span class="kw">if</span> (isValid)
+        {
+            <span class="kw">var</span> result = <span class="kw">await</span> _sut.TransitionStatusAsync(@case.CaseNumber, to);
+            result.Status.Should().Be(to);
+        }
+        <span class="kw">else</span>
+        {
+            <span class="kw">var</span> act = () => _sut.TransitionStatusAsync(@case.CaseNumber, to);
+            <span class="kw">await</span> act.Should().ThrowAsync&lt;<span class="cls">ValidationException</span>&gt;();
+        }
+    }
+}</pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─── INTEGRATION ─── -->
+  <section id="integration">
+    <div class="section-header">
+      <div class="icon icon-blue">🔗</div>
+      <h2>Backend — Integration Tests</h2>
+    </div>
+
+    <div class="alert alert-blue">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Analogy:</strong> Unit tests are like testing each LEGO brick in isolation. Integration tests assemble the full set and verify the structure holds — real DB, real HTTP stack, real middleware. Testcontainers spins up a throwaway SQL Server in Docker for each test run.</div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg width="640" height="160" viewBox="0 0 640 160">
+        <rect x="10" y="30" width="100" height="40" rx="6" fill="#1e2238" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="60" y="55" text-anchor="middle" fill="#e2e8f0" font-size="12">xUnit Test</text>
+
+        <path d="M110,50 L148,50" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="150" y="20" width="130" height="60" rx="6" fill="#1e2238" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="215" y="45" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="600">WebApplication</text>
+        <text x="215" y="62" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="600">Factory</text>
+
+        <path d="M280,50 L318,50" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="320" y="20" width="140" height="60" rx="6" fill="#1e2238" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="390" y="45" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="600">Testcontainers</text>
+        <text x="390" y="62" text-anchor="middle" fill="#94a3b8" font-size="11">SQL Server (Docker)</text>
+
+        <path d="M460,50 L498,50" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="500" y="30" width="120" height="40" rx="6" fill="#1e2238" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="560" y="55" text-anchor="middle" fill="#f59e0b" font-size="12">Mock Blob</text>
+
+        <text x="320" y="110" text-anchor="middle" fill="#64748b" font-size="11">Each test class gets a fresh DB via EF migrations applied at startup</text>
+        <text x="320" y="127" text-anchor="middle" fill="#64748b" font-size="11">Blob Storage replaced by IBlob mock — avoids Azurite dependency</text>
+      </svg>
+    </div>
+
+    <div class="card">
+      <h3>📁 Project Structure to Create</h3>
+      <pre>src/
+  HCM.API.Tests/                 <span class="cm">← new xUnit project</span>
+    Fixtures/
+      ApiFactory.cs              <span class="cm">← WebApplicationFactory with Testcontainers</span>
+      DbSeedHelper.cs
+    Auth/
+      AuthFlowTests.cs           <span class="cm">← login → access → refresh → logout</span>
+    Patients/
+      PatientCrudTests.cs
+    Cases/
+      CaseStateMachineTests.cs
+    Documents/
+      DocumentUploadTests.cs     <span class="cm">← mock IBlobStorageService</span></pre>
+      <pre><span class="cm"># Create project</span>
+dotnet new xunit -n HCM.API.Tests -o src/HCM.API.Tests
+dotnet add src/HCM.API.Tests package Microsoft.AspNetCore.Mvc.Testing
+dotnet add src/HCM.API.Tests package Testcontainers.MsSql
+dotnet add src/HCM.API.Tests package FluentAssertions
+dotnet sln add src/HCM.API.Tests</pre>
+    </div>
+
+    <div class="task-group-title">Integration Test Scenarios</div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Auth flow: login → access protected route → refresh → logout</div>
+        <div class="sub">POST /api/auth/login → 200 + tokens; GET /api/patients (with token) → 200; POST /api/auth/refresh → new token; POST /api/auth/logout → 204</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Auth security: 5 failed logins → account locked</div>
+        <div class="sub">Loop 5 bad-password calls → 6th returns 423 Locked. Verify AuditLog entry written.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Patient CRUD via HTTP: create, read, search, soft-delete</div>
+        <div class="sub">POST → 201 with MRN-YYYY-NNNNN; GET /{mrn} → 200; GET ?name=… → paginated; DELETE → 200 sets IsActive=false (GET still returns record)</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Case state machine: valid transitions succeed, invalid return 422</div>
+        <div class="sub">Create case (Draft) → transition to Open → InProgress → PendingReview → Closed. Then attempt Draft→Closed → 422 with ProblemDetails.</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Document upload and SAS URL generation (mock blob)</div>
+        <div class="sub">POST multipart/form-data → 201; GET download URL → SAS URL with expiry ≤ 1h. IBlobStorageService mocked via DI override in ApiFactory.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">RBAC: ReadOnly JWT → POST endpoints return 403</div>
+        <div class="sub">Mint a ReadOnly-role token in test; verify POST /api/patients, POST /api/cases all return 403 Forbidden.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+
+    <details>
+      <summary>📄 Example: ApiFactory with Testcontainers</summary>
+      <div class="details-body">
+        <pre><span class="kw">public class</span> <span class="cls">ApiFactory</span> : <span class="cls">WebApplicationFactory</span>&lt;<span class="cls">Program</span>&gt;, IAsyncLifetime
+{
+    <span class="kw">private readonly</span> <span class="cls">MsSqlContainer</span> _db = <span class="kw">new</span> <span class="cls">MsSqlBuilder</span>().Build();
+
+    <span class="kw">public async</span> Task InitializeAsync()
+    {
+        <span class="kw">await</span> _db.StartAsync();
+    }
+
+    <span class="kw">protected override void</span> ConfigureWebHost(<span class="cls">IWebHostBuilder</span> builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            <span class="cm">// Replace real DB with Testcontainer connection string</span>
+            services.RemoveAll&lt;<span class="cls">DbContextOptions</span>&lt;<span class="cls">ApplicationDbContext</span>&gt;&gt;();
+            services.AddDbContext&lt;<span class="cls">ApplicationDbContext</span>&gt;(opt =>
+                opt.UseSqlServer(_db.GetConnectionString()));
+
+            <span class="cm">// Replace blob with mock</span>
+            services.RemoveAll&lt;<span class="cls">IBlobStorageService</span>&gt;();
+            services.AddSingleton(<span class="cls">Mock</span>.Of&lt;<span class="cls">IBlobStorageService</span>&gt;(b =>
+                b.GetSasUrl(<span class="cls">It</span>.IsAny&lt;<span class="kw">string</span>&gt;()) ==
+                <span class="str">"https://blob.test/file?sv=2024&amp;se=+1h"</span>));
+        });
+    }
+
+    <span class="kw">public new async</span> Task DisposeAsync() => <span class="kw">await</span> _db.DisposeAsync();
+}</pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─── COVERAGE ─── -->
+  <section id="coverage">
+    <div class="section-header">
+      <div class="icon icon-blue">📊</div>
+      <h2>Coverage Report &amp; CI Integration</h2>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🔧 Setup Coverlet</h3>
+        <pre><span class="cm"># Add to each test project</span>
+dotnet add package coverlet.collector
+dotnet add package ReportGenerator
+
+<span class="cm"># Run with coverage</span>
+dotnet test --collect:"XPlat Code Coverage" \
+  --results-directory ./coverage
+
+<span class="cm"># Generate HTML report</span>
+reportgenerator \
+  -reports:"coverage/**/coverage.cobertura.xml" \
+  -targetdir:"coverage/report" \
+  -reporttypes:Html</pre>
+      </div>
+      <div class="card">
+        <h3>⚙️ GitHub Actions step to add</h3>
+        <pre><span class="kw">- name</span>: <span class="str">Run tests + coverage</span>
+  <span class="kw">run</span>: |
+    dotnet test \
+      --collect:"XPlat Code Coverage" \
+      --results-directory ./coverage
+
+<span class="kw">- name</span>: <span class="str">Check coverage threshold</span>
+  <span class="kw">run</span>: |
+    reportgenerator \
+      -reports:coverage/**/coverage.cobertura.xml \
+      -targetdir:coverage/report \
+      -reporttypes:TextSummary
+    grep "Line coverage" coverage/report/Summary.txt \
+      | awk '{if($NF+0 &lt; 70) exit 1}'
+
+<span class="kw">- name</span>: <span class="str">OWASP Dependency Check</span>
+  <span class="kw">uses</span>: dependency-check/Dependency-Check_Action@main
+  <span class="kw">with</span>:
+    project: <span class="str">'HCMS'</span>
+    path: <span class="str">'.'</span>
+    format: <span class="str">'HTML'</span></pre>
+      </div>
+    </div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Add Coverlet + ReportGenerator to both test projects</div>
+        <div class="sub">coverlet.collector (runtime) + reportgenerator (global tool or CI step)</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Gate GitHub Actions CI: fail build if Application layer coverage &lt; 70%</div>
+        <div class="sub">Add TextSummary report + shell check in build-api.yml</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Add OWASP dependency-check step to CI</div>
+        <div class="sub">dependency-check/Dependency-Check_Action@main — uploads HTML report as artifact. Fail on CVSS ≥ 7.0 (High).</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <!-- ══════════════ FRONTEND TESTING ══════════════ -->
+  <section id="ng-unit">
+    <div class="section-header">
+      <div class="icon icon-green">🅰️</div>
+      <h2>Angular — Unit Tests</h2>
+    </div>
+
+    <div class="alert alert-green">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Scope:</strong> Focus on the services and interceptors — they contain business logic. Components that are pure presentation (just binding) get lower priority. Aim for the hard-to-see-break things: token refresh, role checks, form validation errors.</div>
+    </div>
+
+    <div class="task-group-title">Services to Test</div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">AuthService — login stores tokens, logout clears localStorage, isLoggedIn$ emits</div>
+        <div class="sub">Mock HttpClient via HttpClientTestingModule. Verify localStorage writes, JWT decode, role extraction.</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">JwtInterceptor — attaches Bearer header, triggers refresh on 401</div>
+        <div class="sub">Use HttpClientTestingModule. Test with expired token → 401 → refresh → retry. Verify infinite loop prevention (skip /auth/refresh).</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Reactive form validators — PatientFormComponent, CaseFormComponent</div>
+        <div class="sub">Date of birth ≤ today, required fields, MRN pattern (read-only). Test invalid vs valid states.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">HasRoleDirective — hides element when role doesn't match</div>
+        <div class="sub">Create a TestHostComponent with the directive. Verify ngIf equivalent behavior for each role.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">NotificationService — unread count BehaviorSubject, polling interval</div>
+        <div class="sub">Mock HttpClient, use fakeAsync/tick for 60s polling. Verify badge count updates.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+
+    <details>
+      <summary>📄 Example: JwtInterceptor test</summary>
+      <div class="details-body">
+        <pre><span class="kw">describe</span>(<span class="str">'JwtInterceptor'</span>, () => {
+  <span class="kw">let</span> http: <span class="cls">HttpClient</span>;
+  <span class="kw">let</span> httpMock: <span class="cls">HttpTestingController</span>;
+  <span class="kw">let</span> authService: <span class="cls">AuthService</span>;
+
+  <span class="kw">beforeEach</span>(() => {
+    <span class="cls">TestBed</span>.configureTestingModule({
+      imports: [<span class="cls">HttpClientTestingModule</span>],
+      providers: [
+        { provide: <span class="cls">HTTP_INTERCEPTORS</span>, useClass: <span class="cls">JwtInterceptor</span>, multi: <span class="kw">true</span> }
+      ]
+    });
+    http = <span class="cls">TestBed</span>.inject(<span class="cls">HttpClient</span>);
+    httpMock = <span class="cls">TestBed</span>.inject(<span class="cls">HttpTestingController</span>);
+    authService = <span class="cls">TestBed</span>.inject(<span class="cls">AuthService</span>);
+    spyOn(authService, <span class="str">'getToken'</span>).and.returnValue(<span class="str">'valid.jwt.token'</span>);
+  });
+
+  it(<span class="str">'should attach Authorization header'</span>, () => {
+    http.get(<span class="str">'/api/patients'</span>).subscribe();
+    <span class="kw">const</span> req = httpMock.expectOne(<span class="str">'/api/patients'</span>);
+    expect(req.request.headers.get(<span class="str">'Authorization'</span>))
+      .toBe(<span class="str">'Bearer valid.jwt.token'</span>);
+    req.flush({});
+  });
+});</pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─── E2E ─── -->
+  <section id="e2e">
+    <div class="section-header">
+      <div class="icon icon-green">🎭</div>
+      <h2>E2E Tests — Playwright</h2>
+    </div>
+
+    <div class="alert alert-green">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Why Playwright over Cypress?</strong> Playwright runs on all browsers, has better async support, and a smaller bundle. For a .NET + Angular stack it's zero config — just <code>npm init playwright@latest</code> in the Angular project folder.</div>
+    </div>
+
+    <div class="card">
+      <h3>🔧 Setup</h3>
+      <pre><span class="cm"># In src-ng/hcm-web/</span>
+npm init playwright@latest -- --quiet
+<span class="cm"># Choose: TypeScript, tests/ folder, no GitHub Actions (we'll add manually)</span>
+
+<span class="cm"># playwright.config.ts — point at Angular dev server</span>
+baseURL: <span class="str">'http://localhost:4200'</span>,
+webServer: {
+  command: <span class="str">'ng serve'</span>,
+  url: <span class="str">'http://localhost:4200'</span>,
+  reuseExistingServer: !process.env.CI
+}</pre>
+    </div>
+
+    <div class="task-group-title">4 Required E2E Flows</div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Flow 1 — Login flow</div>
+        <div class="sub">Navigate to /login, fill username/password (admin/Admin@123!), click Sign In → assert dashboard route, assert notification bell visible, assert sidebar shows user name.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Flow 2 — Create patient</div>
+        <div class="sub">Login → /patients/new → fill all required fields → Submit → assert MRN-YYYY-NNNNN shown in success toast, patient appears in list.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Flow 3 — Create case and change status</div>
+        <div class="sub">From PatientDetail → New Case → pick type/priority → submit → CASE-YYYY-NNNNN shown → click "Move to Open" → verify status badge updates.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Flow 4 — Upload document to case</div>
+        <div class="sub">On CaseDetail → Documents tab → Upload → select a PDF file → confirm → assert file name appears in list with download link. Download link must be SAS URL (contains ?sv=).</div>
+      </div>
+      <span class="effort effort-high">High</span>
+    </div>
+
+    <details>
+      <summary>📄 Example: Login flow test</summary>
+      <div class="details-body">
+        <pre><span class="kw">import</span> { test, expect } <span class="kw">from</span> <span class="str">'@playwright/test'</span>;
+
+test(<span class="str">'login → dashboard'</span>, <span class="kw">async</span> ({ page }) => {
+  <span class="kw">await</span> page.goto(<span class="str">'/login'</span>);
+
+  <span class="kw">await</span> page.fill(<span class="str">'[formControlName="username"]'</span>, <span class="str">'admin'</span>);
+  <span class="kw">await</span> page.fill(<span class="str">'[formControlName="password"]'</span>, <span class="str">'Admin@123!'</span>);
+  <span class="kw">await</span> page.click(<span class="str">'button[type="submit"]'</span>);
+
+  <span class="kw">await</span> expect(page).toHaveURL(<span class="str">/dashboard/</span>);
+  <span class="kw">await</span> expect(page.locator(<span class="str">'mat-icon:text("notifications")'</span>))
+    .toBeVisible();
+});
+
+test(<span class="str">'invalid creds shows error'</span>, <span class="kw">async</span> ({ page }) => {
+  <span class="kw">await</span> page.goto(<span class="str">'/login'</span>);
+  <span class="kw">await</span> page.fill(<span class="str">'[formControlName="username"]'</span>, <span class="str">'admin'</span>);
+  <span class="kw">await</span> page.fill(<span class="str">'[formControlName="password"]'</span>, <span class="str">'wrong'</span>);
+  <span class="kw">await</span> page.click(<span class="str">'button[type="submit"]'</span>);
+
+  <span class="kw">await</span> expect(page.locator(<span class="str">'snack-bar-container'</span>))
+    .toContainText(<span class="str">'Invalid credentials'</span>);
+  <span class="kw">await</span> expect(page).toHaveURL(<span class="str">/login/</span>);
+});</pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ─── LIGHTHOUSE ─── -->
+  <section id="lighthouse">
+    <div class="section-header">
+      <div class="icon icon-green">🔦</div>
+      <h2>Lighthouse Accessibility &amp; Bundle Analysis</h2>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🔦 Lighthouse Audit</h3>
+        <p>Target: ≥ 90 accessibility score on 3 pages.</p>
+        <pre><span class="cm"># Install Lighthouse CI</span>
+npm install -g @lhci/cli
+
+<span class="cm"># lighthouserc.json (in project root)</span>
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "ng serve",
+      "url": [
+        "http://localhost:4200/login",
+        "http://localhost:4200/cases",
+        "http://localhost:4200/cases/CASE-2026-00001"
+      ]
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", {"minScore": 0.9}]
+      }
+    }
+  }
+}</pre>
+        <div class="alert alert-yellow" style="margin-top:12px">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-body">Common failures: missing <code>aria-label</code> on icon buttons, color contrast below 4.5:1, missing form labels. Angular Material usually passes — check custom components.</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📦 Bundle Size Analysis</h3>
+        <pre><span class="cm"># Build with stats</span>
+ng build --configuration production --stats-json
+
+<span class="cm"># Visualise</span>
+npx webpack-bundle-analyzer \
+  dist/hcm-web/stats.json
+
+<span class="cm"># Budget check — angular.json</span>"budgets": [
+  {
+    "type": "initial",
+    "maximumWarning": "2mb",
+    "maximumError": "4mb"
+  },
+  {
+    "type": "anyComponentStyle",
+    "maximumWarning": "6kb",
+    "maximumError": "10kb"
+  }
+]</pre>
+        <p style="margin-top:12px;font-size:13px">Check for: duplicate Chart.js bundles, large moment.js locale pulls, unneeded Firely SDK in the frontend (should not be there).</p>
+      </div>
+    </div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Run Lighthouse CI on Login, Case List, Case Detail — fix any score &lt; 90</div>
+        <div class="sub">Common fixes: add aria-label to mat-icon buttons, verify color contrast on status badges, label all form controls</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Run ng build --stats-json + webpack-bundle-analyzer — resolve warnings</div>
+        <div class="sub">Ensure initial bundle &lt; 2 MB warning threshold. Lazy-loading is already wired for all feature modules — verify it's working by checking chunk names in dist/.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <!-- ══════════════ SECURITY ══════════════ -->
+  <section id="headers">
+    <div class="section-header">
+      <div class="icon icon-yellow">🛡️</div>
+      <h2>Security Headers</h2>
+    </div>
+
+    <div class="alert alert-yellow">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Analogy:</strong> Security headers are like putting a "No photography" sign on a sensitive building — they don't stop a determined attacker but eliminate an entire class of opportunistic browser-based attacks (clickjacking, MIME sniffing, XSS via inline scripts) with zero application logic.</div>
+    </div>
+
+    <div class="card">
+      <h3>🔧 Add Middleware to Program.cs</h3>
+      <pre><span class="cm">// In Program.cs, after app.UseHttpsRedirection():</span>
+app.Use(<span class="kw">async</span> (context, next) =>
+{
+    context.Response.Headers.Append(
+        <span class="str">"Content-Security-Policy"</span>,
+        <span class="str">"default-src 'self'; script-src 'self'; "</span> +
+        <span class="str">"style-src 'self' 'unsafe-inline'; img-src 'self' data:; "</span> +
+        <span class="str">"connect-src 'self' https://*.applicationinsights.azure.com; "</span> +
+        <span class="str">"frame-ancestors 'none';"</span>);
+    context.Response.Headers.Append(<span class="str">"X-Frame-Options"</span>, <span class="str">"DENY"</span>);
+    context.Response.Headers.Append(<span class="str">"X-Content-Type-Options"</span>, <span class="str">"nosniff"</span>);
+    context.Response.Headers.Append(<span class="str">"Referrer-Policy"</span>, <span class="str">"no-referrer"</span>);
+    context.Response.Headers.Append(
+        <span class="str">"Permissions-Policy"</span>,
+        <span class="str">"camera=(), microphone=(), geolocation=()"</span>);
+    <span class="kw">await</span> next();
+});</pre>
+    </div>
+
+    <table class="tbl" style="margin-top:16px">
+      <thead>
+        <tr>
+          <th>Header</th><th>Value</th><th>What it prevents</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>Content-Security-Policy</code></td><td><code>default-src 'self'</code></td><td>XSS via injected inline scripts / external resources</td></tr>
+        <tr><td><code>X-Frame-Options</code></td><td><code>DENY</code></td><td>Clickjacking (embedding in iframe)</td></tr>
+        <tr><td><code>X-Content-Type-Options</code></td><td><code>nosniff</code></td><td>MIME-type sniffing attacks</td></tr>
+        <tr><td><code>Referrer-Policy</code></td><td><code>no-referrer</code></td><td>Leaking URL path (may contain IDs) to third parties</td></tr>
+        <tr><td><code>Permissions-Policy</code></td><td><code>camera=(), microphone=()</code></td><td>Prevents rogue JS from requesting device access</td></tr>
+      </tbody>
+    </table>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Add security headers middleware to Program.cs</div>
+        <div class="sub">CSP + X-Frame-Options + X-Content-Type-Options + Referrer-Policy + Permissions-Policy</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Verify headers appear in prod API responses</div>
+        <div class="sub">curl -I https://hcm-prod-api.azurewebsites.net/health — check all 5 headers present. Also check SecurityHeaders.io score.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <section id="phi">
+    <div class="section-header">
+      <div class="icon icon-yellow">🔒</div>
+      <h2>PHI Audit &amp; SAS URL Verification</h2>
+    </div>
+
+    <div class="card">
+      <h3>PHI Leak Prevention Checklist</h3>
+      <p style="margin-bottom:12px">HIPAA rule: log entity IDs only — never names, DOB, SSN, MRN strings, insurance numbers.</p>
+      <table class="tbl">
+        <thead><tr><th>Check</th><th>Where to look</th><th>Action if found</th></tr></thead>
+        <tbody>
+          <tr><td>Patient name in Serilog logs</td><td>Grep codebase for <code>_logger.Log</code> with <code>patient.Name</code>, <code>firstName</code></td><td>Replace with patient ID only</td></tr>
+          <tr><td>DOB / SSN in exception messages</td><td>Check ValidationException messages in DataHandlers</td><td>Generalise error message</td></tr>
+          <tr><td>MRN in Application Insights traces</td><td>Live stream in Azure portal during create-patient E2E flow</td><td>Remove from log template</td></tr>
+          <tr><td>SAS URL in any log statement</td><td>Grep for <code>Log.*sasUrl</code>, <code>Log.*SasUrl</code></td><td>Log only blob name, never the URL</td></tr>
+          <tr><td>SAS URL expiry &gt; 1 hour</td><td>Capture SAS URL from API response, parse <code>se=</code> param</td><td>Fix IBlobStorageService.GetSasUrl to use TimeSpan.FromHours(1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Grep codebase for PHI in log statements — fix any found</div>
+        <div class="sub">Pattern: _logger.Log.*patient\.Name|_logger.Log.*\.Ssn|_logger.Log.*\.Dob — run across src/HCM.Application + src/HCM.Infrastructure</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Confirm SAS URLs are not logged — live check in App Insights during download</div>
+        <div class="sub">Use Azure portal Live Metrics stream; download a document; verify no trace contains a URL with ?sv= or ?sig=</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <section id="zap">
+    <div class="section-header">
+      <div class="icon icon-yellow">🕷️</div>
+      <h2>OWASP ZAP Quick Scan</h2>
+    </div>
+
+    <div class="alert alert-yellow">
+      <div class="alert-icon">💡</div>
+      <div class="alert-body"><strong>Analogy:</strong> ZAP is an automated burglar who tries every window and door while you're home. It won't pick every lock but catches unlocked doors (missing headers, open debug endpoints, reflected XSS) in minutes.</div>
+    </div>
+
+    <div class="card">
+      <h3>🔧 ZAP Quick Scan — Docker</h3>
+      <pre><span class="cm"># Run ZAP baseline scan against your local or staging API</span>
+docker run --rm ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py \
+  -t https://hcm-prod-api.azurewebsites.net \
+  -r zap-report.html \
+  -I <span class="cm"># don't fail on warnings</span></pre>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted)">Expected findings to resolve: missing HSTS header (add to App Service), any reflected user input, dev endpoints exposed (/swagger in prod — disable or restrict).</p>
+    </div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Run OWASP ZAP baseline scan against staging/prod API — resolve Medium+ findings</div>
+        <div class="sub">Common: Swagger accessible in prod (disable with builder.Services.AddSwaggerGen() behind if (app.Environment.IsDevelopment())), HSTS missing (add in App Service TLS settings)</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+  </section>
+
+  <section id="rbac-check">
+    <div class="section-header">
+      <div class="icon icon-yellow">🔑</div>
+      <h2>RBAC Verification</h2>
+    </div>
+
+    <table class="tbl">
+      <thead>
+        <tr><th>Endpoint</th><th>ReadOnly should get</th><th>CareCoordinator</th><th>Admin</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>GET /api/patients</td><td><span class="pill pill-green">200</span></td><td><span class="pill pill-green">200</span></td><td><span class="pill pill-green">200</span></td></tr>
+        <tr><td>POST /api/patients</td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-green">201</span></td><td><span class="pill pill-green">201</span></td></tr>
+        <tr><td>GET /api/audit</td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-green">200</span></td></tr>
+        <tr><td>GET /api/dashboard/admin</td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-green">200</span></td></tr>
+        <tr><td>DELETE /api/patients/{mrn}</td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-yellow">403</span></td><td><span class="pill pill-green">200</span></td></tr>
+        <tr><td>POST /api/users</td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-red">403</span></td><td><span class="pill pill-green">201</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Verify AuditController returns 403 when called with non-Admin JWT</div>
+        <div class="sub">In integration tests: mint a CareCoordinator token → GET /api/audit → assert 403. This is already in the integration test plan — verify it's implemented.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <!-- ══════════════ PRODUCTION ══════════════ -->
+  <section id="azure">
+    <div class="section-header">
+      <div class="icon icon-purple">☁️</div>
+      <h2>Azure &amp; CI/CD Production Setup</h2>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg width="660" height="220" viewBox="0 0 660 220">
+        <!-- GitHub Actions -->
+        <rect x="10" y="10" width="120" height="50" rx="8" fill="#1e2238" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="70" y="38" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="600">Push to main</text>
+        <text x="70" y="52" text-anchor="middle" fill="#64748b" font-size="10">GitHub Actions</text>
+
+        <path d="M130,35 L168,35" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- CI steps -->
+        <rect x="170" y="10" width="130" height="50" rx="8" fill="#1e2238" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="235" y="32" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Build + Test</text>
+        <text x="235" y="48" text-anchor="middle" fill="#64748b" font-size="10">dotnet test · ng test · coverage</text>
+
+        <path d="M300,35 L338,35" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- Manual gate -->
+        <rect x="340" y="5" width="110" height="60" rx="8" fill="#1e2238" stroke="#f59e0b" stroke-width="2"/>
+        <text x="395" y="30" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700">Manual Gate</text>
+        <text x="395" y="46" text-anchor="middle" fill="#94a3b8" font-size="10">Require approval</text>
+        <text x="395" y="59" text-anchor="middle" fill="#94a3b8" font-size="10">before prod deploy</text>
+
+        <path d="M450,35 L488,35" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- Deploy -->
+        <rect x="490" y="10" width="120" height="50" rx="8" fill="#1e2238" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="550" y="32" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">Deploy to Prod</text>
+        <text x="550" y="48" text-anchor="middle" fill="#64748b" font-size="10">App Service + SWA</text>
+
+        <!-- App Insights alerts row -->
+        <rect x="10" y="120" width="640" height="75" rx="10" fill="#1a1d27" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="30" y="143" fill="#a78bfa" font-size="12" font-weight="700">Application Insights Alerts</text>
+
+        <rect x="30" y="152" width="120" height="28" rx="5" fill="#1e2238" stroke="#ef4444" stroke-width="1"/>
+        <text x="90" y="170" text-anchor="middle" fill="#ef4444" font-size="11">Error Rate &gt; 5%</text>
+
+        <rect x="170" y="152" width="140" height="28" rx="5" fill="#1e2238" stroke="#f59e0b" stroke-width="1"/>
+        <text x="240" y="170" text-anchor="middle" fill="#f59e0b" font-size="11">Availability &lt; 99%</text>
+
+        <rect x="330" y="152" width="140" height="28" rx="5" fill="#1e2238" stroke="#38bdf8" stroke-width="1"/>
+        <text x="400" y="170" text-anchor="middle" fill="#38bdf8" font-size="11">p95 Latency &gt; 2s</text>
+
+        <rect x="490" y="152" width="140" height="28" rx="5" fill="#1e2238" stroke="#22c55e" stroke-width="1"/>
+        <text x="560" y="170" text-anchor="middle" fill="#22c55e" font-size="11">Budget &gt; $20/mo</text>
+      </svg>
+    </div>
+
+    <div class="task-group-title">Production Tasks</div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Add manual approval gate to GitHub Actions prod deploy job</div>
+        <div class="sub">Add <code>environment: production</code> to the prod deploy step; configure Environment Protection Rule in GitHub repo Settings → Environments → production → Required reviewers.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Set up Application Insights alerts: error rate &gt; 5%, availability &lt; 99%, p95 latency &gt; 2s</div>
+        <div class="sub">Azure Portal → Application Insights → Alerts → Create. Metric: exceptions/count (error rate), availabilityResults/availabilityPercentage, requests/duration (p95).</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Add Azure budget alert at $20/month threshold</div>
+        <div class="sub">Azure Cost Management → Budgets → New. Scope: subscription. Alert recipients: your email.</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Disable Swagger in production</div>
+        <div class="sub">Wrap AddSwaggerGen() + UseSwagger() in <code>if (app.Environment.IsDevelopment())</code> blocks. Verify /swagger returns 404 in prod (ZAP will flag this).</div>
+      </div>
+      <span class="effort effort-low">Low</span>
+    </div>
+  </section>
+
+  <!-- ─── README ─── -->
+  <section id="readme">
+    <div class="section-header">
+      <div class="icon icon-purple">📝</div>
+      <h2>README &amp; Demo Video</h2>
+    </div>
+
+    <div class="card">
+      <h3>README.md Sections Required</h3>
+      <pre><span class="cm"># Healthcare Case Management System (HCMS)</span>
+
+<span class="cm">## Architecture Diagram</span>
+[inline diagram or link to docs/architecture.md]
+
+<span class="cm">## Tech Stack</span>
+Angular 19 · .NET 8 · EF Core · SQL Server · Azure Blob · FHIR R4
+
+<span class="cm">## Local Setup</span>
+1. Prerequisites: .NET 8 SDK, Node 20, SQL Server / LocalDB, Docker (for tests)
+2. Clone + restore: `dotnet restore && npm ci`
+3. Apply migrations: `dotnet ef database update ...`
+4. Run API: `dotnet run --project src/HCM.API`
+5. Run Angular: `ng serve` (proxies /api → localhost:5001)
+
+<span class="cm">## Environment Variables</span>
+| Variable | Where | Description |
+| Jwt__Secret | dotnet user-secrets | ≥ 32 chars |
+| ConnectionStrings__DefaultConnection | appsettings.Development.json | SQL Server |
+
+<span class="cm">## Test Credentials (local dev)</span>
+admin / Admin@123! (full access)
+
+<span class="cm">## Screenshots</span>
+[login, dashboard, patient list, case detail, FHIR explorer]
+
+<span class="cm">## Live Demo</span>
+[link to Azure SWA] · [5-min demo video link]</pre>
+    </div>
+
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Update README.md — architecture diagram, setup steps, env var guide, screenshots</div>
+        <div class="sub">Add 5 screenshots: Login, Dashboard (Coordinator), Patient List, Case Detail, FHIR Explorer. Inline or hosted in docs/screenshots/.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+    <div class="task">
+      <div class="check"></div>
+      <div class="info">
+        <div class="title">Record 5-minute demo walkthrough video</div>
+        <div class="sub">Script: Login → Dashboard → Create Patient → Open Case → Upload Document → FHIR Export → Admin Dashboard. Upload to YouTube (unlisted) and link from README.</div>
+      </div>
+      <span class="effort effort-med">Medium</span>
+    </div>
+  </section>
+
+  <!-- ══════════════ DOD ══════════════ -->
+  <section id="dod">
+    <div class="section-header">
+      <div class="icon icon-red">✅</div>
+      <h2>Definition of Done</h2>
+    </div>
+
+    <div class="card">
+      <div class="dod-item">
+        <div class="dod-cb">🔵</div>
+        <div class="dod-text">
+          CI pipeline runs all tests; build fails if tests fail or coverage &lt; 70%
+          <span>GitHub Actions: both build-api.yml and build-angular.yml run test steps, fail the build on coverage threshold.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟢</div>
+        <div class="dod-text">
+          Lighthouse accessibility score ≥ 90 on Login, Case List, Case Detail
+          <span>Run Lighthouse CI — pass the assert block in lighthouserc.json.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟡</div>
+        <div class="dod-text">
+          OWASP ZAP scan shows no Medium or Critical findings
+          <span>Run ZAP baseline against prod API. Disable Swagger in prod. Add HSTS in App Service TLS settings.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟡</div>
+        <div class="dod-text">
+          No PHI appears in Application Insights traces or logs
+          <span>Verify via live stream during E2E test run. Grep confirmed clean in source.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟣</div>
+        <div class="dod-text">
+          Prod deployment is behind a manual approval gate
+          <span>GitHub repo → Settings → Environments → production → Required reviewers configured.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟣</div>
+        <div class="dod-text">
+          Application Insights shows live traces from prod environment
+          <span>Open Live Metrics in Azure portal; trigger a login — verify request trace visible.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🟣</div>
+        <div class="dod-text">
+          README.md is complete with architecture diagram, setup instructions, screenshots, demo link
+          <span>README passes a "cold start" test: a new developer can run the app locally following only the README.</span>
+        </div>
+      </div>
+      <div class="dod-item">
+        <div class="dod-cb">🔴</div>
+        <div class="dod-text">
+          All 4 Playwright E2E flows pass in CI headless mode
+          <span>Login, create patient, create case, upload document — green on GitHub Actions.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PHASE REPORT ─── -->
+  <section id="report">
+    <div class="section-header">
+      <div class="icon icon-red">📄</div>
+      <h2>Phase HTML Report (End of Phase)</h2>
+    </div>
+
+    <div class="alert alert-green">
+      <div class="alert-icon">🏁</div>
+      <div class="alert-body">Per the CLAUDE.md rule: at the end of Phase 8, generate <strong>docs/phase-8-testing-security-polish.html</strong>. The PostToolUse hook will auto-append a row to <code>.phase-reports-index.md</code>. Report must be self-contained (no CDN), with sidebar TOC, collapsible sections, and inline SVG diagrams.</div>
+    </div>
+
+    <div class="card">
+      <h3>Report Content Outline</h3>
+      <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+        <li>What was built and why (testing strategy decisions)</li>
+        <li>Test pyramid diagram — unit vs integration vs E2E ratio</li>
+        <li>Coverage report screenshot / numbers</li>
+        <li>Lighthouse score before &amp; after (if fixes were needed)</li>
+        <li>Security headers audit results</li>
+        <li>OWASP ZAP findings summary</li>
+        <li>CI/CD pipeline diagram with manual gate</li>
+        <li>Files added / changed list</li>
+        <li>What's next (project is portfolio-complete)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─── QUICK REFERENCE ─── -->
+  <section>
+    <div class="section-header">
+      <div class="icon icon-blue">⚡</div>
+      <h2>Quick Reference — All Commands</h2>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="task-group-title">Backend</div>
+        <pre><span class="cm"># Create test projects</span>
+dotnet new xunit -n HCM.Application.Tests \
+  -o src/HCM.Application.Tests
+dotnet new xunit -n HCM.API.Tests \
+  -o src/HCM.API.Tests
+
+<span class="cm"># Add packages</span>
+dotnet add package Moq
+dotnet add package FluentAssertions
+dotnet add package coverlet.collector
+dotnet add package Testcontainers.MsSql
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+
+<span class="cm"># Run tests with coverage</span>
+dotnet test --collect:"XPlat Code Coverage"
+
+<span class="cm"># Generate HTML coverage report</span>
+reportgenerator \
+  -reports:"**/coverage.cobertura.xml" \
+  -targetdir:"coverage/report" -reporttypes:Html</pre>
+      </div>
+      <div>
+        <div class="task-group-title">Frontend + Security</div>
+        <pre><span class="cm"># Setup Playwright</span>
+cd src-ng/hcm-web
+npm init playwright@latest
+
+<span class="cm"># Run Playwright tests</span>
+npx playwright test
+npx playwright test --headed   <span class="cm"># visible browser</span>
+npx playwright show-report
+
+<span class="cm"># Lighthouse CI</span>
+npm install -g @lhci/cli
+lhci autorun
+
+<span class="cm"># Bundle analysis</span>
+ng build --configuration production --stats-json
+npx webpack-bundle-analyzer dist/hcm-web/stats.json
+
+<span class="cm"># ZAP scan (Docker)</span>
+docker run --rm ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py \
+  -t https://hcm-prod-api.azurewebsites.net \
+  -r zap-report.html</pre>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Active section highlighting in sidebar
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (match) match.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

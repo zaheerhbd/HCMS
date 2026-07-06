@@ -1,5 +1,7 @@
 <Solution>
+  <Project Path="HCM.API.Tests/HCM.API.Tests.csproj" />
   <Project Path="HCM.API/HCM.API.csproj" />
+  <Project Path="HCM.Application.Tests/HCM.Application.Tests.csproj" />
   <Project Path="HCM.Application/HCM.Application.csproj" />
   <Project Path="HCM.Domain/HCM.Domain.csproj" />
   <Project Path="HCM.Infrastructure/HCM.Infrastructure.csproj" />

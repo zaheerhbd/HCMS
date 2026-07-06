@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HCMS — Angular Testing, Explained</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08);
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --blue: #38bdf8; --indigo: #818cf8; --purple: #a78bfa;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  }
+  :root[data-theme="light"] { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  :root[data-theme="dark"] { --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08); --text: #e2e8f0; --muted: #94a3b8; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, sans-serif; font-size: 14.5px; line-height: 1.65; }
+  a { color: var(--blue); }
+  .layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 260px; flex: 0 0 260px; background: var(--panel); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px;
+  }
+  #sidebar h1 { font-size: 15px; margin: 0 0 4px; }
+  #sidebar .sub { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  #nav a {
+    display: block; padding: 7px 10px; border-radius: 6px; color: var(--muted); text-decoration: none;
+    font-size: 13px; margin-bottom: 2px; border-left: 2px solid transparent;
+  }
+  #nav a:hover { background: var(--panel-2); color: var(--text); }
+  #nav a.active { color: var(--text); background: var(--panel-2); border-left-color: var(--blue); font-weight: 600; }
+  #main { flex: 1; padding: 32px 44px; max-width: 900px; }
+  section { margin-bottom: 48px; scroll-margin-top: 20px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
+  .icon-green { background: rgba(34,197,94,.15); } .icon-blue { background: rgba(56,189,248,.15); }
+  .icon-purple { background: rgba(167,139,250,.15); } .icon-yellow { background: rgba(245,158,11,.15); }
+  .icon-red { background: rgba(239,68,68,.15); } .icon-indigo { background: rgba(129,140,248,.15); }
+  h2 { font-size: 20px; margin: 0; }
+  h3 { font-size: 15.5px; margin: 22px 0 8px; }
+  p { margin: 0 0 12px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .analogy {
+    display: flex; gap: 12px; background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--purple);
+    border-radius: 8px; padding: 14px 16px; margin: 14px 0; font-size: 13.5px;
+  }
+  .analogy .emoji { font-size: 20px; flex: none; }
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13.5px; }
+  .alert-blue { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+  .alert-green { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); }
+  .alert-yellow { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); }
+  .alert-icon { flex: none; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; }
+  pre code { background: none; padding: 0; }
+  .kw { color: var(--indigo); } .str { color: #86e39a; } .cm { color: var(--muted); font-style: italic; } .cls { color: var(--blue); } .fn { color: #f0b64d; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+  table.tbl th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .pill-blue { background: rgba(56,189,248,.15); color: var(--blue); }
+  .pill-purple { background: rgba(167,139,250,.15); color: var(--purple); }
+  .pill-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  details { margin-bottom: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px 14px; }
+  summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+  summary::marker { color: var(--muted); }
+  .details-body { padding-bottom: 14px; }
+  .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+  .step .num {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--blue);
+  }
+  .diagram-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin: 14px 0; overflow-x: auto; }
+  .muted { color: var(--muted); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } #main { padding: 24px; } #sidebar { position: static; width: 100%; flex: none; height: auto; } .layout { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar">
+    <h1>Angular Testing, Explained</h1>
+    <div class="sub">A plain-language guide to the HCMS frontend tests · no prior testing experience assumed</div>
+    <nav id="nav">
+      <a href="#why">Why bother testing?</a>
+      <a href="#whats-here">What exists today</a>
+      <a href="#unit">Unit tests, in Angular</a>
+      <a href="#unit-walkthrough">A service test, line by line</a>
+      <a href="#interceptor-walkthrough">An interceptor test, line by line</a>
+      <a href="#component">Component tests — the "grey area"</a>
+      <a href="#integration">Real integration testing (E2E)</a>
+      <a href="#compare">Three layers, side by side</a>
+      <a href="#run">Running them yourself</a>
+      <a href="#results">Current results</a>
+    </nav>
+  </div>
+
+  <div id="main">
+
+    <section id="why">
+      <div class="section-header"><div class="icon icon-blue">🤔</div><h2>Why bother testing the frontend?</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🚦</div>
+        <div>Think of the Angular app as a car dashboard. The dashboard itself doesn't drive the car — the engine (the API) does that — but if the fuel gauge lies, or the seatbelt light stays off when it shouldn't, the driver makes bad decisions even though the engine was fine the whole time. Frontend tests check the dashboard: does it show the right thing, does it lock out the wrong thing, does it recover correctly when something goes wrong.</div>
+      </div>
+
+      <p>In HCMS, the "dashboard" is things like: <em>does the login screen actually attach my session key to every request?</em> and <em>if my session key expires mid-use, does the app quietly renew it instead of kicking me out?</em> Nobody wants to test that by hand — log in, wait for the token to expire, click around, watch the network tab — every single time someone touches that code. A test does it in a fraction of a second.</p>
+    </section>
+
+    <section id="whats-here">
+      <div class="section-header"><div class="icon icon-purple">📋</div><h2>What exists today</h2></div>
+
+      <p>Six spec files cover the pieces of the Angular app that hold real logic — services, an interceptor, form validation, and a role-based visibility directive. Purely visual components (that just bind data to HTML) are intentionally left alone; there's very little that could go subtly wrong in them, so testing them has low payoff.</p>
+
+      <table class="tbl">
+        <thead><tr><th>File tested</th><th>What it's responsible for</th><th>Tests</th></tr></thead>
+        <tbody>
+          <tr><td><code>auth.service.ts</code></td><td>Login, logout, storing/reading the session token and roles</td><td>8</td></tr>
+          <tr><td><code>jwt.interceptor.ts</code></td><td>Attaching the session token to every request; auto-renewing it on expiry</td><td>5</td></tr>
+          <tr><td><code>notification.service.ts</code></td><td>The unread-count badge and its 60-second polling</td><td>7</td></tr>
+          <tr><td><code>case-form.component.ts</code></td><td>Case form required fields + pre-filling from the URL</td><td>4</td></tr>
+          <tr><td><code>patient-form.component.ts</code></td><td>Patient form required fields (and a documented gap — see below)</td><td>5</td></tr>
+          <tr><td><code>has-role.directive.ts</code></td><td>Hiding page elements when the logged-in user lacks the right role</td><td>3</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-green">
+        <div class="alert-icon">✅</div>
+        <div>All <strong>32 tests pass</strong>. Verified by actually running them (<code>ng test --code-coverage</code>), not just reading the files — coverage confirms every test genuinely exercises its real source file, not a stub.</div>
+      </div>
+    </section>
+
+    <section id="unit">
+      <div class="section-header"><div class="icon icon-blue">🧪</div><h2>Unit tests, in Angular</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🧂</div>
+        <div>Same idea as the backend: taste just the sauce, not the whole meal. A unit test calls one method on one class and checks what comes back — no real browser page, no real server.</div>
+      </div>
+
+      <p>The one thing every Angular service in HCMS depends on is <code>HttpClient</code> — the thing that actually sends network requests. Real network requests are slow and need a real backend running. So tests use <strong>HttpClientTestingModule</strong>, a stand-in that intercepts every outgoing request and lets the test decide exactly what response comes back, instantly, with no network involved.</p>
+
+      <div class="analogy">
+        <div class="emoji">🎬</div>
+        <div>It's the same stunt-double idea as the backend's in-memory database — a fake network that behaves close enough to the real one to test against, but with zero setup and zero risk.</div>
+      </div>
+    </section>
+
+    <section id="unit-walkthrough">
+      <div class="section-header"><div class="icon icon-blue">🔍</div><h2>A real unit test, line by line</h2></div>
+      <p>From <code>src-ng/hcm-web/src/app/core/services/auth.service.spec.ts</code> — checks that logging in actually saves the session in <code>localStorage</code>.</p>
+
+      <pre><code><span class="kw">it</span>(<span class="str">'login() should store tokens, username, and roles in localStorage'</span>, () => {
+  <span class="cm">// 1. Call the real login() method — nothing is faked here</span>
+  service.login({ username: <span class="str">'jdoe'</span>, password: <span class="str">'secret'</span> }).subscribe();
+
+  <span class="cm">// 2. Intercept the outgoing request the service just made</span>
+  <span class="kw">const</span> req = httpMock.expectOne(`${environment.apiUrl}/auth/login`);
+  expect(req.request.method).toBe(<span class="str">'POST'</span>);
+
+  <span class="cm">// 3. Hand back a fake — but realistic — server response</span>
+  req.flush(mockResponse);
+
+  <span class="cm">// 4. Now check the service actually saved everything it should have</span>
+  expect(localStorage.getItem(<span class="str">'hcms_access_token'</span>)).toBe(mockResponse.accessToken);
+  expect(localStorage.getItem(<span class="str">'hcms_refresh_token'</span>)).toBe(mockResponse.refreshToken);
+  expect(JSON.parse(localStorage.getItem(<span class="str">'hcms_roles'</span>)!)).toEqual(mockResponse.roles);
+});</code></pre>
+
+      <div class="step"><div class="num">1</div><div>We call the actual, real <code>AuthService.login()</code> — the same code that runs when a real person clicks "Sign In".</div></div>
+      <div class="step"><div class="num">2</div><div><code>httpMock.expectOne(...)</code> catches the network request before it goes anywhere and confirms the service asked for exactly the right URL, with the right HTTP method.</div></div>
+      <div class="step"><div class="num">3</div><div><code>req.flush(...)</code> is the test playing the part of the server — handing back a canned, realistic response instead of hitting a real backend.</div></div>
+      <div class="step"><div class="num">4</div><div>We then check <code>localStorage</code> directly, proving the service's side effect (saving the session) actually happened, not just that it didn't crash.</div></div>
+
+      <div class="alert alert-green">
+        <div class="alert-icon">✅</div>
+        <div>If someone later renames a localStorage key, or forgets to save the roles array, this test fails immediately — instead of someone discovering weeks later that role-based menus are broken for every user.</div>
+      </div>
+    </section>
+
+    <section id="interceptor-walkthrough">
+      <div class="section-header"><div class="icon icon-blue">🔍</div><h2>An interceptor test, line by line</h2></div>
+      <p>From <code>jwt.interceptor.spec.ts</code> — the trickiest test in the set, because it checks a two-step recovery: a token expires mid-request, and the app has to quietly fix it and retry, instead of showing the user an error.</p>
+
+      <pre><code><span class="kw">it</span>(<span class="str">'should refresh the token and retry the original request on a 401'</span>, () => {
+  spyOn(authService, <span class="str">'getAccessToken'</span>).and.returnValue(<span class="str">'expired.token'</span>);
+  spyOn(authService, <span class="str">'refreshToken'</span>).and.returnValue(of(refreshResponse));
+
+  <span class="cm">// 1. Kick off a normal request, as if a component just asked for patient data</span>
+  http.get(<span class="str">'/api/patients'</span>).subscribe(res => (result = res));
+
+  <span class="cm">// 2. Pretend the server rejected it — the token had just expired</span>
+  <span class="kw">const</span> firstReq = httpMock.expectOne(<span class="str">'/api/patients'</span>);
+  firstReq.flush({ message: <span class="str">'expired'</span> }, { status: 401, statusText: <span class="str">'Unauthorized'</span> });
+
+  <span class="cm">// 3. The interceptor should have automatically asked for a new token,</span>
+  <span class="cm">//    then silently retried the SAME request with it</span>
+  <span class="kw">const</span> retriedReq = httpMock.expectOne(<span class="str">'/api/patients'</span>);
+  expect(retriedReq.request.headers.get(<span class="str">'Authorization'</span>)).toBe(<span class="str">'Bearer new.token'</span>);
+  retriedReq.flush({ ok: <span class="kw">true</span> });
+
+  <span class="cm">// 4. The component that made the original call never even knows this happened</span>
+  expect(result).toEqual({ ok: <span class="kw">true</span> });
+});</code></pre>
+
+      <div class="step"><div class="num">1</div><div>Something in the app asks for data, completely unaware that its saved token happens to be expired.</div></div>
+      <div class="step"><div class="num">2</div><div>We simulate the server's real reaction to an expired token: <code>401 Unauthorized</code>.</div></div>
+      <div class="step"><div class="num">3</div><div>The interceptor is supposed to catch that 401, fetch a fresh token behind the scenes, and re-send the exact same request with it — all without the caller doing anything extra.</div></div>
+      <div class="step"><div class="num">4</div><div>The final check proves the whole dance worked: the original caller just gets its data, as if nothing ever went wrong.</div></div>
+
+      <div class="alert alert-blue">
+        <div class="alert-icon">💡</div>
+        <div>A companion test proves the interceptor <em>doesn't</em> try to refresh when the 401 comes from the refresh endpoint itself — otherwise a truly dead session would refresh-fail-refresh-fail forever in an infinite loop instead of logging the user out.</div>
+      </div>
+    </section>
+
+    <section id="component">
+      <div class="section-header"><div class="icon icon-indigo">🧩</div><h2>Component tests — Angular's "grey area"</h2></div>
+
+      <p>The <code>case-form</code> and <code>patient-form</code> specs sit between the two worlds. They don't call one function in isolation — they use <code>TestBed.createComponent()</code> to build the <em>real</em> component with its <em>real</em> Reactive Form, then poke at the form directly:</p>
+
+      <pre><code>component.form.patchValue({ firstName: <span class="str">'Jane'</span>, lastName: <span class="str">'Doe'</span>, dateOfBirth: <span class="kw">new</span> Date(<span class="str">'1990-01-01'</span>) });
+expect(component.form.valid).toBeTrue();</code></pre>
+
+      <p>This is technically still a "unit" test — no browser, no real navigation, no real server — but it's testing several things wired together at once (the form group, its validators, the component class), which is a little more than the pure single-function tests above. That's normal, and it's why Angular's own docs sometimes call these "shallow" component tests.</p>
+
+      <div class="alert alert-yellow">
+        <div class="alert-icon">⚠️</div>
+        <div>The patient-form spec deliberately includes a test that documents a <strong>known gap</strong>: a date of birth in the future currently passes validation, because there's no max-date rule yet. The test doesn't hide that — it asserts the current (imperfect) behavior with a comment explaining why, so whoever adds that validator later gets an honest signal instead of a silent surprise.</div>
+      </div>
+    </section>
+
+    <section id="integration">
+      <div class="section-header"><div class="icon icon-purple">🔗</div><h2>Real integration testing — where it actually happens</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🎭</div>
+        <div>Unit tests taste the sauce. A true integration test is the full dress rehearsal — a real browser, pointed at the real running app, clicking through it exactly like a person would.</div>
+      </div>
+
+      <p>Angular's <code>TestBed</code> can render a component, but it never opens an actual browser tab or talks to a real running backend. For HCMS, genuine end-to-end integration testing — <strong>login → create a patient → create a case → upload a document</strong> — is a separate layer built with <strong>Playwright</strong>, driving a real Chromium browser against the real Angular dev server and the real API.</p>
+
+      <table class="tbl">
+        <thead><tr><th>Flow</th><th>What it proves</th></tr></thead>
+        <tbody>
+          <tr><td>Login flow</td><td>Real form submit → real HTTP call → real redirect to the dashboard</td></tr>
+          <tr><td>Create patient</td><td>Form → API → generated MRN actually shows up in the UI</td></tr>
+          <tr><td>Create case, change status</td><td>Case number generation + status badge updates after a real click</td></tr>
+          <tr><td>Upload a document</td><td>Real file upload → real SAS URL comes back and is shown as a download link</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-blue">
+        <div class="alert-icon">💡</div>
+        <div>This is documented in <a href="e2eplaywright.md">e2eplaywright.md</a> as the planned next layer — it hasn't been built yet. The 32 unit tests above are the foundation; Playwright is what would catch a bug like "the login page sends the token in a format the interceptor doesn't expect" — something no unit test alone can see, because each side is tested in isolation from the other.</div>
+      </div>
+    </section>
+
+    <section id="compare">
+      <div class="section-header"><div class="icon icon-indigo">⚖️</div><h2>Three layers, side by side</h2></div>
+
+      <div class="compare">
+        <div class="card">
+          <h3 style="margin-top:0">🧪 Unit test <span class="pill pill-blue">exists — 32 passing</span></h3>
+          <ul style="padding-left:18px; margin:0">
+            <li>Tests one service, interceptor, directive, or form in isolation</li>
+            <li>Network faked with <code>HttpClientTestingModule</code></li>
+            <li>Runs in well under a second, all 32 together</li>
+            <li>Example: "does an expired token trigger exactly one silent refresh?"</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🧩 Component test <span class="pill pill-blue">exists — included above</span></h3>
+          <ul style="padding-left:18px; margin:0">
+            <li>Renders a real component + real form together</li>
+            <li>Still no browser, still no real server</li>
+            <li>Example: "is the case form invalid until patientMrn and caseTypeId are filled?"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin-top:0">🔗 End-to-end (Playwright) <span class="pill pill-yellow">planned, not yet built</span></h3>
+        <ul style="padding-left:18px; margin:0">
+          <li>Real Chromium browser, real Angular dev server, real API</li>
+          <li>Confirms the frontend and backend are actually wired together correctly</li>
+          <li>Example: "can a real user log in, create a patient, and see its MRN on screen?"</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="run">
+      <div class="section-header"><div class="icon icon-green">▶️</div><h2>Running the tests yourself</h2></div>
+      <div class="card">
+<pre><code><span class="cm"># from src-ng/hcm-web/</span>
+npx ng test --watch=false --browsers=ChromeHeadless
+
+<span class="cm"># same thing, plus a coverage report (coverage/hcm-web/index.html)</span>
+npx ng test --watch=false --browsers=ChromeHeadless --code-coverage</code></pre>
+      </div>
+      <p class="muted">Each run takes about a second. A green "SUCCESS" total means every check passed; a failure prints the exact test name and the exact expectation that didn't hold.</p>
+    </section>
+
+    <section id="results">
+      <div class="section-header"><div class="icon icon-green">✅</div><h2>Current results</h2></div>
+      <table class="tbl">
+        <thead><tr><th>Spec file</th><th>Tests</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><code>auth.service.spec.ts</code></td><td>8</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><code>jwt.interceptor.spec.ts</code></td><td>5</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><code>notification.service.spec.ts</code></td><td>7</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><code>case-form.component.spec.ts</code></td><td>4</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><code>patient-form.component.spec.ts</code></td><td>5</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><code>has-role.directive.spec.ts</code></td><td>3</td><td><span class="pill pill-green">passing</span></td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>32</strong></td><td><span class="pill pill-green">100% passing</span></td></tr>
+        </tbody>
+      </table>
+      <p>For the equivalent backend (.NET) unit and integration testing story, see <a href="unit-and-integration-testing-explained.html">unit-and-integration-testing-explained.html</a>.</p>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  const links = document.querySelectorAll('#nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`#nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  sections.forEach(s => s && io.observe(s));
+</script>
+</body>
+</html>

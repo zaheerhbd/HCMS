@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HCMS — Angular Unit Tests</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08);
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --blue: #38bdf8; --indigo: #818cf8; --purple: #a78bfa;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  }
+  :root[data-theme="light"] { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  :root[data-theme="dark"] { --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08); --text: #e2e8f0; --muted: #94a3b8; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, sans-serif; font-size: 14.5px; line-height: 1.65; }
+  a { color: var(--blue); }
+  .layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 250px; flex: 0 0 250px; background: var(--panel); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px;
+  }
+  #sidebar h1 { font-size: 15px; margin: 0 0 4px; }
+  #sidebar .sub { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  #nav a {
+    display: block; padding: 7px 10px; border-radius: 6px; color: var(--muted); text-decoration: none;
+    font-size: 13px; margin-bottom: 2px; border-left: 2px solid transparent;
+  }
+  #nav a:hover { background: var(--panel-2); color: var(--text); }
+  #nav a.active { color: var(--text); background: var(--panel-2); border-left-color: var(--green); font-weight: 600; }
+  #main { flex: 1; padding: 32px 40px; max-width: 940px; }
+  section { margin-bottom: 44px; scroll-margin-top: 20px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex: none; }
+  .icon-green { background: rgba(34,197,94,.15); } .icon-blue { background: rgba(56,189,248,.15); }
+  h2 { font-size: 19px; margin: 0; }
+  h3 { font-size: 15px; margin: 18px 0 8px; }
+  p { margin: 0 0 12px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13.5px; }
+  .alert-green { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); }
+  .alert-blue { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+  .alert-icon { flex: none; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; }
+  pre code { background: none; padding: 0; }
+  .kw { color: var(--indigo); } .str { color: #86e39a; } .cls { color: var(--blue); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+  table.tbl th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar">
+    <h1>Angular — Unit Tests</h1>
+    <div class="sub">HCMS Phase 8 · Frontend Testing</div>
+    <nav id="nav">
+      <a href="#scope">Scope</a>
+      <a href="#services">Services to Test</a>
+      <a href="#example">Example: JwtInterceptor</a>
+      <a href="#status">Current Status</a>
+    </nav>
+  </div>
+
+  <div id="main">
+
+    <section id="scope">
+      <div class="section-header"><div class="icon icon-green">🅰️</div><h2>Angular — Unit Tests</h2></div>
+
+      <div class="alert alert-green">
+        <div class="alert-icon">💡</div>
+        <div><strong>Scope:</strong> Focus on the services and interceptors — they contain business logic. Components that are pure presentation (just binding) get lower priority. Aim for the hard-to-see-break things: token refresh, role checks, form validation errors.</div>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="section-header"><div class="icon icon-blue">🧪</div><h2>Services to Test</h2></div>
+
+      <table class="tbl">
+        <thead><tr><th>Service / Directive</th><th>Detail</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>AuthService</code> — login stores tokens, logout clears localStorage, <code>isLoggedIn$</code> emits</td>
+            <td>Mock HttpClient via <code>HttpClientTestingModule</code>. Verify localStorage writes, JWT decode, role extraction</td>
+            <td><span class="pill pill-red">High</span></td>
+          </tr>
+          <tr>
+            <td><code>JwtInterceptor</code> — attaches Bearer header, triggers refresh on 401</td>
+            <td>Use <code>HttpClientTestingModule</code>. Test with expired token → 401 → refresh → retry. Verify infinite loop prevention (skip <code>/auth/refresh</code>)</td>
+            <td><span class="pill pill-red">High</span></td>
+          </tr>
+          <tr>
+            <td>Reactive form validators — <code>PatientFormComponent</code>, <code>CaseFormComponent</code></td>
+            <td>Date of birth ≤ today, required fields, MRN pattern (read-only). Test invalid vs valid states</td>
+            <td><span class="pill pill-yellow">Medium</span></td>
+          </tr>
+          <tr>
+            <td><code>HasRoleDirective</code> — hides element when role doesn't match</td>
+            <td>Create a <code>TestHostComponent</code> with the directive. Verify ngIf equivalent behavior for each role</td>
+            <td><span class="pill pill-green">Low</span></td>
+          </tr>
+          <tr>
+            <td><code>NotificationService</code> — unread count BehaviorSubject, polling interval</td>
+            <td>Mock HttpClient, use <code>fakeAsync</code>/<code>tick</code> for 60s polling. Verify badge count updates</td>
+            <td><span class="pill pill-yellow">Medium</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="example">
+      <div class="section-header"><div class="icon icon-blue">📄</div><h2>Example: JwtInterceptor test</h2></div>
+
+      <div class="card">
+<pre><code><span class="kw">describe</span>(<span class="str">'JwtInterceptor'</span>, () => {
+  <span class="kw">let</span> http: <span class="cls">HttpClient</span>;
+  <span class="kw">let</span> httpMock: <span class="cls">HttpTestingController</span>;
+  <span class="kw">let</span> authService: <span class="cls">AuthService</span>;
+
+  <span class="kw">beforeEach</span>(() => {
+    <span class="cls">TestBed</span>.configureTestingModule({
+      imports: [<span class="cls">HttpClientTestingModule</span>],
+      providers: [
+        { provide: <span class="cls">HTTP_INTERCEPTORS</span>, useClass: <span class="cls">JwtInterceptor</span>, multi: <span class="kw">true</span> }
+      ]
+    });
+    http = <span class="cls">TestBed</span>.inject(<span class="cls">HttpClient</span>);
+    httpMock = <span class="cls">TestBed</span>.inject(<span class="cls">HttpTestingController</span>);
+    authService = <span class="cls">TestBed</span>.inject(<span class="cls">AuthService</span>);
+    spyOn(authService, <span class="str">'getToken'</span>).and.returnValue(<span class="str">'valid.jwt.token'</span>);
+  });
+
+  it(<span class="str">'should attach Authorization header'</span>, () => {
+    http.get(<span class="str">'/api/patients'</span>).subscribe();
+    <span class="kw">const</span> req = httpMock.expectOne(<span class="str">'/api/patients'</span>);
+    expect(req.request.headers.get(<span class="str">'Authorization'</span>))
+      .toBe(<span class="str">'Bearer valid.jwt.token'</span>);
+    req.flush({});
+  });
+});</code></pre>
+      </div>
+    </section>
+
+    <section id="status">
+      <div class="section-header"><div class="icon icon-green">✅</div><h2>Current Status</h2></div>
+
+      <div class="alert alert-blue">
+        <div class="alert-icon">💡</div>
+        <div>Spec files for all five items above already exist in the repo (not yet run/verified as part of this HTML conversion):</div>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>File</th></tr></thead>
+        <tbody>
+          <tr><td><code>src-ng/hcm-web/src/app/core/services/auth.service.spec.ts</code></td></tr>
+          <tr><td><code>src-ng/hcm-web/src/app/core/interceptors/jwt.interceptor.spec.ts</code></td></tr>
+          <tr><td><code>src-ng/hcm-web/src/app/features/patients/patient-form/patient-form.component.spec.ts</code></td></tr>
+          <tr><td><code>src-ng/hcm-web/src/app/features/cases/case-form/case-form.component.spec.ts</code></td></tr>
+          <tr><td><code>src-ng/hcm-web/src/app/shared/directives/has-role.directive.spec.ts</code></td></tr>
+          <tr><td><code>src-ng/hcm-web/src/app/core/services/notification.service.spec.ts</code></td></tr>
+        </tbody>
+      </table>
+
+      <p class="muted">Run with <code>ng test --watch=false</code> from <code>src-ng/hcm-web</code> to confirm pass/fail.</p>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  const links = document.querySelectorAll('#nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`#nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  sections.forEach(s => s && io.observe(s));
+</script>
+</body>
+</html>

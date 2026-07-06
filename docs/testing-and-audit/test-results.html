@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HCMS — Backend Test Results</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08);
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --blue: #38bdf8; --indigo: #818cf8; --purple: #a78bfa;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  }
+  :root[data-theme="light"] { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  :root[data-theme="dark"] { --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08); --text: #e2e8f0; --muted: #94a3b8; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, sans-serif; font-size: 14px; line-height: 1.55; }
+  a { color: var(--blue); }
+  .layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 250px; flex: 0 0 250px; background: var(--panel); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px;
+  }
+  #sidebar h1 { font-size: 15px; margin: 0 0 4px; }
+  #sidebar .sub { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  #nav a {
+    display: block; padding: 7px 10px; border-radius: 6px; color: var(--muted); text-decoration: none;
+    font-size: 13px; margin-bottom: 2px; border-left: 2px solid transparent;
+  }
+  #nav a:hover { background: var(--panel-2); color: var(--text); }
+  #nav a.active { color: var(--text); background: var(--panel-2); border-left-color: var(--blue); font-weight: 600; }
+  #main { flex: 1; padding: 32px 40px; max-width: 980px; }
+  section { margin-bottom: 44px; scroll-margin-top: 20px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex: none; }
+  .icon-green { background: rgba(34,197,94,.15); } .icon-blue { background: rgba(56,189,248,.15); }
+  .icon-purple { background: rgba(167,139,250,.15); } .icon-yellow { background: rgba(245,158,11,.15); }
+  .icon-red { background: rgba(239,68,68,.15); }
+  h2 { font-size: 19px; margin: 0; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat .num { font-size: 26px; font-weight: 700; }
+  .stat .label { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .stat.pass .num { color: var(--green); }
+  .stat.fail .num { color: var(--red); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tbl th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .pill-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .muted { color: var(--muted); }
+  details { margin-bottom: 8px; }
+  summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; }
+  .alert-yellow { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); }
+  .alert-blue { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+  .alert-icon { flex: none; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+  .bar-wrap { background: var(--panel-2); border-radius: 6px; height: 8px; overflow: hidden; margin-top: 6px; }
+  .bar { height: 100%; background: var(--green); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar">
+    <h1>HCMS Test Results</h1>
+    <div class="sub">Phase 8 · Unit &amp; Integration</div>
+    <nav id="nav">
+      <a href="#summary">Summary</a>
+      <a href="#unit">Unit Tests</a>
+      <a href="#integration">Integration Tests</a>
+      <a href="#findings">Findings &amp; Issues</a>
+      <a href="#howto">How to Reproduce</a>
+    </nav>
+  </div>
+
+  <div id="main">
+
+    <section id="summary">
+      <div class="section-header"><div class="icon icon-green">✅</div><h2>Summary</h2></div>
+
+      <div class="alert alert-blue">
+        <div class="alert-icon">💡</div>
+        <div>New to unit vs. integration testing? Read <a href="unit-and-integration-testing-explained.html">this plain-language guide</a> first — it walks through a real test line by line. All 69 backend tests pass. Docker/Testcontainers wasn't available in this environment, so integration tests run the real HCM.API pipeline (auth, RBAC, middleware) against EF Core's InMemory provider instead of a containerized SQL Server — same code paths, no external dependency.</div>
+      </div>
+
+      <div class="grid-stats">
+        <div class="stat pass"><div class="num">69</div><div class="label">Total Tests</div></div>
+        <div class="stat pass"><div class="num">69</div><div class="label">Passed</div></div>
+        <div class="stat fail"><div class="num">0</div><div class="label">Failed</div></div>
+        <div class="stat"><div class="num">43 / 26</div><div class="label">Unit / Integration</div></div>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>Suite</th><th>Project</th><th>Tests</th><th>Result</th><th>Duration</th></tr></thead>
+        <tbody>
+          <tr><td>Unit</td><td class="mono">HCM.Application.Tests</td><td>43</td><td><span class="pill pill-green">100% pass</span></td><td>~2s</td></tr>
+          <tr><td>Integration</td><td class="mono">HCM.API.Tests</td><td>26</td><td><span class="pill pill-green">100% pass</span></td><td>~4s</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="unit">
+      <div class="section-header"><div class="icon icon-blue">🧪</div><h2>Unit Tests — HCM.Application.Tests</h2></div>
+      <p class="muted">DataHandlers tested against EF Core's InMemory provider via the real <code>ApplicationDbContext</code> (entity configs, keys and relationships all apply — only SQL Server is swapped out). Fakes stand in for <code>ITokenService</code> and <code>IBlobStorageService</code>.</p>
+
+      <details open>
+        <summary>Auth — AuthDataHandlerTests <span class="pill pill-green">7/7</span></summary>
+        <table class="tbl">
+          <thead><tr><th>Test</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>LoginAsync_WithValidCredentials_ReturnsAccessAndRefreshTokens</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>LoginAsync_WithWrongPassword_ThrowsUnauthorizedAndIncrementsFailedAttempts</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>LoginAsync_AfterFiveFailedAttempts_LocksAccount</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>LoginAsync_WhenAccountLocked_ThrowsEvenWithCorrectPassword</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>LoginAsync_SuccessfulLogin_ResetsFailedAttemptCounter</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>LoginAsync_WithMissingCredentials_ThrowsValidationException (2 cases)</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Patients — PatientDataHandlerTests <span class="pill pill-green">8/8</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>CreatePatientAsync_GeneratesMrnInExpectedFormat</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreatePatientAsync_SecondPatientInSameYear_IncrementsSequence</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreatePatientAsync_WithFutureDateOfBirth_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreatePatientAsync_WithInvalidEmail_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreatePatientAsync_WithMissingLastName_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>DeletePatientAsync_SetsIsActiveFalse_SoftDelete</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>SearchPatientsAsync_FiltersByNameCaseInsensitively</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetPatientByMrnAsync_WithUnknownMrn_ThrowsKeyNotFoundException</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Cases — CaseStatusMachineTests <span class="pill pill-green">14/14</span></summary>
+        <p class="muted" style="margin:6px 0 10px">Table-driven over the real transition matrix in <code>CaseDataHandler.IsValidStatusTransition</code>: Open→InProgress/OnHold/Closed, InProgress→OnHold/Closed, OnHold→InProgress/Closed, Closed→Reopened, Reopened→InProgress all valid; Open→Reopened and Closed→Open/InProgress rejected.</p>
+        <table class="tbl">
+          <tbody>
+            <tr><td>ChangeCaseStatusAsync_ValidatesTransition (11 valid/invalid cases)</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreateCaseAsync_GeneratesCaseNumberInExpectedFormat</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>ChangeCaseStatusAsync_ToClosed_SetsClosedAtTimestamp</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>ChangeCaseStatusAsync_RecordsStatusHistoryEntry</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CloseCaseAsync_WhenAlreadyClosed_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Documents — DocumentDataHandlerTests <span class="pill pill-green">6/6</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>UploadDocumentAsync_WithAllowedType_UploadsToBlobAndPersistsMetadata</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>UploadDocumentAsync_ExceedingSizeLimit_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>UploadDocumentAsync_WithDisallowedContentType_ThrowsValidationException</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetDownloadUrlAsync_ReturnsSasUrlThatExpiresWithinOneHour</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>DeleteDocumentAsync_SetsIsDeletedFlag_SoftDelete</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>UploadDocumentAsync_WithUnknownCaseNumber_ThrowsKeyNotFoundException</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Notifications — NotificationDataHandlerTests <span class="pill pill-green">6/6</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>CreateAsync_PersistsUnreadNotification</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetUnreadCountAsync_OnlyCountsCurrentUsersUnreadNotifications</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>MarkReadAsync_DecrementsUnreadCount</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>MarkReadAsync_ForAnotherUsersNotification_DoesNothing</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>MarkAllReadAsync_ClearsAllUnreadForUser</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetMyNotificationsAsync_OrdersByNewestFirst</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+    </section>
+
+    <section id="integration">
+      <div class="section-header"><div class="icon icon-purple">🔗</div><h2>Integration Tests — HCM.API.Tests</h2></div>
+      <p class="muted">Boots the real HCM.API pipeline via <code>WebApplicationFactory&lt;Program&gt;</code> — actual JWT auth, RBAC policies, and middleware — against an InMemory database and a fake blob service (see <a href="#howto">How to Reproduce</a> for why Testcontainers/SQL Server wasn't used here).</p>
+
+      <details open>
+        <summary>Auth flow — AuthFlowTests <span class="pill pill-green">6/6</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>Login_WithSeededAdminCredentials_ReturnsTokensAndRoles</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>Login_WithBadPassword_Returns401</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>Login_ThenAccessProtectedRoute_Succeeds</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>Login_WithoutToken_OnProtectedRoute_Returns401</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>Login_AfterFiveFailedAttempts_LocksAccountAndSixthAttemptStaysUnauthorized</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>Refresh_IsNotYetImplemented_ReturnsUnauthorized <span class="muted">(documents a known gap — see Findings)</span></td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Patients — PatientCrudTests <span class="pill pill-green">6/6</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>CreatePatient_AsCareCoordinator_Returns201WithGeneratedMrn</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreatePatient_AsReadOnlyRole_Returns403</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetPatientByMrn_AfterCreate_ReturnsSamePatient</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>SearchPatients_ByName_ReturnsPaginatedMatch</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>DeletePatient_AsAdmin_SoftDeletesAndSubsequentGetReturns404</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>DeletePatient_AsCareCoordinator_Returns403</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>Cases — CaseStateMachineTests <span class="pill pill-green">4/4</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>CreateCase_ThenValidTransitions_Succeed</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>ChangeStatus_WithInvalidTransition_Returns400</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>CreateCase_AsReadOnlyRole_Returns403</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>ChangeStatus_AsClinicianRole_Returns403</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+
+      <details open>
+        <summary>RBAC — RbacVerificationTests <span class="pill pill-green">10/10</span></summary>
+        <table class="tbl">
+          <tbody>
+            <tr><td>GetPatients_Search_AllRolesAllowed (ReadOnly / CareCoordinator / Admin)</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>GetAuditLogs_OnlyAdminAllowed (ReadOnly→403, CareCoordinator→403, Admin→200)</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>PostPatients_AdminAndCareCoordinatorAllowed (ReadOnly→403, others→201)</td><td><span class="pill pill-green">Pass</span></td></tr>
+            <tr><td>ProtectedEndpoint_WithNoToken_Returns401NotForbidden</td><td><span class="pill pill-green">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </details>
+    </section>
+
+    <section id="findings">
+      <div class="section-header"><div class="icon icon-yellow">🔎</div><h2>Findings &amp; Issues Filed</h2></div>
+
+      <div class="alert alert-yellow">
+        <div class="alert-icon">⚠️</div>
+        <div>No test failures. Writing the integration tests surfaced one real product gap in <code>AuthController</code>, tracked as a GitHub issue rather than a test failure (the test asserts the <em>current</em> stub behavior so it stays green until fixed).</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Auth refresh &amp; logout are unimplemented stubs</h3>
+        <p><code>AuthController.Refresh</code> always returns <code>401 Unauthorized</code> and <code>AuthController.Logout</code> is a no-op — both are marked <code>// TODO</code> in source and never call into a data handler. The Phase 8 integration test plan (<a href="integrationtesting.md">integrationtesting.md</a>) assumed a full login → refresh → logout round trip; that flow cannot be completed end-to-end today.</p>
+        <p class="muted">Filed as <a href="https://github.com/zaheerhbd/HCMS/issues/5" target="_blank" rel="noopener">GitHub issue #5</a>.</p>
+      </div>
+    </section>
+
+    <section id="howto">
+      <div class="section-header"><div class="icon icon-green">▶️</div><h2>How to Reproduce</h2></div>
+      <div class="card">
+<pre class="mono" style="white-space:pre-wrap">cd src
+dotnet test HCM.Application.Tests\HCM.Application.Tests.csproj --logger "trx;LogFileName=unit-results.trx"
+dotnet test HCM.API.Tests\HCM.API.Tests.csproj --logger "trx;LogFileName=integration-results.trx"</pre>
+        <p class="muted" style="margin-top:10px">Docker Desktop's engine wasn't running in this environment, so the integration suite substitutes EF Core's InMemory provider for the Testcontainers-backed SQL Server described in the original plan, and a fake <code>IBlobStorageService</code> for Azurite/Azure Blob. Both are swapped in purely via DI overrides in <code>ApiFactory</code> — the controllers, middleware, JWT auth, and RBAC policies under test are the real production code. <code>DataSeeder</code> now branches on <code>Database.IsInMemory()</code> (EnsureCreated vs. Migrate) to support this.</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  const links = document.querySelectorAll('#nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`#nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  sections.forEach(s => s && io.observe(s));
+</script>
+</body>
+</html>

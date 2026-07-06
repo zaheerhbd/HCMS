@@ -3,25 +3,28 @@
 **Goal:** Production-quality build. Key flows covered by tests. Security hardened.
 
 **Duration:** 2 weeks  
-**Status:** `[ ]` Not Started  
-**Last Updated:** 2026-06-24
+**Status:** `[~]` In Progress  
+**Last Updated:** 2026-07-06
 
 ---
 
 ## Backend Testing
 
-- [ ] Unit tests (xUnit + Moq): all Application layer use cases / command handlers
-- [ ] Integration tests (xUnit + `WebApplicationFactory` + Testcontainers SQL Server):
-  - [ ] Auth flow: login → access protected route → refresh → logout
-  - [ ] Patient CRUD
-  - [ ] Case status machine: valid and invalid transitions
-  - [ ] Document upload and SAS URL generation (mock Blob)
+- [x] Unit tests (xUnit + EF Core InMemory): Auth, Patient, Case status machine, Document, Notification DataHandlers — 43 tests, `src/HCM.Application.Tests`
+- [~] Integration tests (xUnit + `WebApplicationFactory`; InMemory DB substituted for Testcontainers SQL Server — Docker daemon unavailable in dev environment):
+  - [~] Auth flow: login → access protected route → refresh → logout (login/protected-route/lockout covered; refresh & logout endpoints are unimplemented stubs — [issue #5](https://github.com/zaheerhbd/HCMS/issues/5))
+  - [x] Patient CRUD
+  - [x] Case status machine: valid and invalid transitions
+  - [ ] Document upload and SAS URL generation (mock Blob) — covered at unit level only; no integration-level multipart upload test yet
+  - [x] RBAC verification across roles (bonus, not originally scoped): `src/HCM.API.Tests/Rbac`
 - [ ] Code coverage report: target ≥ 70% on Application layer
 - [ ] `dotnet-security-scan` or OWASP dependency check in CI pipeline
 
+See [docs/testing-and-audit/](../testing-and-audit/) for per-section test docs and [test-results.html](../testing-and-audit/test-results.html) for the full 69/69 passing run. Frontend unit test results and a plain-language walkthrough are in [angular-testing-explained.html](../testing-and-audit/angular-testing-explained.html) (32/32 passing).
+
 ## Frontend Testing
 
-- [ ] Unit tests (Jasmine/Karma): `AuthService`, `JwtInterceptor`, form validators
+- [x] Unit tests (Jasmine/Karma): `AuthService`, `JwtInterceptor`, `NotificationService`, `CaseFormComponent`/`PatientFormComponent` validation, `HasRoleDirective` — 32 tests, `src-ng/hcm-web/src/app/**/*.spec.ts`
 - [ ] E2E tests (Playwright or Cypress): login flow, create patient, create case, upload document
 - [ ] Run `ng build --configuration production` with `--stats-json`; analyse bundle size
 - [ ] Accessibility audit: run Lighthouse on Login, Case List, Case Detail pages; target ≥ 90 accessibility score

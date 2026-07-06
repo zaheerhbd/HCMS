@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HCMS — Unit &amp; Integration Testing, Explained</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08);
+    --text: #e2e8f0; --muted: #94a3b8; --green: #22c55e; --red: #ef4444; --yellow: #f59e0b;
+    --blue: #38bdf8; --indigo: #818cf8; --purple: #a78bfa;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  }
+  :root[data-theme="light"] { --bg: #f4f6fb; --panel: #ffffff; --panel-2: #eef1f8; --border: rgba(15,23,42,.08); --text: #0f172a; --muted: #55617a; }
+  :root[data-theme="dark"] { --bg: #0f1220; --panel: #171b2e; --panel-2: #1e2238; --border: rgba(255,255,255,.08); --text: #e2e8f0; --muted: #94a3b8; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, Segoe UI, Roboto, sans-serif; font-size: 14.5px; line-height: 1.65; }
+  a { color: var(--blue); }
+  .layout { display: flex; min-height: 100vh; }
+  #sidebar {
+    width: 260px; flex: 0 0 260px; background: var(--panel); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 20px 14px;
+  }
+  #sidebar h1 { font-size: 15px; margin: 0 0 4px; }
+  #sidebar .sub { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  #nav a {
+    display: block; padding: 7px 10px; border-radius: 6px; color: var(--muted); text-decoration: none;
+    font-size: 13px; margin-bottom: 2px; border-left: 2px solid transparent;
+  }
+  #nav a:hover { background: var(--panel-2); color: var(--text); }
+  #nav a.active { color: var(--text); background: var(--panel-2); border-left-color: var(--blue); font-weight: 600; }
+  #main { flex: 1; padding: 32px 44px; max-width: 900px; }
+  section { margin-bottom: 48px; scroll-margin-top: 20px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
+  .icon-green { background: rgba(34,197,94,.15); } .icon-blue { background: rgba(56,189,248,.15); }
+  .icon-purple { background: rgba(167,139,250,.15); } .icon-yellow { background: rgba(245,158,11,.15); }
+  .icon-red { background: rgba(239,68,68,.15); } .icon-indigo { background: rgba(129,140,248,.15); }
+  h2 { font-size: 20px; margin: 0; }
+  h3 { font-size: 15.5px; margin: 22px 0 8px; }
+  p { margin: 0 0 12px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .analogy {
+    display: flex; gap: 12px; background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--purple);
+    border-radius: 8px; padding: 14px 16px; margin: 14px 0; font-size: 13.5px;
+  }
+  .analogy .emoji { font-size: 20px; flex: none; }
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13.5px; }
+  .alert-blue { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+  .alert-green { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); }
+  .alert-yellow { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); }
+  .alert-icon { flex: none; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; }
+  pre code { background: none; padding: 0; }
+  .kw { color: var(--indigo); } .str { color: #86e39a; } .cm { color: var(--muted); font-style: italic; } .cls { color: var(--blue); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+  table.tbl th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  table.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--red); }
+  .pill-blue { background: rgba(56,189,248,.15); color: var(--blue); }
+  .pill-purple { background: rgba(167,139,250,.15); color: var(--purple); }
+  details { margin-bottom: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px 14px; }
+  summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+  summary::marker { color: var(--muted); }
+  .details-body { padding-bottom: 14px; }
+  .step {
+    display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start;
+  }
+  .step .num {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--blue);
+  }
+  .diagram-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin: 14px 0; overflow-x: auto; }
+  .muted { color: var(--muted); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } #main { padding: 24px; } #sidebar { position: static; width: 100%; flex: none; height: auto; } .layout { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar">
+    <h1>Testing, Explained</h1>
+    <div class="sub">A plain-language guide for HCMS · no prior testing experience assumed</div>
+    <nav id="nav">
+      <a href="#why">Why bother testing?</a>
+      <a href="#pyramid">The two kinds of test</a>
+      <a href="#unit">Unit tests</a>
+      <a href="#unit-walkthrough">Unit test, line by line</a>
+      <a href="#integration">Integration tests</a>
+      <a href="#integration-walkthrough">Integration test, line by line</a>
+      <a href="#compare">Unit vs. Integration</a>
+      <a href="#realbug">A real bug this caught</a>
+      <a href="#run">Running them yourself</a>
+      <a href="#results">Current results</a>
+    </nav>
+  </div>
+
+  <div id="main">
+
+    <section id="why">
+      <div class="section-header"><div class="icon icon-blue">🤔</div><h2>Why bother testing?</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🍳</div>
+        <div>Imagine a restaurant kitchen. Before a dish goes to a customer, someone tastes it. Not because the chef is bad at cooking — but because it's easy to forget the salt, or grab sugar instead of flour, and nobody notices until a stranger's fork is already in their mouth. Automated tests are that taste-test, except they run in a few seconds, every single time you change the recipe, and they never get tired or distracted.</div>
+      </div>
+
+      <p>In HCMS, "the recipe" is code like <em>"when someone logs in with the wrong password five times, lock their account."</em> A human tester would have to type the wrong password five times, by hand, after every single code change, forever. A test does that in under a second and tells you immediately if it ever stops working — for example, if someone edits the login code next year and accidentally breaks the lockout rule.</p>
+
+      <p>That's the whole point: tests are a safety net that lets people keep changing the code confidently, without accidentally breaking something that used to work.</p>
+    </section>
+
+    <section id="pyramid">
+      <div class="section-header"><div class="icon icon-purple">🔺</div><h2>The two kinds of test in this project</h2></div>
+
+      <p>HCMS has two test projects, and they check different things:</p>
+
+      <table class="tbl">
+        <thead><tr><th>Project</th><th>What it checks</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td><code>HCM.Application.Tests</code></td><td><span class="pill pill-blue">Unit tests</span> — one piece of business logic in isolation</td><td>43</td></tr>
+          <tr><td><code>HCM.API.Tests</code></td><td><span class="pill pill-purple">Integration tests</span> — the whole app working together over real HTTP</td><td>26</td></tr>
+        </tbody>
+      </table>
+
+      <div class="diagram-wrap">
+        <svg width="100%" height="220" viewBox="0 0 640 220" style="max-width:640px">
+          <polygon points="320,10 620,200 20,200" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+          <line x1="120" y1="130" x2="520" y2="130" stroke="var(--border)" stroke-width="1.5"/>
+
+          <text x="320" y="45" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="700">Fewer</text>
+
+          <rect x="230" y="55" width="180" height="55" rx="8" fill="#1e2238" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="320" y="80" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="700">Integration tests</text>
+          <text x="320" y="98" text-anchor="middle" fill="#94a3b8" font-size="11">26 · slower, realistic</text>
+
+          <rect x="140" y="145" width="360" height="55" rx="8" fill="#1e2238" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="320" y="170" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="700">Unit tests</text>
+          <text x="320" y="188" text-anchor="middle" fill="#94a3b8" font-size="11">43 · fast, focused, run constantly</text>
+
+          <text x="320" y="215" text-anchor="middle" fill="#64748b" font-size="11">More</text>
+        </svg>
+      </div>
+
+      <p class="muted">This shape is called the "testing pyramid": lots of fast, narrow unit tests at the bottom catching small mistakes early, and fewer, slower integration tests near the top confirming the big pieces genuinely fit together.</p>
+    </section>
+
+    <section id="unit">
+      <div class="section-header"><div class="icon icon-blue">🧪</div><h2>Unit tests</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🧂</div>
+        <div>A unit test is like tasting <em>just the sauce</em> before it goes anywhere near the rest of the dish. You're not testing the whole meal — plating, temperature, the side salad — just: "is this one component correct, on its own?"</div>
+      </div>
+
+      <p>In HCMS, the "sauce" is a <strong>DataHandler</strong> — a class that holds one piece of business logic, like <code>AuthDataHandler</code> (login rules) or <code>CaseDataHandler</code> (case status rules). A unit test calls one method on that class directly — no web browser, no HTTP request, no real server — and checks the result.</p>
+
+      <h3>The one tricky part: the database</h3>
+      <p>DataHandlers talk to the database. Real databases are slow to start up and annoying to reset between tests. So instead of a real SQL Server, unit tests use a lightweight stand-in called <strong>EF Core InMemory</strong> — it behaves like a real database (you can save, search, filter) but it all just lives in memory and vanishes the instant the test finishes.</p>
+
+      <div class="analogy">
+        <div class="emoji">🎬</div>
+        <div>Think of it like a movie stunt double: same moves, same result, but nobody has to risk the real actor (the real production database) to film the scene.</div>
+      </div>
+
+      <p>Every unit test in HCMS calls <code>TestDbContextFactory.Create()</code> to get a fresh, empty stunt-double database, all its own, so tests never interfere with each other.</p>
+    </section>
+
+    <section id="unit-walkthrough">
+      <div class="section-header"><div class="icon icon-blue">🔍</div><h2>A real unit test, line by line</h2></div>
+      <p>Here's an actual test from <code>src/HCM.Application.Tests/Auth/AuthDataHandlerTests.cs</code>. It checks the "5 wrong passwords locks the account" rule.</p>
+
+      <pre><code><span class="kw">public async</span> Task LoginAsync_AfterFiveFailedAttempts_LocksAccount()
+{
+    <span class="cm">// 1. Set up a fresh, empty "stunt double" database</span>
+    <span class="kw">await using var</span> db = TestDbContextFactory.Create();
+
+    <span class="cm">// 2. Create a fake user who has already failed 4 times</span>
+    <span class="kw">var</span> user = NewUser(failedAttempts: 4);
+    db.Users.Add(user);
+    <span class="kw">await</span> db.SaveChangesAsync();
+
+    <span class="cm">// 3. Build the real AuthDataHandler — the actual production class,</span>
+    <span class="cm">//    not a fake — pointed at our stunt-double database</span>
+    <span class="kw">var</span> sut = <span class="kw">new</span> AuthDataHandler(db, <span class="kw">new</span> FakeTokenService(), NullLogger&lt;AuthDataHandler&gt;.Instance);
+
+    <span class="cm">// 4. Try logging in with the WRONG password — this is the 5th failed attempt</span>
+    <span class="kw">await</span> Assert.ThrowsAsync&lt;UnauthorizedAccessException&gt;(
+        () =&gt; sut.LoginAsync(user.Username, <span class="str">"WrongPassword!"</span>));
+
+    <span class="cm">// 5. Check the account actually got locked</span>
+    <span class="kw">var</span> reloaded = <span class="kw">await</span> db.Users.FindAsync(user.Id);
+    reloaded!.FailedLoginAttempts.Should().Be(5);
+    reloaded.IsLockedOut.Should().BeTrue();
+}</code></pre>
+
+      <div class="step"><div class="num">1</div><div>Every test starts with a brand-new, empty database, so nothing left over from a previous test can sneak in and cause a false result.</div></div>
+      <div class="step"><div class="num">2</div><div>We plant a fake user who's already failed 4 times — one more failure should trip the lockout.</div></div>
+      <div class="step"><div class="num">3</div><div><code>sut</code> stands for "system under test" — a common naming convention. This is the <em>real</em> <code>AuthDataHandler</code> class from the actual application, not a fake version — that's the whole point of a unit test: prove the real logic works.</div></div>
+      <div class="step"><div class="num">4</div><div>We attempt a login we know is wrong, and assert (fancy word for "check") that it throws the expected error.</div></div>
+      <div class="step"><div class="num">5</div><div>Finally we re-read the user from the database and confirm the account is now actually locked — proving the rule didn't just throw an error, it also recorded the lockout correctly.</div></div>
+
+      <div class="alert alert-green">
+        <div class="alert-icon">✅</div>
+        <div>If someone later "simplifies" the lockout logic and accidentally changes it to lock after 10 attempts instead of 5, this test immediately turns red and tells them exactly what broke — instead of a real user getting silently locked out (or not locked out) in production months later.</div>
+      </div>
+    </section>
+
+    <section id="integration">
+      <div class="section-header"><div class="icon icon-purple">🔗</div><h2>Integration tests</h2></div>
+
+      <div class="analogy">
+        <div class="emoji">🎭</div>
+        <div>If a unit test is tasting the sauce alone, an integration test is a full dress rehearsal: real actors, real costumes, real stage — everyone performing together, in order, exactly like opening night. You're not checking one ingredient anymore; you're checking that the whole show actually works end to end.</div>
+      </div>
+
+      <p>An integration test in HCMS starts the <em>real</em> web application — the same <code>Program.cs</code>, the same controllers, the same login/security rules — and sends it real HTTP requests, exactly like a browser or Postman would. It checks things a unit test can't, such as: "does a request with no login token actually get rejected by the security layer?" or "does a Care Coordinator's role actually let them create a patient, while a Read-Only user gets blocked?"</p>
+
+      <h3>What's swapped out, and why</h3>
+      <p>Two things are still too slow or unavailable to use for real in a test run, so they're replaced with lightweight stand-ins — everything else is 100% the real production code:</p>
+
+      <table class="tbl">
+        <thead><tr><th>Real thing</th><th>Stand-in used in tests</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>SQL Server database</td><td>EF Core InMemory</td><td>No database server needs to be installed or started just to run tests</td></tr>
+          <tr><td>Azure Blob Storage (file uploads)</td><td>A fake in-memory blob service</td><td>Tests shouldn't need a real Azure account or internet connection</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-yellow">
+        <div class="alert-icon">⚠️</div>
+        <div>The original Phase 8 plan called for a real, temporary SQL Server running in Docker (a tool called Testcontainers) instead of the InMemory stand-in above — that's even closer to production. Docker's engine wasn't running in this dev environment, so InMemory was used instead. Everything else (the security rules, the controllers, the actual HTTP pipeline) is unchanged, real code.</div>
+      </div>
+    </section>
+
+    <section id="integration-walkthrough">
+      <div class="section-header"><div class="icon icon-purple">🔍</div><h2>A real integration test, line by line</h2></div>
+      <p>From <code>src/HCM.API.Tests/Auth/AuthFlowTests.cs</code> — checks that logging in gives you a working "key" (token) that actually unlocks a protected page.</p>
+
+      <pre><code><span class="kw">public async</span> Task Login_ThenAccessProtectedRoute_Succeeds()
+{
+    <span class="cm">// 1. Spin up a real copy of the HCMS API in memory</span>
+    <span class="kw">var</span> client = _factory.CreateClient();
+
+    <span class="cm">// 2. Send a real HTTP login request, just like the Angular app would</span>
+    <span class="kw">var</span> login = <span class="kw">await</span> client.PostAsJsonAsync(<span class="str">"/api/auth/login"</span>, <span class="kw">new</span> LoginRequest(<span class="str">"admin"</span>, <span class="str">"Admin@123!"</span>));
+    <span class="kw">var</span> auth = <span class="kw">await</span> login.Content.ReadFromJsonAsync&lt;AuthResponseDto&gt;();
+
+    <span class="cm">// 3. Attach the access token we got back, like a browser would after login</span>
+    client.DefaultRequestHeaders.Authorization =
+        <span class="kw">new</span> AuthenticationHeaderValue(<span class="str">"Bearer"</span>, auth!.AccessToken);
+
+    <span class="cm">// 4. Now try to reach a page that requires being logged in</span>
+    <span class="kw">var</span> protectedResponse = <span class="kw">await</span> client.GetAsync(<span class="str">"/api/cases"</span>);
+
+    <span class="cm">// 5. It should succeed — 200 OK — because we're properly logged in</span>
+    protectedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+}</code></pre>
+
+      <div class="step"><div class="num">1</div><div><code>_factory.CreateClient()</code> boots up the actual web app — controllers, security middleware, everything — and gives us something that behaves exactly like a web browser talking to it.</div></div>
+      <div class="step"><div class="num">2</div><div>We send a real login request over (in-memory) HTTP, using the same username/password an actual person would type in.</div></div>
+      <div class="step"><div class="num">3</div><div>Logging in returns an access token — like a wristband at a concert. We attach it to every future request, the same way the Angular app does.</div></div>
+      <div class="step"><div class="num">4</div><div><code>/api/cases</code> is a page that refuses anyone without a valid wristband. We try to visit it.</div></div>
+      <div class="step"><div class="num">5</div><div>Because we have a valid, freshly issued token, the server lets us in — <code>200 OK</code>. A companion test (<code>Login_WithoutToken_OnProtectedRoute_Returns401</code>) proves the opposite: no wristband, no entry.</div></div>
+    </section>
+
+    <section id="compare">
+      <div class="section-header"><div class="icon icon-indigo">⚖️</div><h2>Unit vs. Integration, side by side</h2></div>
+
+      <div class="compare">
+        <div class="card">
+          <h3 style="margin-top:0">🧪 Unit test</h3>
+          <ul style="padding-left:18px; margin:0">
+            <li>Tests <strong>one class</strong> in isolation</li>
+            <li>No real HTTP, no security layer</li>
+            <li>Runs in milliseconds</li>
+            <li>Pinpoints exactly which piece of logic broke</li>
+            <li>Example: "does the MRN number generator produce <code>MRN-2026-00001</code>?"</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">🔗 Integration test</h3>
+          <ul style="padding-left:18px; margin:0">
+            <li>Tests the <strong>whole app</strong> working together</li>
+            <li>Real HTTP requests, real security/login rules</li>
+            <li>Runs in a few seconds</li>
+            <li>Confirms the pieces are actually wired together correctly</li>
+            <li>Example: "can a Read-Only user really not create a patient through the API?"</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="analogy" style="margin-top:14px">
+        <div class="emoji">🧩</div>
+        <div>You need both. A jigsaw puzzle can have every single piece individually perfect (unit tests passing) and still not form a picture if two pieces don't actually click together (which only an integration test would catch) — say, if the login page sends the token in a slightly different format than the security layer expects to receive it.</div>
+      </div>
+    </section>
+
+    <section id="realbug">
+      <div class="section-header"><div class="icon icon-yellow">🐞</div><h2>A real bug this testing effort caught</h2></div>
+
+      <p>Writing the auth integration test above led to something worth knowing about: two related endpoints, <code>POST /api/auth/refresh</code> and <code>POST /api/auth/logout</code>, turned out to just be placeholders in the code — literally marked <code>// TODO</code> — that always return a canned response and don't do any real work.</p>
+
+      <pre><code><span class="cm">// src/HCM.API/Controllers/AuthController.cs</span>
+[HttpPost(<span class="str">"refresh"</span>)]
+<span class="kw">public async</span> Task&lt;IActionResult&gt; Refresh([FromBody] RefreshRequest request, CancellationToken ct)
+{
+    <span class="cm">// TODO: Implement RefreshTokenService</span>
+    <span class="kw">return</span> Unauthorized();
+}</code></pre>
+
+      <p>This wasn't caught by a failing test — it was caught by the <em>act of trying to write</em> a realistic login → refresh → logout test and discovering there was nothing real to test. That's filed as <a href="https://github.com/zaheerhbd/HCMS/issues/5" target="_blank" rel="noopener">GitHub issue #5</a> so it gets fixed properly later, instead of being silently forgotten.</p>
+
+      <div class="alert alert-blue">
+        <div class="alert-icon">💡</div>
+        <div>This is a good example of a broader truth: tests don't just catch bugs in existing code — the <em>process of writing them</em> forces you to actually use every code path the way a real user would, which surfaces gaps nobody had gotten around to finishing yet.</div>
+      </div>
+    </section>
+
+    <section id="run">
+      <div class="section-header"><div class="icon icon-green">▶️</div><h2>Running the tests yourself</h2></div>
+      <div class="card">
+<pre><code><span class="cm"># from the src/ folder</span>
+dotnet test HCM.Application.Tests\HCM.Application.Tests.csproj   <span class="cm"># unit tests</span>
+dotnet test HCM.API.Tests\HCM.API.Tests.csproj                   <span class="cm"># integration tests</span>
+
+<span class="cm"># or run everything in the solution at once</span>
+dotnet test</code></pre>
+      </div>
+      <p class="muted">Each run takes a few seconds. A green "Passed!" line at the end means every check succeeded; anything red names the exact test and the exact expectation that failed.</p>
+    </section>
+
+    <section id="results">
+      <div class="section-header"><div class="icon icon-green">✅</div><h2>Current results</h2></div>
+      <table class="tbl">
+        <thead><tr><th>Suite</th><th>Tests</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Unit — <code>HCM.Application.Tests</code></td><td>43</td><td><span class="pill pill-green">100% passing</span></td></tr>
+          <tr><td>Integration — <code>HCM.API.Tests</code></td><td>26</td><td><span class="pill pill-green">100% passing</span></td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>69</strong></td><td><span class="pill pill-green">100% passing</span></td></tr>
+        </tbody>
+      </table>
+      <p>For the full breakdown test-by-test, see <a href="test-results.html">test-results.html</a>.</p>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  const links = document.querySelectorAll('#nav a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`#nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  sections.forEach(s => s && io.observe(s));
+</script>
+</body>
+</html>

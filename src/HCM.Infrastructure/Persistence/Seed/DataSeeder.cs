@@ -15,7 +15,12 @@ public static class DataSeeder
 
         try
         {
-            await db.Database.MigrateAsync();
+            // The InMemory provider (used by integration tests) doesn't support migrations —
+            // EnsureCreated builds the schema from the model directly in that case.
+            if (db.Database.IsInMemory())
+                await db.Database.EnsureCreatedAsync();
+            else
+                await db.Database.MigrateAsync();
             await SeedRolesAsync(db);
             await SeedAdminUserAsync(db);
             await SeedDemoUsersAsync(db);

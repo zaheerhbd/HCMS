@@ -215,3 +215,6 @@ app.MapControllerRoute(
 // Blocks here. The app listens on the configured port (default: https://localhost:5001)
 // and processes requests using the middleware pipeline defined above.
 app.Run();
+
+// Exposes the top-level Program for WebApplicationFactory<Program> in integration tests.
+public partial class Program { }
