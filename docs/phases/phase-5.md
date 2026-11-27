@@ -1,10 +1,10 @@
-# Phase 5 — FHIR/HL7 Integration
+# Phase 5 — FHIR Integration
 
-**Goal:** A FHIR R4 API facade is live. Recruiters and reviewers can query `/fhir/R4/metadata`, retrieve a patient as a FHIR resource, and download a full FHIR Bundle. Patient import from a FHIR JSON payload works. HL7 v2 ADT receiver is a stretch goal.
+**Goal:** A FHIR R4 API facade is live. Recruiters and reviewers can query `/fhir/R4/metadata`, retrieve a patient as a FHIR resource, and download a full FHIR Bundle. Patient import from a FHIR JSON payload works.
 
 **Duration:** 2 weeks  
-**Status:** `[~]` In Progress — Backend + Frontend complete; E2E testing pending  
-**Last Updated:** 2026-07-04
+**Status:** `[~]` In Progress — all build tasks complete (Transaction Bundle delivered in Phase 9); only the Definition of Done verification checks remain  
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -37,33 +37,31 @@
 - [x] Add `GET /fhir/R4/Task` — search by `_id` (GUID), `patient` (MRN), `focus` (case number), `status`
 - [x] Fix `CapabilityStatement` search param serialization — use `TypeElement = new Code<SearchParamType>(...)` instead of `Type` property (Firely v6 API surface)
 - [x] Fix MRN generation off-by-one in `PatientDataHandler` — use `mrnPrefix.Length` (9) instead of hardcoded `Substring(8)`
-- [ ] *(stretch)* Add `Hl7Controller` at `/api/hl7/`:
-  - [ ] `POST /adt` — receive raw HL7 v2 ADT^A01 text/plain; parse with NHapi; upsert Patient + FhirImportLogs
-  - [ ] `POST /oru` — receive HL7 v2 ORU^R01; extract OBX observation; create read-only CaseNote on patient's active case
+- [-] *(stretch)* HL7 v2 ADT^A01 / ORU^R01 receiver — built in Phase 9, then **removed** on 2026-07-05 (replaced by FHIR bundle file upload `POST /fhir/R4/$import`)
 
 ## Phase 5 Extension — FHIR Transaction Bundle Import
 
 **Added:** 2026-07-04 | **FRs:** FR-55 – FR-58
 
-These tasks extend Phase 5 with atomic multi-resource import via a FHIR Transaction Bundle. See [Phase 9](phase-9.md) for the full implementation plan.
+These tasks extend Phase 5 with atomic multi-resource import via a FHIR Transaction Bundle. Delivered in [Phase 9](phase-9.md) on 2026-07-05 — ticked here for traceability.
 
 ### Backend Tasks
 
-- [ ] Add `POST /fhir/R4/` (root FHIR endpoint) in `FhirController` — accepts Bundle with `type = transaction`
-- [ ] Add `ImportTransactionBundleAsync(string bundleJson, string importedBy, CancellationToken ct)` to `IFhirDataHandler` / `FhirDataHandler`
-- [ ] Implement entry dispatch in `FhirDataHandler.ImportTransactionBundleAsync`:
-  - [ ] Parse and validate Bundle with Firely SDK (`Bundle.Type == BundleType.Transaction`, at least 1 entry)
-  - [ ] Open a DB transaction (`IDbContextTransaction`)
-  - [ ] Process entries in order: Patient → Encounter (Case) → Appointment → Task
-  - [ ] Resolve `Patient/{{MRN}}` references in downstream entries using the just-created patient's MRN
-  - [ ] Rollback on any failure; return `OperationOutcome` with per-entry diagnostics
-  - [ ] Write `FhirImportLogs` per resource type and `AuditLogs` entry (`FhirBundleImport`) on success
-- [ ] Add `MapTransactionResponse(List<BundleEntryResult> results)` to `IFhirMappingService` / `FhirMappingService`
+- [x] Add `POST /fhir/R4/` (root FHIR endpoint) in `FhirController` — accepts Bundle with `type = transaction`
+- [x] Add `ImportTransactionBundleAsync(string bundleJson, string importedBy, CancellationToken ct)` to `IFhirDataHandler` / `FhirDataHandler`
+- [x] Implement entry dispatch in `FhirDataHandler.ImportTransactionBundleAsync`:
+  - [x] Parse and validate Bundle with Firely SDK (`Bundle.Type == BundleType.Transaction`, at least 1 entry)
+  - [x] Open a DB transaction (`IDbContextTransaction`)
+  - [x] Process entries in order: Patient → Encounter (Case) → Appointment → Task
+  - [x] Resolve `Patient/{{MRN}}` references in downstream entries using the just-created patient's MRN
+  - [x] Rollback on any failure; return `OperationOutcome` with per-entry diagnostics
+  - [x] Write `FhirImportLogs` per resource type and `AuditLogs` entry (`FhirBundleImport`) on success
+- [x] Add `MapTransactionResponse(List<BundleEntryResult> results)` to `IFhirMappingService` / `FhirMappingService`
 
 ### Frontend Tasks
 
-- [ ] Extend `FhirImportComponent` — add "Import Bundle (Patient + Case + Appointments)" tab alongside single-patient import
-- [ ] Add sample Transaction Bundle JSON to the import UI help tooltip / example panel
+- [x] Extend `FhirImportComponent` — add "Import Bundle (Patient + Case + Appointments)" tab alongside single-patient import
+- [x] Add sample Transaction Bundle JSON to the import UI help tooltip / example panel
 
 ## Frontend Tasks
 
@@ -79,6 +77,8 @@ These tasks extend Phase 5 with atomic multi-resource import via a FHIR Transact
 - [x] Install `ngx-json-viewer` package for collapsible JSON tree display
 
 ## Definition of Done
+
+> Not yet formally verified — these are the manual checks still outstanding for this phase.
 
 - [ ] `GET /fhir/R4/metadata` returns a valid FHIR CapabilityStatement (validate with Firely or online FHIR validator)
 - [ ] `GET /fhir/R4/Patient?name=Smith` returns a FHIR searchset Bundle with correct entries
