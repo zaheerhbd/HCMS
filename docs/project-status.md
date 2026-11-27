@@ -1,8 +1,8 @@
 # HCMS — Project Status
 
-**Last Updated:** 2026-07-06 (Phase 8 frontend testing — Angular unit tests verified, 32 tests passing)
+**Last Updated:** 2026-11-27 (Docs synced with code — stale tech/HL7/Key Vault references removed; Phase 4/5 status corrected; blockers refreshed)
 **Current Phase:** Phase 8 — Testing, Security & Polish (In Progress)
-**Overall Progress:** 156 / 206 tasks complete (~76%)
+**Overall Progress:** 162 / 205 tasks complete (~79%)
 
 > **Local dev confirmed working:** API starts, DB created, migrations applied, seed runs. Run with `dotnet run` from `src/HCM.API`. Login: `admin` / `Admin@123!`.
 
@@ -17,8 +17,8 @@
 | 1 | Foundation & Infrastructure | `Complete` | ~29 | 29 | 0 |
 | 2 | Patient & Case Core | `Complete` | ~38 | 38 | 0 |
 | 3 | Documents, Tasks & Notes | `Complete` | ~22 | 22 | 0 |
-| 4 | Appointments & Scheduling | `Complete` | ~16 | 16 | 0 |
-| 5 | FHIR/HL7 Integration | `In Progress` | ~33 | 26 | 7 |
+| 4 | Appointments & Scheduling | `In Progress` | ~16 | 12 | 4 |
+| 5 | FHIR Integration | `Build complete` (DoD checks pending) | ~32 | 32 | 0 |
 | 6 | Dashboards & Reports | `Complete` | ~20 | 20 | 0 |
 | 7 | Notifications & Audit UI | `Complete` | ~14 | 14 | 0 |
 | 8 | Testing, Security & Polish | `In Progress` | ~22 | 5 | 17 |
@@ -49,9 +49,9 @@
 
 ---
 
-## Current Phase Detail — Phase 9: Advanced FHIR & Interoperability
+## Completed Phase Detail — Phase 9: Advanced FHIR & Interoperability
 
-**Goal:** Atomic FHIR Transaction Bundle import (Patient + Encounter + Appointment + Task) and HL7 v2.5.1 ADT/ORU ingestion endpoints.
+**Goal:** Atomic FHIR Transaction Bundle import (Patient + Encounter + Appointment + Task), via JSON body or file upload. (HL7 v2 ADT/ORU ingestion was built, then removed on 2026-07-05.)
 
 **Status:** Complete — all backend and frontend tasks done, builds clean (0 errors).
 
@@ -91,7 +91,6 @@
 - Chart.js 4.5.1 installed directly (no ng2-charts wrapper)
 - Reports feature uses `REPORTS_ROUTES` with `mat-tab-nav-bar` hub
 - Fixed `ApplicationDbContext.BeginTransactionAsync` missing implementation
-- Fixed NHapi package version (downgraded to 3.x — 4.x does not exist on NuGet)
 
 ---
 
@@ -115,11 +114,11 @@
 
 ---
 
-## Previous Phase Detail — Phase 5: FHIR/HL7 Integration
+## Previous Phase Detail — Phase 5: FHIR Integration
 
 **Goal:** Expose a FHIR R4-compliant REST API at `/fhir/R4/`; support Patient, Encounter (Case), Appointment, Task, DocumentReference read + search; `$everything` Bundle operation; single-Patient import from FHIR JSON (parse-and-preview UI); atomic Transaction Bundle import (Patient + Encounter + Appointment + Task in one call).
 
-**Status:** In Progress — core FHIR endpoints done; Transaction Bundle import (FR-55–FR-58) remaining.
+**Status:** Build complete — Transaction Bundle import (FR-55–FR-58) was delivered in Phase 9. Only the Definition of Done verification checks remain (see [phase-5.md](phases/phase-5.md)).
 
 ### Completed in Phase 5
 - FHIR CapabilityStatement (Firely `TypeElement` fix for search params)
@@ -130,10 +129,8 @@
 - "Export as FHIR Bundle" button on PatientDetail
 - MRN generation off-by-one bug fixed
 
-### Remaining in Phase 5 Extension
-- `POST /fhir/R4/` — Transaction Bundle endpoint (FR-55–FR-58)
-- Frontend: Transaction Bundle import tab in `FhirImportComponent`
-- E2E tests for all FHIR search endpoints
+### Remaining in Phase 5
+- Verify the six Definition of Done checks (CapabilityStatement validity, search Bundles, `$everything`, UI import, export JSON validity, 401/OperationOutcome) — fits naturally into the Phase 8 Playwright/E2E work
 
 ---
 
@@ -247,29 +244,30 @@
 
 ## Blockers
 
-**Pending: confirm login works end-to-end**
+**Open: Token refresh and logout not implemented** — [issue #5](https://github.com/zaheerhbd/HCMS/issues/5)
 
-Three fixes were deployed this session — verify all are live:
-1. Key Vault code removed (`f566766`) — API should start without `AKV10032` crash.
-2. `angular.json` `fileReplacements` added (`0f5b07a`) — SPA now bundles the Azure API URL instead of `localhost:5144`.
-3. `Jwt__Secret` in App Service must be **≥ 32 characters** — the original value was 16 chars (128 bits), causing `IDX10720` on every login attempt. Update via App Service → Configuration → `Jwt__Secret`.
+`AuthController.Refresh` and `Logout` are `// TODO` stubs. The Angular `jwtInterceptor` already calls refresh on 401, so an expired access token currently logs the user out. Blocks the Phase 8 "login → refresh → logout" integration test and the Phase 1 DoD item "JWT refresh works transparently".
 
-Steps to verify:
-- Hit `/health` — should return `{"status":"Healthy"}`.
-- Hit `/swagger` → try POST `/api/auth/login` with `admin` / `Admin@123!` → should return 200 + tokens.
-- Open `https://jolly-bay-072046c10.7.azurestaticapps.net/login` → login → should reach the dashboard.
+**Unverified: production login end-to-end**
+
+The June deployment fixes (Key Vault removal, `angular.json` `fileReplacements`, `Jwt__Secret` ≥ 32 chars) have not been recorded as verified. To check:
+- `/health` on `hcm-prod-api` returns `{"status":"Healthy"}`
+- `POST /api/auth/login` with `admin` / `Admin@123!` returns 200 + tokens
+- `https://jolly-bay-072046c10.7.azurestaticapps.net/login` reaches the dashboard
 
 **Pending: GitHub branch protection on `main`**
 
-GitHub repo → Settings → Branches → Add rule → Branch name pattern: `main` → Require status checks before merging → select `build-and-deploy` (API) and `build-and-deploy` (Angular).
+GitHub repo → Settings → Branches → Add rule → `main` → require the `build-and-deploy` status checks (API and Angular) before merging.
 
-**Resolved: Key Vault tenant mismatch**
+**Known gaps (not blockers)**
+- No edit-note endpoint — case notes are append-only from creation; `CaseNoteEditLockService` has nothing to protect yet.
+- Admin user-management UI not built (backend complete).
+- Document UI hidden (backend complete).
+- Phase 4: `ProviderAvailabilityComponent`, appointments section on Case Detail, and the < 24h appointment reminder notification are not built.
 
-Key Vault (`hcm-prod-kv`) was created in West Europe under a different Azure AD tenant than the App Service, causing `AKV10032 Invalid issuer` on every startup. Decision: remove Key Vault integration; supply secrets directly via App Service Application Settings.
+**Resolved: Key Vault tenant mismatch** — Key Vault removed; secrets supplied via App Service Application Settings.
 
-**Resolved: Angular prod build using wrong environment file**
-
-`angular.json` was missing `fileReplacements` in the production configuration, so `environment.prod.ts` was never used. Fixed in commit `0f5b07a`.
+**Resolved: Angular prod build using wrong environment file** — `fileReplacements` added in commit `0f5b07a`.
 
 ---
 
@@ -277,7 +275,7 @@ Key Vault (`hcm-prod-kv`) was created in West Europe under a different Azure AD 
 
 | Date | Decision | Rationale |
 |---|---|---|
-| 2026-06-22 | JWT + refresh token (not Azure AD) | Sufficient for portfolio; avoids Azure AD cost and complexity |
+| 2026-06-22 | JWT + refresh token (not Azure AD) — refresh not yet implemented, issue #5 | Sufficient for portfolio; avoids Azure AD cost and complexity |
 | 2026-06-22 | Soft deletes only (no hard deletes) | HIPAA-aligned audit integrity |
 | 2026-06-22 | Firely SDK for FHIR (not hand-rolled) | Official .NET FHIR SDK; handles serialization + validation |
 | 2026-06-22 | EF Core only (no raw SQL) | Prevents SQL injection; easier migrations |
@@ -286,6 +284,8 @@ Key Vault (`hcm-prod-kv`) was created in West Europe under a different Azure AD 
 | 2026-06-23 | .env deferred (not native to .NET/Angular) | .NET uses appsettings.Development.json; Angular uses environment.ts; .env.example kept for reference and CI/CD |
 | 2026-06-24 | Single prod environment only (no staging) | Portfolio project — staging adds cost and complexity with no benefit; deploy directly from `main` to prod (`hcm-prod-rg`). Azure resources use `hcm-prod-*` naming. |
 | 2026-06-25 | Skip Azure Key Vault; use App Service Application Settings for secrets | Key Vault was provisioned in a different Azure AD tenant (West Europe, `adf10e2b-...`) from the App Service (`397f0f29-...`), causing `AKV10032` on every startup. Fixing the tenant would require re-provisioning Key Vault in the correct region/tenant; not worth it for a portfolio project. Secrets go directly into App Service config using double-underscore notation. |
+| 2026-07-05 | Remove HL7 v2 ingestion; use FHIR bundle file upload instead | Bundle upload (`POST /fhir/R4/$import`) covers the intake use case with one standard format; dropping NHapi removed a second parsing stack. FR-53/54 withdrawn. |
+| 2026-11-27 (recorded) | Service-level RxJS `BehaviorSubject` for auth + notification state instead of NgRx | What the code actually does; state is small (auth flag, unread count). NgRx packages removed 2026-11-27. |
 
 ---
 

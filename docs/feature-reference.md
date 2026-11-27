@@ -1,6 +1,6 @@
 # HCMS — Feature Reference
 
-**Last Updated:** 2026-07-05 (Module 13: removed HL7 v2; added FHIR Bundle file-upload endpoint `POST /fhir/R4/$import` with drag-and-drop Angular UI)
+**Last Updated:** 2026-11-27 (Synced with code: Audit + Notifications marked Complete, endpoints corrected, Key Vault / ng2-charts / CsvHelper / HL7 references removed)
 
 > One section per module. Update when a feature ships, changes, or is deferred.
 > Each entry links to the FR number in [product-requirements.md](product-requirements.md).
@@ -23,7 +23,7 @@
 | 10 | Audit & Compliance | 7 | Complete | FR-40 – FR-42 |
 | 11 | Notifications | 7 | Complete | FR-43 – FR-45 |
 | 12 | Administration (User Mgmt) | 2 | In Progress | (Admin endpoints) |
-| 13 | FHIR / HL7 Integration | 5 + 9 | Complete | FR-46 – FR-58 |
+| 13 | FHIR Integration | 5 + 9 | Complete | FR-46 – FR-58 (FR-53/54 withdrawn) |
 
 ---
 
@@ -59,8 +59,9 @@
 `Users` · `Roles` · `UserRoles` · `RefreshTokens`
 
 ### Notes
-- No Azure AD / SAML. JWT self-signed with a Key Vault secret.
+- No Azure AD / SAML. JWT (HS256) signed with a secret from App Service Application Settings (prod) or user-secrets (local).
 - Rate limiting: 10 login attempts per minute per IP.
+- **Gap:** `POST /api/auth/refresh` and `POST /api/auth/logout` are `// TODO` stubs ([issue #5](https://github.com/zaheerhbd/HCMS/issues/5)). The Angular interceptor already calls refresh on 401.
 
 ---
 
@@ -320,17 +321,17 @@ Cancelled → (terminal)
 - `TasksByAssigneeReportComponent` — stacked bar chart.
 
 ### Libraries
-- `ng2-charts` + `Chart.js` for all charts.
-- `CsvHelper` (.NET) for CSV generation.
+- `Chart.js` 4 used directly (no `ng2-charts` wrapper) for all charts.
+- CSV generated with `StringBuilder` (RFC 4180 quoting) — no CSV library.
 
 ---
 
 ## 10. Audit & Compliance
 
-**Phase:** 2 (interceptor) + 7 (UI) | **Status:** In Progress (AuditInterceptor complete; admin UI deferred to Phase 7)
+**Phase:** 2 (capture) + 7 (UI) | **Status:** Complete
 
 ### Features
-- Every create/update/delete on Patient, Case, CaseNote, Document, User produces an audit entry.
+- Every create/update/delete on Patient, Case, CaseNote, User produces an audit entry, built in `ApplicationDbContext.BuildAuditEntries()` during `SaveChanges`. FHIR exports and bundle imports write their own entries (`FhirExport`, `FhirBundleImport`).
 - Audit log is **immutable** — no DELETE or UPDATE endpoint.
 - Captures: entity type, entity ID, action, old value (JSON), new value (JSON), user ID, user email, IP address, timestamp.
 - No FK to `Users` — log survives user deletion.
@@ -340,8 +341,10 @@ Cancelled → (terminal)
 ### API Endpoints
 | Method | Route | Role Required | Description |
 |---|---|---|---|
-| GET | `/api/audit` | Admin | Paginated audit log with filters |
-| GET | `/api/audit/{entityType}/{entityId}` | Admin | All entries for one entity |
+| GET | `/api/audit` | Admin | Paginated audit log; filters: entityType, action, changedBy, date range |
+
+### Angular Components
+- `AuditLogComponent` (`/admin/audit`) — filterable paginated Material table with expandable Before/After JSON diff.
 
 ### DB Tables
 `AuditLogs` ← no FK to Users, no DELETE endpoint
@@ -350,11 +353,11 @@ Cancelled → (terminal)
 
 ## 11. Notifications
 
-**Phase:** 7 | **Status:** Not Started
+**Phase:** 7 | **Status:** Complete
 
 ### Features
 - In-app notification bell with unread count badge.
-- Trigger events: case assigned, task assigned, task overdue, case escalated, appointment reminder.
+- Trigger events: case assigned, task assigned, task overdue (daily `NotificationOverdueService`, deduped per day), case escalated. *(Appointment reminder not implemented.)*
 - Poll `GET /api/notifications/unread-count` every 60 seconds.
 - Mark individual or all notifications read.
 
@@ -363,13 +366,12 @@ Cancelled → (terminal)
 |---|---|---|
 | GET | `/api/notifications` | Current user's notifications (unread first) |
 | GET | `/api/notifications/unread-count` | Badge count only |
-| PUT | `/api/notifications/{id}/read` | Mark one read |
-| PUT | `/api/notifications/mark-all-read` | Mark all read |
+| POST | `/api/notifications/{id}/read` | Mark one read |
+| POST | `/api/notifications/read-all` | Mark all read |
 
 ### Angular Components
-- `NotificationBellComponent` — icon in top bar, polling, unread badge.
-- `NotificationListComponent` — dropdown panel, latest 20, mark-read action.
-- `NotificationService` — HTTP calls + 60s polling.
+- `NotificationBellComponent` (`core/components/notification-bell`) — top-bar icon, unread badge, dropdown list with per-item mark-read and mark-all.
+- `NotificationService` — HTTP calls + 60s polling; `BehaviorSubject` unread count.
 
 ### DB Tables
 `Notifications`
@@ -392,19 +394,20 @@ Cancelled → (terminal)
 | GET | `/api/users/{id}` | Admin | User detail |
 | POST | `/api/users` | Admin | Create user + assign roles |
 | PUT | `/api/users/{id}` | Admin | Update user info |
-| PUT | `/api/users/{id}/roles` | Admin | Reassign roles |
-| PUT | `/api/users/{id}/activate` | Admin | Activate or deactivate |
+| POST | `/api/users/{id}/roles` | Admin | Reassign roles |
+| PUT | `/api/users/{id}/status` | Admin | Activate or deactivate |
+| GET | `/api/users/assignable` | Coordinator+ | Users available for case/task assignment dropdowns |
 
-### Angular Components
+### Angular Components (planned — not built)
 - `UserListComponent` — table with role badges, status, last login.
 - `UserFormComponent` — create/edit with role multi-select.
-- `RoleAssignmentComponent` — drag-drop role assignment.
+- `RoleAssignmentComponent` — role assignment.
 
 ---
 
-## 13. FHIR / HL7 Integration
+## 13. FHIR Integration
 
-**Phase:** 5 | **Status:** In Progress — backend + frontend complete; E2E testing pending
+**Phase:** 5 + 9 | **Status:** Complete (HL7 v2 ADT/ORU ingestion was built in Phase 9 and removed on 2026-07-05 in favour of bundle file upload)
 
 ### Features
 

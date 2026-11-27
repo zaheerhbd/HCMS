@@ -60,7 +60,7 @@
             "type": "command",
             "shell": "powershell",
             "statusMessage": "Checking docs for milestone updates...",
-            "command": "@{hookSpecificOutput=@{hookEventName='Stop';additionalContext='DOCS UPDATE CHECK: Before finishing, review what happened this session. If any tasks were checked off in docs/phase-tracker.md, a phase was completed, or any module features shipped — you MUST update: (1) docs/changelog.md: add a [YYYY-MM-DD] dated bullet under the correct phase section describing what changed and why. (2) docs/project-status.md: tick off completed tasks in the phase checklist, update the phase overview table counts, and note any new blockers or decisions. (3) docs/feature-reference.md: change the Status field from Not Started to In Progress or Complete for any modules that moved. Update the Last Updated date at the top of each file you change. If nothing doc-worthy happened this session, skip all of the above — do not add empty or placeholder entries.'}} | ConvertTo-Json -Compress -Depth 5"
+            "command": "powershell -NonInteractive -File .claude/scripts/docs-update-check.ps1"
           }
         ]
       }

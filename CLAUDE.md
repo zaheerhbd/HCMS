@@ -69,11 +69,8 @@ npx webpack-bundle-analyzer dist/hcm-web/stats.json
 # Start Azurite blob emulator (for Document Management)
 azurite --silent --location .azurite --debug .azurite/debug.log
 
-# Azure CLI login (for Key Vault access locally via DefaultAzureCredential)
-az login
-
-# List Key Vault secrets
-az keyvault secret list --vault-name hcm-dev-kv
+# Prod secrets live in App Service Application Settings (no Key Vault)
+az webapp config appsettings list --name hcm-prod-api --resource-group <rg-name>
 ```
 
 ### dotnet user-secrets (recommended for local JWT secret)
@@ -113,7 +110,7 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 ## Hard Rules (Always Follow)
 
 ### Security
-- **No secrets in source code, ever.** All secrets go in Azure Key Vault (prod) or `dotnet user-secrets` / `appsettings.Development.json` (local dev). `.env` is gitignored.
+- **No secrets in source code, ever.** All secrets go in Azure App Service Application Settings (prod, e.g. `Jwt__Secret`) or `dotnet user-secrets` / `appsettings.Development.json` (local dev). `.env` is gitignored.
 - **No raw SQL.** Use EF Core parameterized queries only. Raw SQL is blocked in PRs.
 - **JWT secret ≥ 32 characters.** 
 - **SAS URLs expire in 1 hour max** (FR-25). Never log SAS URLs to Application Insights.
@@ -133,17 +130,17 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=..."
 - **One migration owner per branch.** Squash migrations before merging to avoid conflicts.
 
 ### Angular
-- **Lazy-loaded feature modules** for every feature area.
+- **Standalone components, lazy-loaded** — every feature area is lazy-loaded via `loadComponent` / `loadChildren` (no NgModules).
 - **`HasRoleDirective`** for hiding UI elements by role — never rely solely on route guards.
 - **Reactive Forms** throughout — no template-driven forms.
-- **NgRx** for auth state and notifications. Component-level RxJS for local UI state.
-- **`localStorage`** for JWT; `sessionStorage` option available for sensitive roles.
+- **Service-level RxJS (`BehaviorSubject`)** for auth state and notifications; component-level RxJS for local UI state. No NgRx.
+- **`localStorage`** for JWT access + refresh tokens.
 
 ### Format Conventions
 - **MRN format:** `MRN-{YYYY}-{NNNNN}` (e.g. `MRN-2026-00001`)
 - **Case number format:** `CASE-{YYYY}-{NNNNN}` (e.g. `CASE-2026-00001`)
-- **Azure resource naming:** `hcm-{env}-{resource}` (e.g. `hcm-prod-api`, `hcm-prod-kv`)
-- **Environments:** `dev` (local) · `staging` (Azure Free/Basic) · `prod` (Azure Standard)
+- **Azure resource naming:** `hcm-{env}-{resource}` (e.g. `hcm-prod-api`, `hcm-prod-web`)
+- **Environments:** `dev` (local) · `prod` (Azure, deployed from `main`). No staging environment — dropped by decision on 2026-06-24.
 - **FHIR base path:** `/fhir/R4/` (distinct from `/api/`)
 - **API error format:** RFC 7807 ProblemDetails for REST errors; FHIR OperationOutcome for `/fhir/R4/` errors.
 
@@ -180,9 +177,23 @@ At the end of every development phase, generate a self-contained HTML report sav
 
 ---
 
+## HTML Output Rule (Applies to ANY HTML Claude Produces)
+
+Whenever the user asks Claude for an HTML file or artifact — a report, a doc, a tool, a demo, anything — it must be:
+
+- **Self-contained** — inline CSS/JS, no external CDN dependencies
+- **Navigable** — sticky sidebar or top TOC with jump links; highlight the active section on scroll if the page has multiple sections
+- **Real-life examples/analogies** — wherever a concept isn't self-evident, ground it with a concrete real-world analogy or example, not just abstract description
+- **Easy diagrams** — inline SVG (or simple HTML/CSS diagrams) for anything structural, sequential, or relational — architecture, flow, state, hierarchy. Skip diagrams for trivial points; only add where they genuinely aid understanding
+- **Readable** — sensible typography, spacing, and light/dark theme support; collapsible `<details>` sections for dense/optional detail
+
+This applies beyond phase reports (which have their own stricter checklist above) — it's the baseline for every HTML deliverable.
+
+---
+
 ## Current Phase
 
-**Phase 2 — Patient & Case Core** (In Progress — backend + frontend complete, E2E testing pending)
+**Phase 8 — Testing, Security & Polish** (In Progress — backend unit + integration tests and Angular unit tests done; coverage/CI, E2E, security hardening and prod polish remaining). Phases 1–4, 6, 7 and 9 are complete; Phase 5 has only manual FHIR verification checks left.
 
 See [docs/project-status.md](docs/project-status.md) for the current detailed status.
 

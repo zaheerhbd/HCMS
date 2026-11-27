@@ -1,8 +1,8 @@
 # Healthcare Case Management System — Product Requirements
 
 **Project Type:** Enterprise Portfolio Project  
-**Stack:** Angular · .NET 8 Web API · Clean Architecture · EF Core · SQL Server / Azure SQL  
-**Last Updated:** 2026-06-22
+**Stack:** Angular 19 · .NET 8 Web API · Clean Architecture · EF Core · SQL Server / Azure SQL  
+**Last Updated:** 2026-11-27 (removed HL7 v2, Key Vault, MediatR, NgRx, ng2-charts references; added FR-55a bundle file upload)
 
 ---
 
@@ -91,7 +91,7 @@ A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enab
 - FR-44: Notification triggers: case assigned, task assigned, task overdue, case escalated, appointment reminder.
 - FR-45: Users can mark notifications read/dismissed.
 
-#### FHIR/HL7 Integration (Phase 5)
+#### FHIR Integration (Phase 5)
 - FR-46: The system shall expose a FHIR R4-compliant REST API at `/fhir/R4/` with a valid CapabilityStatement at `/fhir/R4/metadata`.
 - FR-47: The FHIR API shall support read and search operations for Patient, Encounter (Case), Appointment, Task, and DocumentReference resources.
 - FR-48: The `Patient/{id}/$everything` operation shall return a FHIR R4 Bundle containing all related resources for a patient (Encounters, Appointments, Tasks, DocumentReferences).
@@ -118,11 +118,11 @@ A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enab
 - FR-50: Any patient record may be exported as a downloadable FHIR R4 Bundle (JSON) from the patient detail page; the download is logged in audit.
 - FR-51: FHIR search shall support standard parameters: Patient by `_id`, `name`, `birthdate`, `identifier`; Encounter by `patient`, `status`; Appointment by `_id`, `patient`, `status`, `date`; Task by `_id`, `patient`, `focus` (case number), `status`.
 - FR-52: All FHIR API errors shall return HL7-compliant `OperationOutcome` resources; HTTP status codes shall follow FHIR REST semantics.
-- FR-53 *(stretch)*: The system shall accept HL7 v2 ADT^A01 messages via an HTTP endpoint and auto-create or update the corresponding Patient record.
-- FR-54 *(stretch)*: The system shall accept HL7 v2 ORU^R01 messages (lab observation results) and attach the payload as a read-only CaseNote on the patient's active case.
+- ~~FR-53 / FR-54~~ *(withdrawn 2026-07-05)*: HL7 v2 ADT^A01 / ORU^R01 ingestion was built and then removed; FHIR bundle file upload (FR-55a) replaces it. Numbers kept so later FR references stay stable.
 
 #### FHIR Transaction Bundle Import (Phase 5 Extension / Phase 9)
 - FR-55: The system shall accept a FHIR R4 Transaction Bundle via `POST /fhir/R4/` (root endpoint). The Bundle `type` must be `transaction`. Supported resource types within entries: `Patient`, `Encounter` (Case), `Appointment`, `Task`.
+- FR-55a: The same import shall be available as a file upload via `POST /fhir/R4/$import` (multipart/form-data, field `bundleFile`). An Encounter may carry the extension `http://hcms.local/fhir/StructureDefinition/case-assigned-to` (`valueString`: username) to assign the case's coordinator; unknown usernames fall back to the importing user.
 - FR-56: All entries in a Transaction Bundle shall be processed atomically — if any entry fails validation or persistence, the entire operation is rolled back and no data is written. The response on failure is an `OperationOutcome` with per-entry diagnostics.
 - FR-57: On success, the response shall be a FHIR Bundle of type `transaction-response` with one entry per request entry, each containing the created resource's assigned logical ID (MRN for Patient, CaseNumber for Encounter, GUID for Appointment/Task) and HTTP status `201 Created`.
 - FR-58: Every Transaction Bundle import shall write one `FhirImportLogs` record per created resource type and a single `AuditLogs` entry for the whole operation with `Action = FhirBundleImport` and a summary of resources created.
@@ -131,7 +131,7 @@ A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enab
 
 | Category | Requirement |
 |---|---|
-| Security | HTTPS everywhere; secrets in Azure Key Vault; no secrets in source code |
+| Security | HTTPS everywhere; secrets in App Service Application Settings (prod) / user-secrets (local); no secrets in source code |
 | Security | OWASP Top 10 mitigated; input validation on all endpoints |
 | Performance | API p95 response time < 400 ms under 100 concurrent users |
 | Availability | 99.5% uptime SLA target (Azure App Service Standard tier) |
@@ -160,7 +160,7 @@ A cloud-native, HIPAA-aligned Healthcare Case Management System (HCMS) that enab
 | 10 | Audit Log | Immutable event log for compliance |
 | 11 | Notifications | In-app alerts, trigger engine |
 | 12 | Administration | User management, role assignment, system config |
-| 13 | FHIR/HL7 Integration | FHIR R4 REST facade, resource mapping (Patient/Encounter/Appointment/Task/DocumentReference), Bundle export/import, HL7 v2 receiver (stretch) |
+| 13 | FHIR Integration | FHIR R4 REST facade, resource mapping (Patient/Encounter/Appointment/Task/DocumentReference), Bundle export, single-patient import, atomic Transaction Bundle import |
 
 ---
 
@@ -432,11 +432,13 @@ FhirImportLogs
 ### Clean Architecture Layers
 
 ```
-HCM.Domain          — Entities, value objects, domain events, enums
-HCM.Application     — Use cases (CQRS with MediatR), interfaces, DTOs, validators
-HCM.Infrastructure  — EF Core DbContext, repositories, Blob storage, Key Vault, email
-HCM.API             — Controllers, middleware, filters, DI composition root
+HCM.Domain          — Entities, enums
+HCM.Application     — DataHandlers (validation + business logic, one per feature), interfaces, DTOs
+HCM.Infrastructure  — EF Core DbContext, Blob storage, FHIR mapping, token service, background jobs
+HCM.API             — Controllers, middleware, DI composition root
 ```
+
+> The tables below are the requirement-level contract. For the routes as actually implemented (e.g. notes, tasks, documents and care team are nested under `/api/cases/{caseNumber}/...`), see [architecture.md § 5](architecture.md#5-api-route-map-summary).
 
 ### Controllers & Key Endpoints
 
@@ -605,20 +607,14 @@ The user-facing import is a two-step modal on the FHIR Explorer screen:
 1. **Step 1 — Paste & Parse:** User pastes FHIR Patient JSON (or clicks "Use Sample"). Clicking "Parse & Preview" calls a client-side mapping preview (no server round-trip yet) that validates the JSON shape and renders a field-mapping table showing exactly what will be imported.
 2. **Step 2 — Confirm Import:** Clicking "Confirm Import" posts the raw JSON to `POST /fhir/R4/Patient`. On `201 Created`, the Angular `PatientsService` cache is invalidated and the app navigates to the new patient's detail screen. On error, the `OperationOutcome` message is displayed inline in the modal.
 
-#### `Hl7Controller` — `/api/hl7` *(stretch)*
-| Method | Route | Description |
-|---|---|---|
-| POST | `/adt` | Receive HL7 v2 ADT^A01 (admit/register patient); parse with NHapi; upsert Patient + log to FhirImportLogs |
-| POST | `/oru` | Receive HL7 v2 ORU^R01 (lab/observation result); attach as read-only CaseNote on patient's active case |
-
 ### Cross-Cutting Concerns (Middleware & Infrastructure)
-- **Global exception handler** — maps domain exceptions to RFC 7807 ProblemDetails
+- **Global exception handler** — `ExceptionHandlerMiddleware` maps exceptions to RFC 7807 ProblemDetails (or OperationOutcome on `/fhir/R4/`)
 - **JWT authentication** — `Microsoft.AspNetCore.Authentication.JwtBearer`
-- **Audit middleware** — captures user identity, IP, and user agent per request
-- **Rate limiting** — `Microsoft.AspNetCore.RateLimiting` on auth endpoints
-- **FluentValidation** — request DTO validation via MediatR pipeline behavior
+- **Audit trail** — `ApplicationDbContext` SaveChanges override records before/after values with the acting user
+- **Rate limiting** — ASP.NET Core rate limiter on `/api/auth/login` (10 requests / 60 s per IP)
+- **Validation** — inside DataHandlers; `ValidationException` → 400 ProblemDetails
 - **Serilog → Application Insights** — structured log sink
-- **Health checks** — `/health` endpoint covering DB, Blob, Key Vault
+- **Health checks** — `/health` endpoint covering the database
 
 ---
 
@@ -626,45 +622,29 @@ The user-facing import is a two-step modal on the FHIR Explorer screen:
 
 ### Module Structure
 
+Angular 19 with **standalone components** (no NgModules); each feature area is lazy-loaded via `loadComponent` / `loadChildren`. The actual folder tree is in [architecture.md § 3](architecture.md#3-frontend--angular-architecture).
+
 ```
-src/
-  app/
-    core/               # Singleton services, interceptors, guards
-      services/         # AuthService, UserService, NotificationService
-      interceptors/     # JwtInterceptor, ErrorInterceptor, LoadingInterceptor
-      guards/           # AuthGuard, RoleGuard
-      models/           # Core shared interfaces
-    shared/             # Reusable dumb components and pipes
-      components/       # PageHeader, DataTable, ConfirmDialog, StatusBadge, FileUpload
-      pipes/            # DateFormatPipe, TruncatePipe, EnumLabelPipe
-      directives/       # HasRoleDirective
-    features/
-      auth/             # Login, ChangePassword
-      dashboard/        # CoordinatorDashboard, SupervisorDashboard, AdminDashboard
-      patients/         # PatientList, PatientDetail, PatientForm
-      cases/            # CaseList, CaseDetail, CaseForm, CaseStatusHistory
-      case-notes/       # NoteList, NoteForm (embedded in CaseDetail)
-      tasks/            # TaskList, TaskDetail, TaskForm, MyTasks
-      documents/        # DocumentList, DocumentUpload (embedded in CaseDetail/PatientDetail)
-      appointments/     # AppointmentList, AppointmentForm, ProviderCalendar
-      reports/          # ReportsDashboard, CasesByStatus, CaseDuration, TasksByAssignee
-      notifications/    # NotificationBell, NotificationList
-      admin/            # UserList, UserForm, RoleAssignment, AuditLog
-      fhir/             # FhirExplorer, FhirImportModalComponent (two-step: parse/preview → confirm), FhirExportButton (embedded in PatientDetail)
+src-ng/hcm-web/src/app/
+    core/               # services (Auth, User, Notification, Fhir), interceptors (jwt, error), guards (auth, role), notification-bell
+    shared/             # StatusBadge, ConfirmDialog, HasRoleDirective
+    shell/              # app shell layout
+    features/           # auth, dashboard, patients, cases (notes, tasks, documents, care team nested), tasks (MyTasks),
+                        # appointments, documents, reports, fhir, admin (audit log), unauthorized
 ```
 
 ### Key Angular Patterns
 | Pattern | Implementation |
 |---|---|
-| State management | NgRx Store for auth state and notifications; component-level RxJS for local UI state |
+| State management | Service-level RxJS `BehaviorSubject`s for auth state and notifications; component-level RxJS for local UI state |
 | HTTP | `HttpClient` with typed services; `catchError` to global error handler |
 | Forms | Reactive Forms throughout; custom validators for date ranges, phone, MRN |
-| Routing | Lazy-loaded feature modules; role-based route guards |
+| Routing | Lazy-loaded standalone routes; role-based route guards |
 | UI Library | Angular Material (MDC) — consistent enterprise look, accessibility built-in |
 | Tables | Angular CDK virtual scroll for large lists; Angular Material paginator |
-| Charts | Chart.js via `ng2-charts` for dashboard widgets |
+| Charts | Chart.js 4 used directly (no wrapper library) for dashboard and report widgets |
 | File upload | Custom `FileUploadComponent` using `FormData` and progress events |
-| Auth tokens | `localStorage` for JWT; `sessionStorage` option for sensitive roles |
+| Auth tokens | `localStorage` for JWT access + refresh tokens |
 | FHIR display | `ngx-json-viewer` for rendering FHIR resource JSON; `FhirService` targets `/fhir/R4/` endpoints |
 
 ---
@@ -674,7 +654,7 @@ src/
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        GitHub Actions CI/CD                          │
-│  Build → Test → Publish → Deploy (dev → staging → prod)             │
+│  Build → Test → Publish → Deploy (push to main → prod)              │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
             ┌────────────────┼────────────────┐
@@ -685,17 +665,11 @@ src/
   │ (Angular SPA)    │  │ (.NET 8 API)│  │  (General Purpose │
   │  Free/Standard   │  │  P1v3 tier) │  │   S2 tier)        │
   └────────┬─────────┘  └──────┬──────┘  └──────────────────┘
-           │ HTTPS             │ HTTPS             ▲
-           │                   │ (VNET             │
-           │                   │  Integration)     │ EF Core
-           │                   ▼                   │
-           │           ┌──────────────────┐        │
-           │           │  Azure Key Vault  │        │
-           └──────────►│  - JWT secret     │        │
-                       │  - SQL conn str   │────────┘
-                       │  - Blob conn str  │
-                       └──────────────────┘
-                                │
+           │ HTTPS             │ EF Core           ▲
+           └──────────────────►│───────────────────┘
+                               │  secrets from App Service
+                               │  Application Settings
+                               │
                 ┌───────────────┼────────────────┐
                 ▼               ▼                 ▼
      ┌──────────────────┐  ┌──────────────┐  ┌───────────────┐
@@ -714,7 +688,7 @@ src/
 | Environment | Purpose | Tier |
 |---|---|---|
 | `dev` | Local development | SQL Server LocalDB / Docker |
-| `staging` | Integration testing + demos | Azure Free/Basic tiers |
+| ~~`staging`~~ | Dropped 2026-06-24 — single prod environment | — |
 | `prod` | Production portfolio demo | Azure Standard tiers |
 
 ### Key Azure Services Configuration
@@ -723,7 +697,7 @@ src/
 - Runtime: .NET 8
 - Always On: enabled
 - HTTPS only: enforced
-- Managed Identity: enabled (used to access Key Vault and Blob Storage without stored credentials)
+- Secrets: supplied as Application Settings with double-underscore keys (`Jwt__Secret`, `ConnectionStrings__DefaultConnection`) — Key Vault was dropped on 2026-06-25 after a tenant mismatch
 - VNET Integration: connects to Azure SQL on private endpoint (prod)
 
 **Azure Static Web Apps (Angular)**
@@ -737,7 +711,7 @@ src/
 - Azure Defender for SQL: enabled
 - Transparent Data Encryption: enabled by default
 - Geo-redundant backup: enabled (prod)
-- Connection: EF Core connection string from Key Vault
+- Connection: EF Core connection string from App Service Application Settings
 
 **Azure Blob Storage**
 - Account kind: StorageV2
@@ -747,11 +721,6 @@ src/
 - Soft delete: 30 days (prod)
 - Managed Identity access from App Service (no stored keys)
 
-**Azure Key Vault**
-- Access: Managed Identity RBAC (Key Vault Secrets User)
-- Secrets: `ConnectionStrings--DefaultConnection`, `Jwt--Secret`, `BlobStorage--ConnectionString`
-- Diagnostic logs forwarded to Application Insights
-
 **Application Insights**
 - SDK: `Microsoft.ApplicationInsights.AspNetCore`
 - Custom events: case status transitions, document uploads, login failures
@@ -759,6 +728,8 @@ src/
 - Alerts: error rate > 5%, p95 latency > 2s, availability < 99%
 
 ### CI/CD Pipeline (GitHub Actions)
+
+> Original target pipeline. What exists today is simpler (one workflow each for API and Angular, deploying straight to prod on push to `main`, no approval gate). Staging was dropped by decision on 2026-06-24. See [architecture.md § 10](architecture.md#10-cicd-pipeline-as-implemented).
 
 ```
 Trigger: push to main / PR to main
@@ -808,8 +779,6 @@ Resource Group: rg-hcm-prod
 ├── Storage Account: hcmprodst
 │   └── Container: case-documents (private)
 │
-├── Key Vault: hcm-prod-kv
-│
 ├── Application Insights: hcm-prod-ai
 │
 └── Log Analytics Workspace: hcm-prod-law
@@ -825,7 +794,7 @@ Resource Group: rg-hcm-prod
 |---|---|---|---|---|
 | R1 | Azure costs exceed free-tier for portfolio demo | Medium | Medium | Use Basic/Free tiers; set budget alerts; shut down non-prod after business hours |
 | R2 | HIPAA compliance gaps expose PHI in logs | Medium | High | Strip PHI from all log messages; use entity IDs only; enable App Insights data masking |
-| R3 | JWT secret leaked to source control | Low | Critical | Use Key Vault; scan repo with GitHub secret detection; pre-commit hooks |
+| R3 | JWT secret leaked to source control | Low | Critical | Secrets only in App Service settings / user-secrets; scan repo with GitHub secret detection; pre-commit hooks |
 | R4 | SQL injection via dynamic queries | Low | Critical | Use EF Core parameterized queries only; ban raw SQL in PRs |
 | R5 | Blob SAS URL leaked (document access control failure) | Low | High | Short-lived SAS (1 hour); log every download in audit; no public container access |
 | R6 | Scope creep extends Phase 1 indefinitely | High | Medium | Strict phase definitions; defer nice-to-haves to backlog; time-box phases |
@@ -844,7 +813,7 @@ Resource Group: rg-hcm-prod
 | A2 | A single Azure subscription is used for all environments |
 | A3 | GitHub is the source control and CI/CD platform |
 | A4 | The developer has an active Azure subscription (pay-as-you-go or Visual Studio credits) |
-| A5 | Angular 17+ (standalone components acceptable but NgModules used for demonstrating enterprise patterns) |
+| A5 | Angular 19 with standalone components (no NgModules) |
 | A6 | .NET 8 LTS is the target runtime |
 | A7 | SQL Server 2022 / Azure SQL is the only supported database |
 | A8 | Multi-tenancy (multiple hospital organizations) is out of scope for this phase |

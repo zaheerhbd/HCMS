@@ -1,11 +1,11 @@
 # Phase 9 — Advanced FHIR & Interoperability
 
-**Goal:** Extend the FHIR R4 facade with atomic Transaction Bundle import (multi-resource in one call) and HL7 v2 message ingestion. An external EHR system can send a complete patient intake — Patient + Case + Appointments + Tasks — as a single request and have it land correctly or not at all.
+**Goal:** Extend the FHIR R4 facade with atomic Transaction Bundle import (multi-resource in one call) and bundle file upload. An external EHR system can send a complete patient intake — Patient + Case + Appointments + Tasks — as a single request and have it land correctly or not at all.
 
 **Duration:** 1 week  
-**Status:** `[ ]` Not Started  
-**Last Updated:** 2026-07-04  
-**FRs:** FR-55 – FR-58 (Transaction Bundle); FR-53, FR-54 (HL7 v2 — promoted from Phase 5 stretch)
+**Status:** `[x]` Complete (2026-07-05)  
+**Last Updated:** 2026-11-27  
+**FRs:** FR-55 – FR-58, FR-55a (Transaction Bundle + file upload). FR-53/54 (HL7 v2) withdrawn.
 
 ---
 
@@ -21,15 +21,15 @@ Phase 5 covered single-resource import (`POST /fhir/R4/Patient`). Phase 9 adds t
 
 ### Transaction Bundle (`POST /fhir/R4/`)
 
-- [ ] Add `POST /fhir/R4/` root endpoint in `FhirController`
+- [x] Add `POST /fhir/R4/` root endpoint in `FhirController`
   - Accept `application/fhir+json` body; read entire stream
   - Reject non-Bundle or non-transaction types with `OperationOutcome`
-- [ ] Add interface method to `IFhirDataHandler`:
+- [x] Add interface method to `IFhirDataHandler`:
   ```csharp
   Task<FhirBundleImportResultDto> ImportTransactionBundleAsync(
       string bundleJson, string importedBy, CancellationToken ct = default);
   ```
-- [ ] Implement `FhirDataHandler.ImportTransactionBundleAsync`:
+- [x] Implement `FhirDataHandler.ImportTransactionBundleAsync`:
   - Parse with Firely SDK (`FhirJsonParser`); validate `Bundle.Type == BundleType.Transaction`
   - Open `IDbContextTransaction` (rollback scope)
   - Process entries in declaration order:
@@ -39,7 +39,7 @@ Phase 5 covered single-resource import (`POST /fhir/R4/Patient`). Phase 9 adds t
     4. `Task` entries → call task creation; resolve `Patient/` and `Encounter/` references
   - On any exception: rollback + return `OperationOutcome` with per-entry diagnostics
   - On success: commit; write `FhirImportLogs` per resource type; write `AuditLogs` entry (`FhirBundleImport`)
-- [ ] Add `FhirBundleImportResultDto` in `HCM.Application/Fhir/DTOs/`:
+- [x] Add `FhirBundleImportResultDto` in `HCM.Application/Fhir/DTOs/`:
   ```csharp
   public record FhirBundleImportResultDto(
       bool Success,
@@ -48,29 +48,30 @@ Phase 5 covered single-resource import (`POST /fhir/R4/Patient`). Phase 9 adds t
   public record BundleEntryResultDto(
       string ResourceType, string AssignedId, string Status);
   ```
-- [ ] Add `MapTransactionResponse(List<BundleEntryResultDto> results)` to `IFhirMappingService` / `FhirMappingService`
+- [x] Add `MapTransactionResponse(List<BundleEntryResultDto> results)` to `IFhirMappingService` / `FhirMappingService`
   - Returns FHIR Bundle of type `transaction-response`
   - One entry per input entry with `response.status = "201 Created"` and `response.location = ResourceType/AssignedId`
 
-### HL7 v2 Ingestion (Stretch)
+### HL7 v2 Ingestion (Stretch) — removed
 
-- [ ] Add `NHapi` NuGet package to `HCM.Infrastructure`
-- [ ] Add `Hl7Controller` at `/api/hl7/`:
-  - [ ] `POST /adt` — accept `text/plain` HL7 v2 ADT^A01; parse with NHapi; extract PID segment; upsert Patient; write `FhirImportLogs`
-  - [ ] `POST /oru` — accept `text/plain` HL7 v2 ORU^R01; extract OBX; create read-only `CaseNote` on patient's active case
-- [ ] Add `IHl7MappingService` / `Hl7MappingService` in Application/Infrastructure layers
+- [-] HL7 v2 ADT^A01 / ORU^R01 endpoints (`Hl7Controller`, `Hl7DataHandler`, `Hl7MappingService`, NHapi) were built and then **removed** on 2026-07-05.
+
+### Bundle File Upload (replacement)
+
+- [x] `POST /fhir/R4/$import` — multipart/form-data `bundleFile`, delegates to `ImportTransactionBundleAsync`
+- [x] Encounter extension `case-assigned-to` (username) → assigned coordinator, falls back to importer
 
 ---
 
 ## Frontend Tasks
 
-- [ ] Extend `FhirImportComponent` — add **"Import Bundle"** tab:
+- [x] Extend `FhirImportComponent` — add **"Import Bundle"** tab:
   - Textarea / file upload for Transaction Bundle JSON
   - On submit: `POST /fhir/R4/` with `Content-Type: application/fhir+json`
   - Display per-entry result table: resource type, assigned ID, status
   - On success: link to the newly created patient detail page
-- [ ] Add **sample Transaction Bundle** JSON in the help tooltip / example panel (collapsible)
-- [ ] Add `importTransactionBundle(bundleJson: string)` to `FhirService`
+- [x] Add **sample Transaction Bundle** JSON in the help tooltip / example panel (collapsible)
+- [x] Add `importTransactionBundle(bundleJson: string)` to `FhirService`
 
 ---
 
@@ -144,9 +145,11 @@ Phase 5 covered single-resource import (`POST /fhir/R4/Patient`). Phase 9 adds t
 
 ## Definition of Done
 
+> Build complete and builds clean; these acceptance checks have not been formally recorded as verified.
+
 - [ ] `POST /fhir/R4/` with the sample bundle above creates Patient + Case + Appointment + Task atomically
 - [ ] If any entry fails (e.g., duplicate patient name + DOB), no resources are created and the response is an `OperationOutcome` with per-entry diagnostics
 - [ ] Response is a valid FHIR Bundle of type `transaction-response` with `response.location` for each entry
 - [ ] `FhirImportLogs` contains one row per resource type; `AuditLogs` contains one row with `Action = FhirBundleImport`
 - [ ] Angular UI "Import Bundle" tab successfully submits the sample bundle and displays the created resource IDs
-- [ ] *(stretch)* `POST /api/hl7/adt` with an ADT^A01 message creates a new Patient record
+- [-] *(stretch)* HL7 ADT ingestion — removed

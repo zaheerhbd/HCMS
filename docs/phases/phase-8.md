@@ -33,14 +33,14 @@ See [docs/testing-and-audit/](../testing-and-audit/) for per-section test docs a
 
 - [ ] Verify no PHI (names, DOB, MRN) appears in Application Insights traces or logs
 - [ ] Add `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options` headers to API responses
-- [ ] Rotate JWT secret in Key Vault; confirm app picks up new version without redeploy (Key Vault reference auto-refresh)
+- [ ] Rotate `Jwt__Secret` in App Service Application Settings; confirm the app restarts cleanly and existing tokens are rejected (Key Vault not used)
 - [ ] Confirm SAS URLs are not logged (check Application Insights live stream during a download)
-- [ ] Run OWASP ZAP quick scan against staging API; resolve any Medium+ findings
+- [ ] Run OWASP ZAP quick scan against the prod API (no staging environment); resolve any Medium+ findings
 - [ ] Confirm `AuditController` returns 403 when called with a non-Admin JWT
 
 ## Production Deploy & Polish
 
-- [ ] Provision prod Azure resources (separate Resource Group from staging)
+- [ ] Confirm prod Azure resources (`hcm-prod-*`) are complete and documented (staging dropped by decision)
 - [ ] Configure manual approval gate in GitHub Actions for prod deploy
 - [ ] Set up Application Insights alerts: error rate > 5%, availability < 99%, p95 > 2s
 - [ ] Add budget alert on Azure subscription ($20/month threshold for portfolio)
